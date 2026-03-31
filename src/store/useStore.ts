@@ -48,6 +48,7 @@ interface AppStore {
   roles: Role[];
   addRole: (role: Omit<Role, 'id'>) => void;
   updateRole: (id: string, updates: Partial<Role>) => void;
+  deleteRole: (id: string) => void;
 
   // Desks
   desks: Desk[];
