@@ -320,6 +320,7 @@ export default function AdminPayments() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }
