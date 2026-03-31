@@ -339,7 +339,13 @@ export default function AdminLeads() {
                     <td className="text-sm text-muted-foreground">{lead.source || '—'}</td>
                     <td className="text-xs text-muted-foreground">{new Date(lead.createdAt).toLocaleDateString()}</td>
                     <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</td>
-                    <td><Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button></td>
+                    <td>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditLead({ ...lead })}><Pencil size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
