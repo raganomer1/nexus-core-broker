@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +8,16 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ClientLogin from "./pages/ClientLogin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
+
+// Website (public)
+import WebsiteLayout from "./layouts/WebsiteLayout";
+import HomePage from "./pages/website/HomePage";
+import AboutPage from "./pages/website/AboutPage";
+import PlatformPage from "./pages/website/PlatformPage";
+import ConditionsPage from "./pages/website/ConditionsPage";
+import FAQPage from "./pages/website/FAQPage";
+import ContactsPage from "./pages/website/ContactsPage";
+import RegisterPage from "./pages/website/RegisterPage";
 
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
@@ -54,8 +64,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public login pages */}
-          <Route path="/" element={<ClientLogin />} />
+          {/* Public website */}
+          <Route element={<WebsiteLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/platform" element={<PlatformPage />} />
+            <Route path="/conditions" element={<ConditionsPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/contacts" element={<ContactsPage />} />
+          </Route>
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Auth */}
+          <Route path="/login" element={<ClientLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* Admin CRM — protected */}
