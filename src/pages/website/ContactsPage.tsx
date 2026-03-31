@@ -8,9 +8,8 @@ import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const contactInfo = [
-  { icon: Mail, title: "Email", value: "support@nexustrade.com", href: "mailto:support@nexustrade.com" },
-  { icon: Phone, title: "Phone", value: "+44 20 1234 5678", href: "tel:+442012345678" },
-  { icon: MapPin, title: "Office", value: "71 Queen Victoria St, London EC4V 4AY, UK" },
+  { icon: Mail, title: "Email", value: "support@spitrade.com", href: "mailto:support@spitrade.com" },
+  { icon: Clock, title: "Working Hours", value: "24/7 — Support never sleeps" },
   { icon: Clock, title: "Working Hours", value: "24/7 — Support never sleeps" },
 ];
 
