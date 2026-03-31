@@ -58,6 +58,7 @@ interface AppStore {
   tradingAccounts: TradingAccount[];
   addTradingAccount: (account: Omit<TradingAccount, 'id' | 'createdAt'>) => void;
   updateTradingAccount: (id: string, updates: Partial<TradingAccount>) => void;
+  deleteTradingAccount: (id: string) => void;
 
   // Positions
   positions: TradingPosition[];
