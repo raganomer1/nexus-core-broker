@@ -21,15 +21,29 @@ export default function ClientLayout() {
   const [paymentsOpen, setPaymentsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { auth, clients, employees, stopImpersonation } = useStore();
+  const { auth, clients, employees, stopImpersonation, getActiveRestriction } = useStore();
   const { lang } = useSettingsStore();
   const client = clients.find(c => c.id === auth.clientId);
   const manager = client?.responsibleId ? employees.find(e => e.id === client.responsibleId) : null;
+  const restriction = auth.clientId ? getActiveRestriction(auth.clientId) : undefined;
 
   const handleNavClick = () => setSidebarOpen(false);
 
   return (
     <div className="flex flex-col h-screen">
+      {/* Full-access restriction overlay */}
+      {restriction?.restrictFullAccess && (
+        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+              <X size={32} className="text-destructive" />
+            </div>
+            <h2 className="text-lg font-bold mb-3">Доступ ограничен</h2>
+            <p className="text-sm text-muted-foreground mb-6 whitespace-pre-wrap">{restriction.message}</p>
+            <Button variant="outline" onClick={() => navigate('/')}>Выйти</Button>
+          </div>
+        </div>
+      )}
       {auth.impersonating && (
         <div className="bg-warning/90 text-warning-foreground px-4 py-1.5 text-sm flex items-center justify-between">
           <span className="truncate">{t(lang, 'viewingAs')}: {client?.lastName} {client?.firstName}</span>
