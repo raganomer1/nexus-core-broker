@@ -15,19 +15,26 @@ import TablePagination from '@/components/TablePagination';
 
 const statusTabs: { label: string; value: ClientStatus | 'All' }[] = [
   { label: 'Все', value: 'All' },
+  { label: 'New', value: 'New' },
   { label: 'Hot', value: 'Hot' },
+  { label: 'Warm', value: 'Warm' },
+  { label: 'Cold', value: 'Cold' },
   { label: 'Lead', value: 'Lead' },
   { label: 'Live', value: 'Live' },
   { label: 'Demo', value: 'Demo' },
-  { label: 'New', value: 'New' },
-  { label: 'Cold', value: 'Cold' },
+  { label: 'Call Back', value: 'Call Back' },
+  { label: 'No potential', value: 'No potential' },
+  { label: 'Not intr.', value: 'Not interesting' },
+  { label: 'No answer', value: 'No answer' },
   { label: 'Spam', value: 'Spam' },
 ];
 
 const statusColors: Record<string, string> = {
-  New: 'status-new', Hot: 'status-hot', Lead: 'status-lead', Spam: 'status-spam',
+  New: 'status-new', Hot: 'status-hot', Warm: 'bg-orange-100 text-orange-700',
+  Lead: 'status-lead', Spam: 'status-spam',
   Live: 'status-live', Demo: 'status-demo', Cold: 'bg-gray-100 text-gray-600',
   'Not interesting': 'bg-gray-100 text-gray-500', 'No answer': 'status-pending',
+  'No potential': 'bg-slate-100 text-slate-600', 'Call Back': 'bg-indigo-100 text-indigo-700',
 };
 
 const emptyClient = {
