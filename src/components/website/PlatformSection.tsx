@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimatedSection } from "./AnimatedSection";
-import { LayoutDashboard, BarChart3, CreditCard, FileText } from "lucide-react";
+import { LayoutDashboard, BarChart3, CreditCard, FileText, Check } from "lucide-react";
 import { useWT } from "@/hooks/useWebsiteTranslation";
 import type { WebsiteTranslationKey } from "@/i18n/websiteTranslations";
 
@@ -18,23 +18,23 @@ const PlatformSection = () => {
   const current = tabKeys.find((t) => t.id === active)!;
 
   return (
-    <section className="py-24 md:py-32 bg-muted/30">
+    <section className="py-28 md:py-36 bg-muted/30 website-section">
       <div className="container mx-auto px-6">
-        <AnimatedSection className="text-center mb-16">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">{w("platTag")}</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mt-3 mb-5">{w("platTitle")}</h2>
+        <AnimatedSection className="text-center mb-20">
+          <span className="text-primary text-xs font-semibold uppercase tracking-[0.2em] block mb-4">{w("platTag")}</span>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground website-section-title mb-6">{w("platTitle")}</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{w("platDesc")}</p>
         </AnimatedSection>
 
         <AnimatedSection delay={0.2}>
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-3 mb-16">
             {tabKeys.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActive(tab.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   active === tab.id
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    ? "bg-primary text-primary-foreground shadow-xl shadow-primary/25"
                     : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
                 }`}
               >
@@ -49,29 +49,31 @@ const PlatformSection = () => {
               key={active}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="grid lg:grid-cols-2 gap-12 items-center"
+              className="grid lg:grid-cols-2 gap-16 items-center"
             >
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">{w(current.titleKey)}</h3>
-                <p className="text-muted-foreground leading-relaxed mb-8">{w(current.descKey)}</p>
-                <div className="grid grid-cols-2 gap-3">
+                <h3 className="text-2xl md:text-4xl font-bold text-foreground mb-5 website-section-title">{w(current.titleKey)}</h3>
+                <p className="text-muted-foreground leading-relaxed mb-10 text-lg">{w(current.descKey)}</p>
+                <div className="space-y-4">
                   {current.featureKeys.map((fk) => (
-                    <div key={fk} className="flex items-center gap-2 text-sm text-foreground">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      {w(fk)}
+                    <div key={fk} className="flex items-center gap-3 text-sm text-foreground">
+                      <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span className="font-medium">{w(fk)}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="relative">
-                <div className="rounded-2xl border border-border bg-card p-2 shadow-2xl">
-                  <div className="rounded-xl bg-muted/50 aspect-video flex items-center justify-center overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                      <current.icon className="w-16 h-16 text-primary/30" />
+                <div className="rounded-3xl border border-border bg-card p-3 shadow-2xl premium-border">
+                  <div className="rounded-2xl bg-gradient-to-br from-muted/80 to-muted aspect-video flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-primary/10 flex items-center justify-center">
+                      <current.icon className="w-20 h-20 text-primary/20" />
                     </div>
                   </div>
                 </div>
-                <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl -z-10" />
+                <div className="absolute -inset-6 bg-primary/5 rounded-[2rem] blur-3xl -z-10" />
               </div>
             </motion.div>
           </AnimatePresence>

@@ -14,23 +14,25 @@ const StatsSection = () => {
   const w = useWT();
 
   return (
-    <section className="py-24 md:py-32 bg-website-dark relative overflow-hidden">
-      <div className="absolute inset-0 hero-grid opacity-20" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[150px]" />
+    <section className="py-28 md:py-36 bg-website-dark relative overflow-hidden website-section">
+      <div className="absolute inset-0 hero-grid opacity-15" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full blur-[200px]"
+        style={{ background: 'radial-gradient(circle, hsl(217 91% 50% / 0.06), transparent 70%)' }} />
 
       <div className="container mx-auto px-6 relative z-10">
-        <AnimatedSection className="text-center mb-16">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">{w("statsTag")}</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mt-3">{w("statsTitle")}</h2>
+        <AnimatedSection className="text-center mb-20">
+          <span className="text-primary text-xs font-semibold uppercase tracking-[0.2em] block mb-4">{w("statsTag")}</span>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white website-section-title">{w("statsTitle")}</h2>
         </AnimatedSection>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 max-w-5xl mx-auto">
           {statKeys.map((stat, i) => (
             <AnimatedSection key={stat.labelKey} delay={i * 0.1} className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">
+              <div className="text-4xl md:text-6xl font-extrabold text-white mb-3 website-section-title">
                 <AnimatedCounter target={stat.value} suffix={stat.suffix} />
               </div>
-              <p className="text-sm text-gray-400 font-medium">{w(stat.labelKey)}</p>
+              <div className="w-8 h-0.5 bg-primary/40 mx-auto mb-3 rounded-full" />
+              <p className="text-sm text-white/40 font-medium">{w(stat.labelKey)}</p>
             </AnimatedSection>
           ))}
         </div>
