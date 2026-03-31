@@ -165,7 +165,7 @@ export default function AdminAccounts() {
       <button onClick={() => setEditAccount({ ...a })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Редактировать">
         <Edit2 size={14} />
       </button>
-      <button onClick={() => { deleteTradingAccount(a.id); toast.success('Счёт удалён'); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить">
+      <button onClick={() => confirmDelete('Удаление счёта', `Удалить счёт ${a.accountNumber}?`, () => { deleteTradingAccount(a.id); toast.success('Счёт удалён'); })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить">
         <X size={14} />
       </button>
     </div>
