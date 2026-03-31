@@ -106,11 +106,11 @@ export default function AdminAccounts() {
     if (fundCreatePayment) {
       addPayment({
         clientId: fundAccount.clientId,
+        accountId: fundAccount.id,
         type: isDeposit ? 'Deposit' : 'Withdrawal',
         amount,
         currency: fundAccount.currency || 'USD',
-        method: fundMethod === 'manager' ? 'Пополнение менеджером' : fundMethod,
-        accountNumber: fundAccount.accountNumber,
+        paymentMethod: fundMethod === 'manager' ? 'Пополнение менеджером' : fundMethod,
         comment: fundComment,
       });
     }
