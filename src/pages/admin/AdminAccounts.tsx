@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminAccounts() {
-  const { tradingAccounts, clients, employees, addTradingAccount, updateTradingAccount } = useStore();
+  const { tradingAccounts, clients, employees, addTradingAccount, updateTradingAccount, deleteTradingAccount } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
