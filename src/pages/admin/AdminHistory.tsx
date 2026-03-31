@@ -2,31 +2,48 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminHistory() {
-  const { history, employees } = useStore();
+  const { history, employees, clients } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [sectionFilter, setSectionFilter] = useState('All');
   const [sourceFilter, setSourceFilter] = useState('All');
+  const [authorFilter, setAuthorFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const authors = useMemo(() => {
+    const ids = new Set(history.map(h => h.authorId));
+    return employees.filter(e => ids.has(e.id));
+  }, [history, employees]);
 
   const filtered = useMemo(() => {
     let result = [...history].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     if (sectionFilter !== 'All') result = result.filter(h => h.section === sectionFilter);
     if (sourceFilter !== 'All') result = result.filter(h => h.source === sourceFilter);
+    if (authorFilter !== 'All') result = result.filter(h => h.authorId === authorFilter);
+    if (dateFrom) result = result.filter(h => new Date(h.timestamp) >= new Date(dateFrom));
+    if (dateTo) result = result.filter(h => new Date(h.timestamp) <= new Date(dateTo + 'T23:59:59'));
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(h => h.description.toLowerCase().includes(s) || (h.clientName && h.clientName.toLowerCase().includes(s)) || h.authorName.toLowerCase().includes(s));
     }
     return result;
-  }, [history, sectionFilter, sourceFilter, search]);
+  }, [history, sectionFilter, sourceFilter, authorFilter, dateFrom, dateTo, search]);
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-lg md:text-xl font-semibold mb-4">{t(lang, 'historyActions')}</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'historyActions')}</h1>
+        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative max-w-sm flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -51,6 +68,21 @@ export default function AdminHistory() {
           </Select>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-muted/30 rounded-lg border">
+          <Select value={authorFilter} onValueChange={setAuthorFilter}>
+            <SelectTrigger className="w-44"><SelectValue placeholder="Автор" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все авторы</SelectItem>
+              {authors.map(a => <SelectItem key={a.id} value={a.id}>{a.lastName} {a.firstName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36" />
+          <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36" />
+          <Button variant="ghost" size="sm" onClick={() => { setAuthorFilter('All'); setDateFrom(''); setDateTo(''); }}>Сброс</Button>
+        </div>
+      )}
 
       <div className="md:hidden space-y-2">
         {filtered.slice(0, 100).map(h => (

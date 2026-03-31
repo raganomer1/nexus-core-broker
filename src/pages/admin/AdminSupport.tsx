@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Plus, Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminSupport() {
   const { tickets, messages, clients, employees, addMessage, updateTicketStatus, auth } = useStore();
@@ -12,18 +14,37 @@ export default function AdminSupport() {
   const [tab, setTab] = useState<'Open' | 'Closed'>('Open');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState('');
+  const [search, setSearch] = useState('');
+  const [assignedFilter, setAssignedFilter] = useState('All');
 
-  const filtered = tickets.filter(t => t.status === tab).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+  const filtered = useMemo(() => {
+    let result = tickets.filter(t => t.status === tab);
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(tk => {
+        const c = clients.find(cl => cl.id === tk.clientId);
+        return tk.subject.toLowerCase().includes(s) || (c && (c.lastName.toLowerCase().includes(s) || c.email.toLowerCase().includes(s)));
+      });
+    }
+    if (assignedFilter !== 'All') result = result.filter(tk => tk.assignedTo === assignedFilter);
+    return result.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+  }, [tickets, tab, search, assignedFilter, clients]);
+
   const selected = tickets.find(t => t.id === selectedId);
   const selectedMsgs = selected ? messages.filter(m => m.ticketId === selected.id).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) : [];
   const selectedClient = selected ? clients.find(c => c.id === selected.clientId) : null;
+
+  const assignees = useMemo(() => {
+    const ids = new Set(tickets.map(t => t.assignedTo).filter(Boolean));
+    return employees.filter(e => ids.has(e.id));
+  }, [tickets, employees]);
 
   const handleReply = () => { if (!reply.trim() || !selected) return; addMessage({ ticketId: selected.id, authorId: auth.employeeId || '', authorType: 'Employee', text: reply }); setReply(''); };
 
   return (
     <div className="p-4 md:p-6">
       <h1 className="text-lg md:text-xl font-semibold mb-4">{t(lang, 'support')}</h1>
-      <div className="flex gap-1 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         {(['Open', 'Closed'] as const).map(tb => (
           <button key={tb} onClick={() => { setTab(tb); setSelectedId(null); }}
             className={`px-3 py-1.5 rounded-full text-xs font-medium ${tab === tb ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
@@ -31,11 +52,23 @@ export default function AdminSupport() {
             <span className="ml-1 opacity-60">{tickets.filter(tk => tk.status === tb).length}</span>
           </button>
         ))}
+        <div className="relative flex-1 max-w-xs ml-auto">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Поиск..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
+        </div>
+        <Select value={assignedFilter} onValueChange={setAssignedFilter}>
+          <SelectTrigger className="w-40 h-8 text-xs"><SelectValue placeholder="Ответственный" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">Все</SelectItem>
+            {assignees.map(a => <SelectItem key={a.id} value={a.id}>{a.lastName} {a.firstName}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6" style={{ minHeight: '60vh' }}>
         <div className={`bg-card rounded-lg border overflow-hidden ${selectedId ? 'hidden lg:block' : ''}`}>
           <div className="divide-y">
+            {filtered.length === 0 && <div className="p-6 text-center text-muted-foreground text-sm">Нет тикетов</div>}
             {filtered.map(tk => {
               const client = clients.find(c => c.id === tk.clientId);
               const assigned = employees.find(e => e.id === tk.assignedTo);
