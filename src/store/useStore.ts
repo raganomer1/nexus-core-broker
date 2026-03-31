@@ -196,6 +196,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set(s => ({ employees: [...s.employees, emp] }));
   },
   updateEmployee: (id, updates) => set(s => ({ employees: s.employees.map(e => e.id === id ? { ...e, ...updates } : e) })),
+  deleteEmployee: (id) => set(s => ({ employees: s.employees.filter(e => e.id !== id) })),
 
   // ==================== ROLES ====================
   roles: [...mock.roles],
