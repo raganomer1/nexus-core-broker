@@ -385,7 +385,7 @@ export default function AdminClients() {
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
               <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
             </Select>
-            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); }}>
+            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => confirmDelete('Удаление клиентов', `Удалить ${selected.size} выбранных клиентов? Это действие нельзя отменить.`, () => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); })}>
               <Trash2 size={12} className="mr-1" /> Удалить
             </Button>
           </div>
