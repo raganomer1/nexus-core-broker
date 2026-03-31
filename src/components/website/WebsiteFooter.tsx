@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const footerLinks = {
   Company: [
@@ -30,24 +30,18 @@ const WebsiteFooter = () => (
         <div className="lg:col-span-2">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-              <span className="text-white font-bold">N</span>
+              <span className="text-white font-bold">S</span>
             </div>
-            <span className="text-xl font-bold">Nexus</span>
+            <span className="text-xl font-bold">SPI Trade</span>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
             A next-generation trading platform providing access to global financial markets
             with institutional-grade execution and cutting-edge technology.
           </p>
           <div className="flex flex-col gap-3 text-sm text-gray-400">
-            <a href="mailto:support@nexustrade.com" className="flex items-center gap-2 hover:text-primary transition-colors">
-              <Mail className="w-4 h-4" /> support@nexustrade.com
+            <a href="mailto:support@spitrade.com" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Mail className="w-4 h-4" /> support@spitrade.com
             </a>
-            <a href="tel:+442012345678" className="flex items-center gap-2 hover:text-primary transition-colors">
-              <Phone className="w-4 h-4" /> +44 20 1234 5678
-            </a>
-            <span className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> London, United Kingdom
-            </span>
           </div>
         </div>
 
@@ -73,7 +67,7 @@ const WebsiteFooter = () => (
 
       <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-xs text-gray-500">
-          © {new Date().getFullYear()} Nexus Trading Ltd. All rights reserved.
+          © 2014–{new Date().getFullYear()} SPI Trade Ltd. All rights reserved.
         </p>
         <p className="text-xs text-gray-600 max-w-xl text-center md:text-right">
           Trading involves significant risk of loss. Past performance is not indicative of future results.

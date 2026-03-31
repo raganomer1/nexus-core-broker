@@ -39,10 +39,10 @@ const WebsiteHeader = () => {
       <div className="container mx-auto px-6 h-18 flex items-center justify-between py-4">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-            <span className="text-white font-bold text-base">N</span>
+            <span className="text-white font-bold text-base">S</span>
           </div>
           <span className={`text-xl font-bold tracking-tight transition-colors ${scrolled ? "text-foreground" : "text-white"}`}>
-            Nexus
+            SPI Trade
           </span>
         </Link>
 
