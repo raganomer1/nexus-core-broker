@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
