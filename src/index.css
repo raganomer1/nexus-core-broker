@@ -58,6 +58,12 @@
     --buy-color: 142 71% 45%;
     --sell-color: 0 84% 60%;
 
+    /* Website */
+    --website-dark: 222 47% 5%;
+    --website-dark-secondary: 222 30% 10%;
+    --website-dark-card: 222 25% 13%;
+    --website-glow: 217 91% 60%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
