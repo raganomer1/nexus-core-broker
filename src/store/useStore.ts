@@ -42,6 +42,7 @@ interface AppStore {
   employees: Employee[];
   addEmployee: (emp: Omit<Employee, 'id' | 'createdAt'>) => void;
   updateEmployee: (id: string, updates: Partial<Employee>) => void;
+  deleteEmployee: (id: string) => void;
 
   // Roles
   roles: Role[];
