@@ -179,21 +179,21 @@ export default function AdminTrading() {
       {/* Accounts table */}
       <div className="bg-card rounded-lg border overflow-hidden mb-1">
         <div className="overflow-x-auto">
-          <table className="data-table text-xs">
+          <table className="data-table text-xs" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead>
               <tr className="bg-muted/30">
-                <th className="whitespace-nowrap">Группа</th>
-                <th className="whitespace-nowrap">Номер</th>
-                <th className="whitespace-nowrap">Ф.И.О</th>
-                <th className="whitespace-nowrap text-right">Введено</th>
-                <th className="whitespace-nowrap text-right">Снято</th>
-                <th className="whitespace-nowrap text-right">Введено/выведено</th>
-                <th className="whitespace-nowrap text-right">Ввод-вывод</th>
-                <th className="whitespace-nowrap text-right">Сделки</th>
-                <th className="whitespace-nowrap text-right">Уровень средств</th>
-                <th className="whitespace-nowrap text-right">Потрачено бонусов</th>
-                <th className="whitespace-nowrap text-right">Прибыль</th>
-                <th className="whitespace-nowrap text-right">Средства</th>
+                <ResizableTh className="whitespace-nowrap" initialWidth={120}>Группа</ResizableTh>
+                <ResizableTh className="whitespace-nowrap" initialWidth={80}>Номер</ResizableTh>
+                <ResizableTh className="whitespace-nowrap" initialWidth={140}>Ф.И.О</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Введено</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={80}>Снято</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={130}>Введено/выведено</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Ввод-вывод</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={70}>Сделки</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={110}>Уровень средств</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={120}>Потрачено бонусов</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Прибыль</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Средства</ResizableTh>
                 <th className="w-8"></th>
               </tr>
             </thead>
