@@ -118,6 +118,7 @@ export default function AdminAccounts() {
                 <div className="flex items-center gap-2">
                   <span className={`status-badge ${a.status === 'Active' ? 'status-live' : a.status === 'Blocked' ? 'status-rejected' : 'status-pending'}`}>{a.status}</span>
                   <Button variant="ghost" size="sm" onClick={() => setEditAccount({ ...a })}><Edit2 size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteTradingAccount(a.id); }}><Trash2 size={14} /></Button>
                 </div>
               </div>
               <div className="text-sm text-muted-foreground mb-2">{client ? `${client.lastName} ${client.firstName}` : '—'}</div>
