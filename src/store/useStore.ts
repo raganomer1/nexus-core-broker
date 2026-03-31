@@ -80,6 +80,8 @@ interface AppStore {
   payments: PaymentRequest[];
   paymentMethods: PaymentMethod[];
   addPayment: (payment: Omit<PaymentRequest, 'id' | 'createdAt' | 'status'>) => void;
+  updatePayment: (id: string, updates: Partial<PaymentRequest>) => void;
+  deletePayment: (id: string) => void;
   updatePaymentStatus: (id: string, status: PaymentStatus, processedBy?: string) => void;
 
   // Support
@@ -378,6 +380,8 @@ export const useStore = create<AppStore>((set, get) => ({
       link: '/admin/payments',
     });
   },
+  updatePayment: (id, updates) => set(s => ({ payments: s.payments.map(p => p.id === id ? { ...p, ...updates } : p) })),
+  deletePayment: (id) => set(s => ({ payments: s.payments.filter(p => p.id !== id) })),
   updatePaymentStatus: (id, status, processedBy) => {
     set(s => ({
       payments: s.payments.map(p => p.id === id ? { ...p, status, processedAt: new Date().toISOString(), processedBy } : p),
