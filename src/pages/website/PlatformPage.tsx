@@ -58,9 +58,15 @@ const PlatformPage = () => {
               </div>
               <div className={i % 2 === 1 ? "lg:order-1" : ""}>
                 <div className="rounded-2xl border border-border bg-card p-3 shadow-xl">
-                  <div className="rounded-xl bg-muted/50 aspect-video flex items-center justify-center">
-                    <f.icon className="w-16 h-16 text-primary/20" />
-                  </div>
+                  {f.image ? (
+                    <div className="rounded-xl overflow-hidden aspect-video">
+                      <img src={f.image} alt={w(f.titleKey)} loading="lazy" width={1280} height={720} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-muted/50 aspect-video flex items-center justify-center">
+                      <f.icon className="w-16 h-16 text-primary/20" />
+                    </div>
+                  )}
                 </div>
               </div>
             </AnimatedSection>
