@@ -344,7 +344,7 @@ export default function AdminLeads() {
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditLead({ ...lead })}><Pencil size={13} /></Button>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={13} /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${lead.lastName} ${lead.firstName}?`, () => { deleteLead(lead.id); toast.success('Лид удалён'); })}><Trash2 size={13} /></Button>
                       </div>
                     </td>
                   </tr>
