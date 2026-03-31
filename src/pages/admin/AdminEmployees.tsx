@@ -217,7 +217,7 @@ export default function AdminEmployees() {
             <h3 className="text-sm font-semibold">Права</h3>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">Роль</span>
-              <Select value={form.roleId || '__none''} onValueChange={v => {
+              <Select value={form.roleId || '__none'} onValueChange={v => {
                 const rid = v === '__none' ? '' : v;
                 const role = roles.find(r => r.id === rid);
                 setForm(f => ({ ...f, roleId: rid, permissions: role?.permissions ? { ...role.permissions } : f.permissions }));
