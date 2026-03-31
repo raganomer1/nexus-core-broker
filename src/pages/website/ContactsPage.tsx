@@ -71,10 +71,6 @@ const ContactsPage = () => {
                 ))}
               </div>
 
-              {/* Map placeholder */}
-              <div className="mt-10 rounded-2xl border border-border bg-muted/50 h-48 flex items-center justify-center">
-                <MapPin className="w-8 h-8 text-muted-foreground/30" />
-              </div>
             </AnimatedSection>
 
             {/* Contact form */}
