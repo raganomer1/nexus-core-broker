@@ -13,6 +13,7 @@ import { PaymentStatus, PaymentRequest } from '@/types';
 import { toast } from 'sonner';
 import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
+import { exportPaymentsToXlsx } from '@/lib/xlsxUtils';
 
 export default function AdminPayments() {
   const { payments, clients, tradingAccounts, employees, updatePaymentStatus, updatePayment, deletePayment, auth } = useStore();
