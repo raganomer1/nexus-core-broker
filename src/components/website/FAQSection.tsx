@@ -28,26 +28,26 @@ const FAQSection = ({ showAll = false }: FAQSectionProps) => {
   const displayFaqs = showAll ? faqKeys : faqKeys.slice(0, 6);
 
   return (
-    <section className="py-24 md:py-32 bg-background">
+    <section className="py-28 md:py-36 bg-background website-section">
       <div className="container mx-auto px-6">
-        <AnimatedSection className="text-center mb-16">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">{w("faqTag")}</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mt-3 mb-5">{w("faqTitle")}</h2>
+        <AnimatedSection className="text-center mb-20">
+          <span className="text-primary text-xs font-semibold uppercase tracking-[0.2em] block mb-4">{w("faqTag")}</span>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground website-section-title mb-6">{w("faqTitle")}</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{w("faqDesc")}</p>
         </AnimatedSection>
 
         <AnimatedSection delay={0.2} className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="space-y-3">
+          <Accordion type="single" collapsible className="space-y-4">
             {displayFaqs.map((faq, i) => (
               <AccordionItem
                 key={i}
                 value={`faq-${i}`}
-                className="border border-border rounded-xl px-6 data-[state=open]:border-primary/30 data-[state=open]:shadow-lg data-[state=open]:shadow-primary/5 transition-all duration-300"
+                className="border border-border rounded-2xl px-7 data-[state=open]:border-primary/30 data-[state=open]:shadow-xl data-[state=open]:shadow-primary/5 transition-all duration-500 bg-card"
               >
-                <AccordionTrigger className="text-left font-semibold text-foreground hover:text-primary hover:no-underline py-5">
+                <AccordionTrigger className="text-left font-bold text-foreground hover:text-primary hover:no-underline py-6 website-section-title">
                   {w(faq.qKey)}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-6">
                   {w(faq.aKey)}
                 </AccordionContent>
               </AccordionItem>

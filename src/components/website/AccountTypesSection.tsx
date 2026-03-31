@@ -15,57 +15,59 @@ const AccountTypesSection = () => {
   const w = useWT();
 
   return (
-    <section className="py-24 md:py-32 bg-muted/30">
+    <section className="py-28 md:py-36 bg-muted/30 website-section">
       <div className="container mx-auto px-6">
-        <AnimatedSection className="text-center mb-16">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">{w("accTag")}</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground mt-3 mb-5">{w("accTitle")}</h2>
+        <AnimatedSection className="text-center mb-20">
+          <span className="text-primary text-xs font-semibold uppercase tracking-[0.2em] block mb-4">{w("accTag")}</span>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground website-section-title mb-6">{w("accTitle")}</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{w("accDesc")}</p>
         </AnimatedSection>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {accountKeys.map((acc, i) => (
             <AnimatedSection key={acc.nameKey} delay={i * 0.15}>
-              <div className={`relative p-8 rounded-2xl border h-full flex flex-col ${
+              <div className={`relative p-8 rounded-3xl border h-full flex flex-col transition-all duration-500 ${
                 acc.popular
-                  ? "border-primary bg-card shadow-2xl shadow-primary/10 scale-[1.02]"
-                  : "border-border bg-card hover:border-primary/30 hover:shadow-xl transition-all duration-300"
+                  ? "border-primary bg-card shadow-2xl shadow-primary/10 scale-[1.03] premium-border"
+                  : "border-border bg-card hover:border-primary/30 hover:shadow-xl premium-card"
               }`}>
                 {acc.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/30">
-                    <Star className="w-3 h-3" /> {w("accPopular")}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-xl shadow-primary/30">
+                    <Star className="w-3.5 h-3.5" /> {w("accPopular")}
                   </div>
                 )}
 
-                <h3 className="text-2xl font-bold text-foreground mb-2">{w(acc.nameKey)}</h3>
-                <p className="text-sm text-muted-foreground mb-6">{w(acc.descKey)}</p>
+                <h3 className="text-2xl font-bold text-foreground mb-2 website-section-title">{w(acc.nameKey)}</h3>
+                <p className="text-sm text-muted-foreground mb-8">{w(acc.descKey)}</p>
 
-                <div className="space-y-3 mb-8">
+                <div className="space-y-3 mb-8 p-4 rounded-xl bg-muted/50">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{w("accDeposit")}</span>
-                    <span className="font-semibold text-foreground">{acc.depositKey ? w(acc.depositKey) : acc.deposit}</span>
+                    <span className="font-bold text-foreground">{acc.depositKey ? w(acc.depositKey) : acc.deposit}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{w("accSpread")}</span>
-                    <span className="font-semibold text-foreground">{acc.spread}</span>
+                    <span className="font-bold text-foreground">{acc.spread}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{w("accLeverage")}</span>
-                    <span className="font-semibold text-foreground">{acc.leverage}</span>
+                    <span className="font-bold text-foreground">{acc.leverage}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-8 flex-1">
+                <div className="space-y-3.5 mb-10 flex-1">
                   {acc.featureKeys.map((fk) => (
-                    <div key={fk} className="flex items-center gap-2 text-sm text-foreground">
-                      <Check className="w-4 h-4 text-primary shrink-0" />
+                    <div key={fk} className="flex items-center gap-3 text-sm text-foreground">
+                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-primary" />
+                      </div>
                       {w(fk)}
                     </div>
                   ))}
                 </div>
 
                 <Link to="/register">
-                  <Button className="w-full" variant={acc.popular ? "default" : "outline"} size="lg">
+                  <Button className="w-full rounded-xl" variant={acc.popular ? "default" : "outline"} size="lg">
                     {w("accOpenBtn")}
                   </Button>
                 </Link>
