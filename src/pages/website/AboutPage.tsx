@@ -24,7 +24,7 @@ const AboutPage = () => (
             Building the Future of <span className="gradient-text">Online Trading</span>
           </h1>
           <p className="text-lg text-gray-400 leading-relaxed">
-            Nexus is a technology-driven brokerage platform built for the modern trader.
+            SPI Trade is a technology-driven brokerage platform built for the modern trader.
             We combine institutional-grade infrastructure with an intuitive user experience
             to make professional trading accessible to everyone.
           </p>
