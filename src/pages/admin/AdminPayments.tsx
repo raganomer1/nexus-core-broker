@@ -96,7 +96,10 @@ export default function AdminPayments() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'payments')}</h1>
-        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportPaymentsToXlsx(filtered, (id) => { const c = clients.find(cl => cl.id === id); return c ? `${c.lastName} ${c.firstName}` : '—'; })}><Download size={14} className="mr-1" />Excel</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+        </div>
       </div>
 
       <div className="flex gap-1 mb-4 flex-wrap">
