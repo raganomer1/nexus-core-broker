@@ -523,7 +523,7 @@ export default function AdminAccounts() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Депозиты — счёт #{depositsAccount?.accountNumber}</DialogTitle></DialogHeader>
           {depositsAccount && (() => {
-            const acctPayments = getAccountPayments(depositsAccount.accountNumber);
+            const acctPayments = getAccountPayments(depositsAccount.id);
             const deposits = acctPayments.filter(p => p.type === 'Deposit');
             const withdrawals = acctPayments.filter(p => p.type === 'Withdrawal');
             const totalDep = deposits.reduce((s, p) => s + p.amount, 0);
