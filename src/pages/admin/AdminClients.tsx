@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '@/store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag } from 'lucide-react';
+import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClientStatus, Client } from '@/types';
@@ -16,11 +17,11 @@ const statusTabs: { label: string; value: ClientStatus | 'All' }[] = [
   { label: 'Все', value: 'All' },
   { label: 'Hot', value: 'Hot' },
   { label: 'Lead', value: 'Lead' },
-  { label: 'Spam', value: 'Spam' },
   { label: 'Live', value: 'Live' },
   { label: 'Demo', value: 'Demo' },
   { label: 'New', value: 'New' },
   { label: 'Cold', value: 'Cold' },
+  { label: 'Spam', value: 'Spam' },
 ];
 
 const statusColors: Record<string, string> = {
@@ -29,18 +30,34 @@ const statusColors: Record<string, string> = {
   'Not interesting': 'bg-gray-100 text-gray-500', 'No answer': 'status-pending',
 };
 
+const emptyClient = {
+  salutation: '', lastName: '', firstName: '', middleName: '', deskId: '', responsibleId: '',
+  status: 'New' as ClientStatus, affiliateId: '', country: '', region: '', city: '', zip: '',
+  address: '', email: '', phone: '', additionalContact: '', citizenship: '', campaignId: '',
+  tag1: '', tag2: '', passport: '', birthday: '', purpose: '', source: '', description: '',
+  type: 'Lead' as const,
+};
+
 export default function AdminClients() {
   const navigate = useNavigate();
-  const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings } = useStore();
+  const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClientStatus | 'All'>('All');
   const [showCreate, setShowCreate] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [contactsVisible, setContactsVisible] = useState<Set<string>>(new Set());
-  const [filterConditions, setFilterConditions] = useState<{ field: string; operator: string; value: string }[]>([]);
 
-  const [newClient, setNewClient] = useState({ lastName: '', firstName: '', email: '', phone: '', country: '', type: 'Lead' as const, status: 'New' as ClientStatus, deskId: '', responsibleId: '' });
+  // Advanced filters
+  const [filterManager, setFilterManager] = useState('All');
+  const [filterCountry, setFilterCountry] = useState('');
+  const [filterDesk, setFilterDesk] = useState('All');
+  const [filterVerification, setFilterVerification] = useState('All');
+  const [filterDeposit, setFilterDeposit] = useState('All'); // All | HasDeposit | NoDeposit
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+
+  const [newClient, setNewClient] = useState({ ...emptyClient });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,16 +66,31 @@ export default function AdminClients() {
     try {
       const rows = await parseXlsxFile(file);
       const mapped = mapRowsToClients(rows);
-      if (mapped.length === 0) { toast.error('Не найдено валидных записей (нужны Фамилия и Email)'); return; }
+      if (mapped.length === 0) { toast.error('Не найдено валидных записей'); return; }
       mapped.forEach(c => addClient({ lastName: c.lastName!, firstName: c.firstName || '', email: c.email!, phone: c.phone, country: c.country, type: (c as any).type || 'Lead', status: (c as any).status || 'New', middleName: '', verificationStatus: 'Unverified', source: (c as any).source }));
       toast.success(`Импортировано ${mapped.length} клиентов`);
     } catch { toast.error('Ошибка чтения файла'); }
     e.target.value = '';
   };
 
+  const countries = useMemo(() => [...new Set(clients.map(c => c.country).filter(Boolean))].sort(), [clients]);
+
   const filtered = useMemo(() => {
     let result = clients;
     if (statusFilter !== 'All') result = result.filter(c => c.status === statusFilter);
+    if (filterManager !== 'All') result = result.filter(c => c.responsibleId === filterManager);
+    if (filterDesk !== 'All') result = result.filter(c => c.deskId === filterDesk);
+    if (filterCountry) result = result.filter(c => c.country?.toLowerCase().includes(filterCountry.toLowerCase()));
+    if (filterVerification !== 'All') result = result.filter(c => c.verificationStatus === filterVerification);
+    if (filterDeposit === 'HasDeposit') {
+      const clientsWithDeposit = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
+      result = result.filter(c => clientsWithDeposit.has(c.id));
+    } else if (filterDeposit === 'NoDeposit') {
+      const clientsWithDeposit = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
+      result = result.filter(c => !clientsWithDeposit.has(c.id));
+    }
+    if (filterDateFrom) result = result.filter(c => c.createdAt >= filterDateFrom);
+    if (filterDateTo) result = result.filter(c => c.createdAt <= filterDateTo);
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(c =>
@@ -66,34 +98,20 @@ export default function AdminClients() {
         c.email.toLowerCase().includes(s) || (c.phone && c.phone.includes(s))
       );
     }
-    filterConditions.forEach(fc => {
-      if (!fc.value) return;
-      result = result.filter(c => {
-        const val = (c as any)[fc.field];
-        if (!val) return false;
-        if (fc.operator === 'equals') return val === fc.value;
-        if (fc.operator === 'contains') return String(val).toLowerCase().includes(fc.value.toLowerCase());
-        return true;
-      });
-    });
     return result;
-  }, [clients, statusFilter, search, filterConditions]);
+  }, [clients, statusFilter, search, filterManager, filterDesk, filterCountry, filterVerification, filterDeposit, filterDateFrom, filterDateTo, tradingAccounts]);
 
   const toggleContact = (id: string) => {
-    setContactsVisible(prev => {
-      const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
-      return n;
-    });
+    setContactsVisible(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
-
   const maskValue = (val: string) => val.substring(0, 3) + '***' + val.substring(val.length - 2);
 
   const handleCreate = () => {
-    if (!newClient.lastName || !newClient.email) return;
-    addClient({ ...newClient, middleName: '', verificationStatus: 'Unverified' });
+    if (!newClient.lastName || !newClient.email) { toast.error('Фамилия и Email обязательны'); return; }
+    addClient({ ...newClient, verificationStatus: 'Unverified' });
     setShowCreate(false);
-    setNewClient({ lastName: '', firstName: '', email: '', phone: '', country: '', type: 'Lead', status: 'New', deskId: '', responsibleId: '' });
+    setNewClient({ ...emptyClient });
+    toast.success('Клиент создан');
   };
 
   const toggleAll = () => {
@@ -101,9 +119,17 @@ export default function AdminClients() {
     else setSelected(new Set(filtered.map(c => c.id)));
   };
 
+  const clearFilters = () => {
+    setFilterManager('All'); setFilterCountry(''); setFilterDesk('All');
+    setFilterVerification('All'); setFilterDeposit('All');
+    setFilterDateFrom(''); setFilterDateTo('');
+  };
+
+  const hasActiveFilters = filterManager !== 'All' || filterCountry || filterDesk !== 'All' || filterVerification !== 'All' || filterDeposit !== 'All' || filterDateFrom || filterDateTo;
+
   const { paginated, page, setPage, perPage, setPerPage, totalPages, toggleSort, sortIcon } = useTableControls(filtered);
 
-  const clientColumns: { key: string; label: string }[] = [
+  const clientColumns = [
     { key: 'lastName', label: 'ФИО' },
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Телефон' },
@@ -113,14 +139,17 @@ export default function AdminClients() {
     { key: 'status', label: 'Статус' },
   ];
 
+  const nc = newClient;
+  const setNc = (field: string, value: string) => setNewClient(prev => ({ ...prev, [field]: value }));
+
   return (
     <div className="p-4 md:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-lg md:text-xl font-semibold">Клиенты</h1>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)}>
-            <Filter size={14} className="mr-1" /> Фильтры
+          <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)} className={hasActiveFilters ? 'border-primary text-primary' : ''}>
+            <Filter size={14} className="mr-1" /> Фильтры {hasActiveFilters && <span className="ml-1 w-2 h-2 rounded-full bg-primary" />}
           </Button>
           <input type="file" ref={fileInputRef} accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
           <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => fileInputRef.current?.click()}><Upload size={14} className="mr-1" /> Импорт</Button>
@@ -129,6 +158,12 @@ export default function AdminClients() {
             <Plus size={14} className="mr-1" /> <span className="hidden sm:inline">Новый клиент</span><span className="sm:hidden">Новый</span>
           </Button>
         </div>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md mb-3">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="Поиск по имени, email, телефону..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       {/* Status tabs */}
@@ -144,70 +179,92 @@ export default function AdminClients() {
         ))}
       </div>
 
+      {/* Advanced filters */}
+      {showFilter && (
+        <div className="mb-4 p-4 bg-card rounded-lg border space-y-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Расширенные фильтры</span>
+            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7"><X size={12} className="mr-1" /> Сбросить</Button>}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Менеджер</label>
+              <Select value={filterManager} onValueChange={setFilterManager}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">Все</SelectItem>
+                  {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Desk</label>
+              <Select value={filterDesk} onValueChange={setFilterDesk}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">Все</SelectItem>
+                  {desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Страна</label>
+              <Input value={filterCountry} onChange={e => setFilterCountry(e.target.value)} placeholder="Страна" className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Верификация</label>
+              <Select value={filterVerification} onValueChange={setFilterVerification}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">Все</SelectItem>
+                  <SelectItem value="Verified">Verified</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Unverified">Unverified</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Депозит</label>
+              <Select value={filterDeposit} onValueChange={setFilterDeposit}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">Все</SelectItem>
+                  <SelectItem value="HasDeposit">С депозитом</SelectItem>
+                  <SelectItem value="NoDeposit">Без депозита</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Дата от</label>
+              <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Дата до</label>
+              <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="h-9 text-xs" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bulk actions bar */}
       {selected.size > 0 && (
         <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium">Выбрано: {selected.size}</span>
           <div className="flex flex-wrap gap-2">
-            <Select onValueChange={v => {
-              selected.forEach(id => updateClient(id, { status: v as ClientStatus }));
-              toast.success(`Статус изменён у ${selected.size} клиентов`);
-              setSelected(new Set());
-            }}>
+            <Select onValueChange={v => { selected.forEach(id => updateClient(id, { status: v as ClientStatus })); toast.success(`Статус изменён у ${selected.size} клиентов`); setSelected(new Set()); }}>
               <SelectTrigger className="w-36 h-8 text-xs"><Tag size={12} className="mr-1" /><SelectValue placeholder="Сменить статус" /></SelectTrigger>
-              <SelectContent>
-                {['New', 'Hot', 'Lead', 'Live', 'Demo', 'Cold', 'Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{['New', 'Hot', 'Lead', 'Live', 'Demo', 'Cold', 'Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
-            <Select onValueChange={v => {
-              selected.forEach(id => updateClient(id, { responsibleId: v }));
-              const emp = employees.find(e => e.id === v);
-              toast.success(`Ответственный назначен: ${emp?.firstName} ${emp?.lastName}`);
-              setSelected(new Set());
-            }}>
+            <Select onValueChange={v => { selected.forEach(id => updateClient(id, { responsibleId: v })); const emp = employees.find(e => e.id === v); toast.success(`Ответственный: ${emp?.firstName} ${emp?.lastName}`); setSelected(new Set()); }}>
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
-              <SelectContent>
-                {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
             </Select>
-            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => {
-              selected.forEach(id => deleteClient(id));
-              toast.success(`Удалено ${selected.size} клиентов`);
-              setSelected(new Set());
-            }}>
+            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); }}>
               <Trash2 size={12} className="mr-1" /> Удалить
             </Button>
           </div>
           <Button variant="ghost" size="sm" className="h-8 text-xs ml-auto" onClick={() => setSelected(new Set())}>Снять выбор</Button>
-        </div>
-      )}
-
-      {/* Filter builder */}
-      {showFilter && (
-        <div className="mb-4 p-3 md:p-4 bg-card rounded-lg border space-y-2">
-          {filterConditions.map((fc, i) => (
-            <div key={i} className="flex flex-wrap gap-2 items-center">
-              <Select value={fc.field} onValueChange={v => { const n = [...filterConditions]; n[i].field = v; setFilterConditions(n); }}>
-                <SelectTrigger className="w-32 md:w-40"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="country">Страна</SelectItem>
-                  <SelectItem value="type">Тип</SelectItem>
-                  <SelectItem value="status">Статус</SelectItem>
-                  <SelectItem value="responsibleId">Ответственный</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={fc.operator} onValueChange={v => { const n = [...filterConditions]; n[i].operator = v; setFilterConditions(n); }}>
-                <SelectTrigger className="w-28 md:w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="equals">Равно</SelectItem>
-                  <SelectItem value="contains">Содержит</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input value={fc.value} onChange={e => { const n = [...filterConditions]; n[i].value = e.target.value; setFilterConditions(n); }} className="w-32 md:w-40" placeholder="Значение" />
-              <Button variant="ghost" size="sm" onClick={() => setFilterConditions(fc => fc.filter((_, idx) => idx !== i))}>✕</Button>
-            </div>
-          ))}
-          <Button variant="outline" size="sm" onClick={() => setFilterConditions(f => [...f, { field: 'country', operator: 'equals', value: '' }])}>+ Добавить условие</Button>
         </div>
       )}
 
@@ -285,37 +342,87 @@ export default function AdminClients() {
         <TablePagination page={page} totalPages={totalPages} total={filtered.length} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} selectedCount={selected.size} />
       </div>
 
-      {/* Create dialog */}
+      {/* Create Client Dialog — Multi-block structured form */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg mx-4">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader><DialogTitle>Новый клиент</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><label className="text-xs text-muted-foreground">Фамилия *</label><Input value={newClient.lastName} onChange={e => setNewClient(n => ({ ...n, lastName: e.target.value }))} /></div>
-              <div><label className="text-xs text-muted-foreground">Имя *</label><Input value={newClient.firstName} onChange={e => setNewClient(n => ({ ...n, firstName: e.target.value }))} /></div>
-            </div>
-            <div><label className="text-xs text-muted-foreground">Email *</label><Input value={newClient.email} onChange={e => setNewClient(n => ({ ...n, email: e.target.value }))} /></div>
-            <div><label className="text-xs text-muted-foreground">Телефон</label><Input value={newClient.phone} onChange={e => setNewClient(n => ({ ...n, phone: e.target.value }))} /></div>
-            <div><label className="text-xs text-muted-foreground">Страна</label><Input value={newClient.country} onChange={e => setNewClient(n => ({ ...n, country: e.target.value }))} /></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Desk</label>
-                <Select value={newClient.deskId} onValueChange={v => setNewClient(n => ({ ...n, deskId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
-                  <SelectContent>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-                </Select>
+          <div className="space-y-5">
+            {/* 1. General Information */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-primary">Общая информация</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">Обращение</label>
+                  <Select value={nc.salutation} onValueChange={v => setNc('salutation', v)}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent><SelectItem value="Mr">Mr</SelectItem><SelectItem value="Mrs">Mrs</SelectItem><SelectItem value="Ms">Ms</SelectItem></SelectContent>
+                  </Select>
+                </div>
+                <div><label className="text-xs text-muted-foreground">Фамилия *</label><Input value={nc.lastName} onChange={e => setNc('lastName', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Имя *</label><Input value={nc.firstName} onChange={e => setNc('firstName', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Отчество</label><Input value={nc.middleName} onChange={e => setNc('middleName', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Desk</label>
+                  <Select value={nc.deskId} onValueChange={v => setNc('deskId', v)}>
+                    <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+                    <SelectContent>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><label className="text-xs text-muted-foreground">Ответственный</label>
+                  <Select value={nc.responsibleId} onValueChange={v => setNc('responsibleId', v)}>
+                    <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+                    <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><label className="text-xs text-muted-foreground">Статус</label>
+                  <Select value={nc.status} onValueChange={v => setNc('status', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{['New','Hot','Cold','Lead','Live','Demo','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><label className="text-xs text-muted-foreground">Affiliate ID</label><Input value={nc.affiliateId} onChange={e => setNc('affiliateId', e.target.value)} /></div>
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Ответственный</label>
-                <Select value={newClient.responsibleId} onValueChange={v => setNewClient(n => ({ ...n, responsibleId: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
-                  <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
-                </Select>
+            </div>
+
+            {/* 2. Contact Information */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-primary">Контактная информация</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">Страна</label><Input value={nc.country} onChange={e => setNc('country', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Регион</label><Input value={nc.region} onChange={e => setNc('region', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Город</label><Input value={nc.city} onChange={e => setNc('city', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Индекс</label><Input value={nc.zip} onChange={e => setNc('zip', e.target.value)} /></div>
+                <div className="col-span-2"><label className="text-xs text-muted-foreground">Адрес</label><Input value={nc.address} onChange={e => setNc('address', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Email *</label><Input value={nc.email} onChange={e => setNc('email', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Телефон</label><Input value={nc.phone} onChange={e => setNc('phone', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Доп. контакт</label><Input value={nc.additionalContact} onChange={e => setNc('additionalContact', e.target.value)} /></div>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+
+            {/* 3. Additional Information */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-primary">Дополнительная информация</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">Гражданство</label><Input value={nc.citizenship} onChange={e => setNc('citizenship', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Campaign ID</label><Input value={nc.campaignId} onChange={e => setNc('campaignId', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Тег 1</label><Input value={nc.tag1} onChange={e => setNc('tag1', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Тег 2</label><Input value={nc.tag2} onChange={e => setNc('tag2', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Паспорт</label><Input value={nc.passport} onChange={e => setNc('passport', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Дата рождения</label><Input type="date" value={nc.birthday} onChange={e => setNc('birthday', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Цель</label><Input value={nc.purpose} onChange={e => setNc('purpose', e.target.value)} /></div>
+                <div><label className="text-xs text-muted-foreground">Источник</label><Input value={nc.source} onChange={e => setNc('source', e.target.value)} /></div>
+              </div>
+            </div>
+
+            {/* 4. Description */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3 text-primary">Описание</h3>
+              <Textarea value={nc.description} onChange={e => setNc('description', e.target.value)} placeholder="Комментарий к клиенту..." rows={3} />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" onClick={() => setShowCreate(false)}>Отмена</Button>
-              <Button onClick={handleCreate}>Создать</Button>
+              <Button variant="outline" onClick={() => { handleCreate(); }}>Сохранить и закрыть</Button>
+              <Button onClick={handleCreate}>Сохранить</Button>
             </div>
           </div>
         </DialogContent>

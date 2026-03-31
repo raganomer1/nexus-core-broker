@@ -16,7 +16,7 @@ export default function AdminPrices() {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => { simulatePriceMovement(); checkOverrideExpiry(); setNow(Date.now()); }, 3000);
+    const interval = setInterval(() => { simulatePriceMovement(); checkOverrideExpiry(); setNow(Date.now()); }, 2000);
     return () => clearInterval(interval);
   }, []);
 
