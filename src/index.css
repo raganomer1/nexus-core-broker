@@ -1,96 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --background: 0 0% 98%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --popover-foreground: 220 20% 10%;
+    --primary: 217 91% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 20% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 217 91% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 50%;
     --radius: 0.5rem;
 
+    /* Custom tokens */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Admin sidebar */
+    --admin-sidebar: 220 25% 12%;
+    --admin-sidebar-foreground: 220 14% 80%;
+    --admin-sidebar-active: 217 91% 50%;
+    --admin-sidebar-hover: 220 25% 18%;
+
+    /* Client header */
+    --client-header: 220 25% 14%;
+    --client-header-foreground: 0 0% 95%;
+
+    /* Terminal */
+    --terminal-bg: 220 25% 8%;
+    --terminal-surface: 220 25% 12%;
+    --terminal-border: 220 20% 20%;
+    --terminal-foreground: 220 14% 80%;
+    --terminal-accent: 217 91% 50%;
+    --terminal-green: 142 71% 45%;
+    --terminal-red: 0 84% 60%;
+
+    /* Trading specific */
+    --buy-color: 142 71% 45%;
+    --sell-color: 0 84% 60%;
+
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 217 91% 50%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 220 25% 8%;
+    --foreground: 220 14% 90%;
+    --card: 220 25% 12%;
+    --card-foreground: 220 14% 90%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 220 14% 90%;
+    --primary: 217 91% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 14% 90%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 217 91% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 217 91% 55%;
   }
 }
 
@@ -98,8 +95,69 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .admin-sidebar {
+    background: hsl(var(--admin-sidebar));
+    color: hsl(var(--admin-sidebar-foreground));
+  }
+  .admin-sidebar-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors cursor-pointer;
+    color: hsl(var(--admin-sidebar-foreground));
+  }
+  .admin-sidebar-item:hover {
+    background: hsl(var(--admin-sidebar-hover));
+  }
+  .admin-sidebar-item.active {
+    background: hsl(var(--admin-sidebar-active));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .status-new { @apply bg-blue-100 text-blue-700; }
+  .status-hot { @apply bg-red-100 text-red-700; }
+  .status-lead { @apply bg-amber-100 text-amber-700; }
+  .status-spam { @apply bg-gray-100 text-gray-500; }
+  .status-live { @apply bg-green-100 text-green-700; }
+  .status-demo { @apply bg-purple-100 text-purple-700; }
+  .status-pending { @apply bg-yellow-100 text-yellow-700; }
+  .status-approved { @apply bg-green-100 text-green-700; }
+  .status-rejected { @apply bg-red-100 text-red-700; }
+
+  .terminal-surface {
+    background: hsl(var(--terminal-surface));
+    border-color: hsl(var(--terminal-border));
+    color: hsl(var(--terminal-foreground));
+  }
+
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table th {
+    @apply px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground border-b;
+  }
+  .data-table td {
+    @apply px-4 py-3 border-b;
+  }
+  .data-table tr:hover td {
+    @apply bg-muted/50;
+  }
+
+  .buy-btn {
+    background: hsl(var(--buy-color));
+    color: hsl(var(--primary-foreground));
+    @apply px-6 py-2 rounded font-semibold text-sm;
+  }
+  .sell-btn {
+    background: hsl(var(--sell-color));
+    color: hsl(var(--primary-foreground));
+    @apply px-6 py-2 rounded font-semibold text-sm;
   }
 }
