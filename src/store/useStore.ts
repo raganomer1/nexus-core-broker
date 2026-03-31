@@ -224,6 +224,7 @@ export const useStore = create<AppStore>((set, get) => ({
   updateTradingAccount: (id, updates) => set(s => ({
     tradingAccounts: s.tradingAccounts.map(a => a.id === id ? { ...a, ...updates } : a)
   })),
+  deleteTradingAccount: (id) => set(s => ({ tradingAccounts: s.tradingAccounts.filter(a => a.id !== id) })),
 
   // ==================== POSITIONS ====================
   positions: [...mock.tradingPositions],
