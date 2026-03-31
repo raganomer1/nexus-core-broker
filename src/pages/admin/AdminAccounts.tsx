@@ -147,7 +147,7 @@ export default function AdminAccounts() {
   const getAccountPositions = (accountId: string) => positions.filter(p => p.accountId === accountId);
 
   // Get payments for an account
-  const getAccountPayments = (accountNumber: string) => payments.filter(p => p.accountNumber === accountNumber);
+  const getAccountPayments = (accountId: string) => payments.filter(p => p.accountId === accountId);
 
   const ActionIcons = ({ a }: { a: any }) => (
     <div className="flex gap-0.5">
