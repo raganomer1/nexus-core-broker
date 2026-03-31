@@ -4,12 +4,16 @@ import { AnimatedSection } from "./AnimatedSection";
 import { LayoutDashboard, BarChart3, CreditCard, FileText, Check } from "lucide-react";
 import { useWT } from "@/hooks/useWebsiteTranslation";
 import type { WebsiteTranslationKey } from "@/i18n/websiteTranslations";
+import platformDashboard from "@/assets/platform-dashboard.jpg";
+import platformTerminal from "@/assets/platform-terminal.jpg";
+import platformPayments from "@/assets/platform-payments.jpg";
+import platformAnalytics from "@/assets/platform-analytics.jpg";
 
-const tabKeys: { id: string; icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; featureKeys: WebsiteTranslationKey[] }[] = [
-  { id: "dashboard", icon: LayoutDashboard, titleKey: "platDashTitle", descKey: "platDashDesc", featureKeys: ["platDashF1", "platDashF2", "platDashF3", "platDashF4"] },
-  { id: "terminal", icon: BarChart3, titleKey: "platTermTitle", descKey: "platTermDesc", featureKeys: ["platTermF1", "platTermF2", "platTermF3", "platTermF4"] },
-  { id: "payments", icon: CreditCard, titleKey: "platPayTitle", descKey: "platPayDesc", featureKeys: ["platPayF1", "platPayF2", "platPayF3", "platPayF4"] },
-  { id: "analytics", icon: FileText, titleKey: "platRepTitle", descKey: "platRepDesc", featureKeys: ["platRepF1", "platRepF2", "platRepF3", "platRepF4"] },
+const tabKeys: { id: string; icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; featureKeys: WebsiteTranslationKey[]; image: string }[] = [
+  { id: "dashboard", icon: LayoutDashboard, titleKey: "platDashTitle", descKey: "platDashDesc", featureKeys: ["platDashF1", "platDashF2", "platDashF3", "platDashF4"], image: platformDashboard },
+  { id: "terminal", icon: BarChart3, titleKey: "platTermTitle", descKey: "platTermDesc", featureKeys: ["platTermF1", "platTermF2", "platTermF3", "platTermF4"], image: platformTerminal },
+  { id: "payments", icon: CreditCard, titleKey: "platPayTitle", descKey: "platPayDesc", featureKeys: ["platPayF1", "platPayF2", "platPayF3", "platPayF4"], image: platformPayments },
+  { id: "analytics", icon: FileText, titleKey: "platRepTitle", descKey: "platRepDesc", featureKeys: ["platRepF1", "platRepF2", "platRepF3", "platRepF4"], image: platformAnalytics },
 ];
 
 const PlatformSection = () => {
@@ -67,10 +71,15 @@ const PlatformSection = () => {
               </div>
               <div className="relative">
                 <div className="rounded-3xl border border-border bg-card p-3 shadow-2xl premium-border">
-                  <div className="rounded-2xl bg-gradient-to-br from-muted/80 to-muted aspect-video flex items-center justify-center overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-primary/10 flex items-center justify-center">
-                      <current.icon className="w-20 h-20 text-primary/20" />
-                    </div>
+                  <div className="rounded-2xl overflow-hidden aspect-video">
+                    <img
+                      src={current.image}
+                      alt={w(current.titleKey)}
+                      loading="lazy"
+                      width={1280}
+                      height={720}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
                 <div className="absolute -inset-6 bg-primary/5 rounded-[2rem] blur-3xl -z-10" />
