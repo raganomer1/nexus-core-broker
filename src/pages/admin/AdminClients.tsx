@@ -462,7 +462,7 @@ export default function AdminClients() {
                     <td onClick={e => e.stopPropagation()}>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/admin/clients/${client.id}`)}><Pencil size={13} /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteClient(client.id); toast.success('Клиент удалён'); }}><Trash2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDelete('Удаление клиента', `Удалить клиента ${client.lastName} ${client.firstName}?`, () => { deleteClient(client.id); toast.success('Клиент удалён'); })}><Trash2 size={13} /></Button>
                       </div>
                     </td>
                   </tr>
