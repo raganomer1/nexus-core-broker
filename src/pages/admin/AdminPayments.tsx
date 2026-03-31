@@ -312,7 +312,7 @@ export default function AdminPayments() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={handleSaveEdit}>Сохранить</Button>
                 <Button variant="outline" onClick={() => setEditPayment(null)}>Отмена</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deletePayment(editPayment.id); setEditPayment(null); toast.success('Платёж удалён'); }}>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(editPayment.id); setEditPayment(null); toast.success('Платёж удалён'); })}>
                   <Trash2 size={14} className="mr-1" /> Удалить
                 </Button>
               </div>
