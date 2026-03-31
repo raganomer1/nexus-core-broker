@@ -17,7 +17,7 @@ const RegisterPage = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast({ title: "Account created!", description: "Welcome to Nexus." });
+      toast({ title: "Account created!", description: "Welcome to SPI Trade." });
       navigate("/login");
     }, 1500);
   };
