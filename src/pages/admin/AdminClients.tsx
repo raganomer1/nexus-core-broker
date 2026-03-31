@@ -581,6 +581,7 @@ export default function AdminClients() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }
