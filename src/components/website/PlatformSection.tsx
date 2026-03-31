@@ -9,11 +9,11 @@ import platformTerminal from "@/assets/platform-terminal.jpg";
 import platformPayments from "@/assets/platform-payments.jpg";
 import platformAnalytics from "@/assets/platform-analytics.jpg";
 
-const tabKeys: { id: string; icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; featureKeys: WebsiteTranslationKey[] }[] = [
-  { id: "dashboard", icon: LayoutDashboard, titleKey: "platDashTitle", descKey: "platDashDesc", featureKeys: ["platDashF1", "platDashF2", "platDashF3", "platDashF4"] },
-  { id: "terminal", icon: BarChart3, titleKey: "platTermTitle", descKey: "platTermDesc", featureKeys: ["platTermF1", "platTermF2", "platTermF3", "platTermF4"] },
-  { id: "payments", icon: CreditCard, titleKey: "platPayTitle", descKey: "platPayDesc", featureKeys: ["platPayF1", "platPayF2", "platPayF3", "platPayF4"] },
-  { id: "analytics", icon: FileText, titleKey: "platRepTitle", descKey: "platRepDesc", featureKeys: ["platRepF1", "platRepF2", "platRepF3", "platRepF4"] },
+const tabKeys: { id: string; icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; featureKeys: WebsiteTranslationKey[]; image: string }[] = [
+  { id: "dashboard", icon: LayoutDashboard, titleKey: "platDashTitle", descKey: "platDashDesc", featureKeys: ["platDashF1", "platDashF2", "platDashF3", "platDashF4"], image: platformDashboard },
+  { id: "terminal", icon: BarChart3, titleKey: "platTermTitle", descKey: "platTermDesc", featureKeys: ["platTermF1", "platTermF2", "platTermF3", "platTermF4"], image: platformTerminal },
+  { id: "payments", icon: CreditCard, titleKey: "platPayTitle", descKey: "platPayDesc", featureKeys: ["platPayF1", "platPayF2", "platPayF3", "platPayF4"], image: platformPayments },
+  { id: "analytics", icon: FileText, titleKey: "platRepTitle", descKey: "platRepDesc", featureKeys: ["platRepF1", "platRepF2", "platRepF3", "platRepF4"], image: platformAnalytics },
 ];
 
 const PlatformSection = () => {
