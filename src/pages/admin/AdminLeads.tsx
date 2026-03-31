@@ -436,7 +436,7 @@ export default function AdminLeads() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateLead(editLead.id, editLead); setEditLead(null); toast.success('Лид обновлён'); }}>Сохранить</Button>
                 <Button variant="outline" onClick={() => setEditLead(null)}>Отмена</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${editLead.lastName} ${editLead.firstName}?`, () => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); })}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}
