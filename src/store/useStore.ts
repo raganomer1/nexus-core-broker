@@ -109,8 +109,17 @@ interface AppStore {
 
   // Settings
   clientStatusConfigs: ClientStatusConfig[];
+  addClientStatusConfig: (config: Omit<ClientStatusConfig, 'id'>) => void;
+  updateClientStatusConfig: (id: string, updates: Partial<ClientStatusConfig>) => void;
+  deleteClientStatusConfig: (id: string) => void;
   actionStatusConfigs: ActionStatusConfig[];
+  addActionStatusConfig: (config: Omit<ActionStatusConfig, 'id'>) => void;
+  updateActionStatusConfig: (id: string, updates: Partial<ActionStatusConfig>) => void;
+  deleteActionStatusConfig: (id: string) => void;
   reminderIntervals: ReminderInterval[];
+  addReminderInterval: (interval: Omit<ReminderInterval, 'id'>) => void;
+  updateReminderInterval: (id: string, updates: Partial<ReminderInterval>) => void;
+  deleteReminderInterval: (id: string) => void;
   securitySettings: SecuritySettings;
   updateSecuritySettings: (settings: Partial<SecuritySettings>) => void;
   savedViews: SavedView[];
