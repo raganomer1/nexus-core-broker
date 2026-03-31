@@ -401,6 +401,45 @@ export default function AdminLeads() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={!!editLead} onOpenChange={() => setEditLead(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Редактировать лид</DialogTitle></DialogHeader>
+          {editLead && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'lastName')}</label><Input value={editLead.lastName} onChange={e => setEditLead({ ...editLead, lastName: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'firstName')}</label><Input value={editLead.firstName} onChange={e => setEditLead({ ...editLead, firstName: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'email')}</label><Input value={editLead.email} onChange={e => setEditLead({ ...editLead, email: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'phone')}</label><Input value={editLead.phone || ''} onChange={e => setEditLead({ ...editLead, phone: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'country')}</label><Input value={editLead.country || ''} onChange={e => setEditLead({ ...editLead, country: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'source')}</label><Input value={editLead.source || ''} onChange={e => setEditLead({ ...editLead, source: e.target.value })} /></div>
+              </div>
+              <div><label className="text-xs text-muted-foreground">{t(lang, 'status')}</label>
+                <Select value={editLead.status} onValueChange={v => setEditLead({ ...editLead, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><label className="text-xs text-muted-foreground">{t(lang, 'responsible')}</label>
+                <Select value={editLead.responsibleId || '_none'} onValueChange={v => setEditLead({ ...editLead, responsibleId: v === '_none' ? '' : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">—</SelectItem>
+                    {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-2 border-t">
+                <Button onClick={() => { updateLead(editLead.id, editLead); setEditLead(null); toast.success('Лид обновлён'); }}>Сохранить</Button>
+                <Button variant="outline" onClick={() => setEditLead(null)}>Отмена</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
