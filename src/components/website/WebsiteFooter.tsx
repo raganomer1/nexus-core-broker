@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { useWT } from "@/hooks/useWebsiteTranslation";
+import spiLogo from "@/assets/spi-logo.png";
 
 const WebsiteFooter = () => {
   const w = useWT();
@@ -27,21 +28,19 @@ const WebsiteFooter = () => {
   };
 
   return (
-    <footer className="bg-website-dark text-white">
-      <div className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+    <footer className="bg-website-dark text-white border-t border-white/5">
+      <div className="container mx-auto px-6 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-16">
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-                <span className="text-white font-bold">S</span>
-              </div>
-              <span className="text-xl font-bold">SPI Trade</span>
+            <div className="flex items-center gap-3 mb-6">
+              <img src={spiLogo} alt="SPI Trade" className="h-10 w-auto" loading="lazy" width={40} height={40} />
+              <span className="text-xl font-bold website-section-title">SPI Trade</span>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
+            <p className="text-white/35 text-sm leading-relaxed mb-8 max-w-sm">
               {w("footDesc")}
             </p>
-            <div className="flex flex-col gap-3 text-sm text-gray-400">
-              <a href="mailto:support@spitrade.com" className="flex items-center gap-2 hover:text-primary transition-colors">
+            <div className="flex flex-col gap-3 text-sm text-white/40">
+              <a href="mailto:support@spitrade.com" className="flex items-center gap-2.5 hover:text-primary transition-colors">
                 <Mail className="w-4 h-4" /> support@spitrade.com
               </a>
             </div>
@@ -49,11 +48,11 @@ const WebsiteFooter = () => {
 
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="font-semibold text-sm uppercase tracking-wider mb-5 text-gray-300">{title}</h4>
-              <ul className="flex flex-col gap-3">
+              <h4 className="font-bold text-xs uppercase tracking-[0.15em] mb-6 text-white/60">{title}</h4>
+              <ul className="flex flex-col gap-3.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.href} className="text-sm text-gray-400 hover:text-primary transition-colors">
+                    <Link to={link.href} className="text-sm text-white/35 hover:text-primary transition-colors duration-200">
                       {link.label}
                     </Link>
                   </li>
@@ -63,11 +62,11 @@ const WebsiteFooter = () => {
           ))}
         </div>
 
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500">
+        <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-white/25">
             © 2014–{new Date().getFullYear()} {w("footRights")}
           </p>
-          <p className="text-xs text-gray-600 max-w-xl text-center md:text-right">
+          <p className="text-xs text-white/15 max-w-xl text-center md:text-right leading-relaxed">
             {w("footDisclaimer")}
           </p>
         </div>

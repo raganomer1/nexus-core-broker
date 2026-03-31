@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useWT } from "@/hooks/useWebsiteTranslation";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import spiLogo from "@/assets/spi-logo.png";
 
 const WebsiteHeader = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -36,16 +37,14 @@ const WebsiteHeader = () => {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-black/5"
+          ? "bg-background/80 backdrop-blur-2xl border-b border-border/50 shadow-lg shadow-black/5"
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-6 h-18 flex items-center justify-between py-4">
+      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-            <span className="text-white font-bold text-base">S</span>
-          </div>
-          <span className={`text-xl font-bold tracking-tight transition-colors ${scrolled ? "text-foreground" : "text-white"}`}>
+          <img src={spiLogo} alt="SPI Trade" className="h-10 w-auto" width={40} height={40} />
+          <span className={`text-xl font-bold tracking-tight transition-colors website-section-title ${scrolled ? "text-foreground" : "text-white"}`}>
             SPI Trade
           </span>
         </Link>
@@ -88,7 +87,7 @@ const WebsiteHeader = () => {
             </Button>
           </Link>
           <Link to="/register">
-            <Button size="sm" className="shadow-lg shadow-primary/25">
+            <Button size="sm" className="shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow">
               {w("wOpenAccount")}
             </Button>
           </Link>
@@ -102,6 +101,10 @@ const WebsiteHeader = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-80">
             <div className="flex flex-col gap-2 mt-8">
+              <div className="flex items-center gap-2.5 mb-6 px-4">
+                <img src={spiLogo} alt="SPI Trade" className="h-8 w-auto" loading="lazy" width={32} height={32} />
+                <span className="text-lg font-bold website-section-title">SPI Trade</span>
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
