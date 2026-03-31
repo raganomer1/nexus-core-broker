@@ -504,6 +504,36 @@ export const useStore = create<AppStore>((set, get) => ({
   addSavedView: (view) => set(s => ({ savedViews: [...s.savedViews, { ...view, id: genId() }] })),
   deleteSavedView: (id) => set(s => ({ savedViews: s.savedViews.filter(v => v.id !== id) })),
 
+  // ==================== API INTEGRATIONS ====================
+  apiIntegrations: [],
+  addApiIntegration: (data) => set(s => ({
+    apiIntegrations: [...s.apiIntegrations, {
+      ...data, id: genId(), createdAt: new Date().toISOString(),
+      apiKey: 'ak_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+    }],
+  })),
+  updateApiIntegration: (id, updates) => set(s => ({ apiIntegrations: s.apiIntegrations.map(i => i.id === id ? { ...i, ...updates } : i) })),
+  deleteApiIntegration: (id) => set(s => ({ apiIntegrations: s.apiIntegrations.filter(i => i.id !== id) })),
+
+  // ==================== CLIENT RESTRICTIONS ====================
+  clientRestrictions: [],
+  addClientRestriction: (data) => set(s => ({
+    clientRestrictions: [...s.clientRestrictions, { ...data, id: genId(), createdAt: new Date().toISOString() }],
+  })),
+  updateClientRestriction: (id, updates) => set(s => ({ clientRestrictions: s.clientRestrictions.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteClientRestriction: (id) => set(s => ({ clientRestrictions: s.clientRestrictions.filter(r => r.id !== id) })),
+  getActiveRestriction: (clientId) => {
+    const store = get();
+    const client = store.clients.find(c => c.id === clientId);
+    if (!client) return undefined;
+    return store.clientRestrictions.find(r => {
+      if (!r.isActive) return false;
+      if (r.targetType === 'clients') return r.targetIds.includes(clientId);
+      if (r.targetType === 'desks') return client.deskId ? r.targetIds.includes(client.deskId) : false;
+      return false;
+    });
+  },
+
   // ==================== HELPERS ====================
   getClientById: (id) => get().clients.find(c => c.id === id),
   getEmployeeById: (id) => get().employees.find(e => e.id === id),
