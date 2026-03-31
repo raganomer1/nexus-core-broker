@@ -4,20 +4,24 @@ import { motion } from "framer-motion";
 import { Menu, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Platform", href: "/platform" },
-  { label: "Conditions", href: "/conditions" },
-  { label: "FAQ", href: "/faq" },
-  { label: "Contacts", href: "/contacts" },
-];
+import { useWT } from "@/hooks/useWebsiteTranslation";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 const WebsiteHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const w = useWT();
+  const { lang, toggleLang } = useSettingsStore();
+
+  const navLinks = [
+    { label: w("wHome"), href: "/" },
+    { label: w("wAbout"), href: "/about" },
+    { label: w("wPlatform"), href: "/platform" },
+    { label: w("wConditions"), href: "/conditions" },
+    { label: w("wFAQ"), href: "/faq" },
+    { label: w("wContacts"), href: "/contacts" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -69,9 +73,10 @@ const WebsiteHeader = () => {
             variant="ghost"
             size="sm"
             className={`gap-1.5 ${scrolled ? "" : "text-white/70 hover:text-white hover:bg-white/10"}`}
+            onClick={toggleLang}
           >
             <Globe className="w-4 h-4" />
-            EN
+            {lang === "ru" ? "RU" : "EN"}
           </Button>
           <Link to="/login">
             <Button
@@ -79,12 +84,12 @@ const WebsiteHeader = () => {
               size="sm"
               className={scrolled ? "" : "text-white border-white/20 hover:bg-white/10"}
             >
-              Sign In
+              {w("wSignIn")}
             </Button>
           </Link>
           <Link to="/register">
             <Button size="sm" className="shadow-lg shadow-primary/25">
-              Open Account
+              {w("wOpenAccount")}
             </Button>
           </Link>
         </div>
@@ -112,11 +117,15 @@ const WebsiteHeader = () => {
                 </Link>
               ))}
               <div className="border-t pt-4 mt-4 flex flex-col gap-3">
+                <Button variant="outline" size="sm" onClick={toggleLang} className="w-full gap-2">
+                  <Globe className="w-4 h-4" />
+                  {lang === "ru" ? "English" : "Русский"}
+                </Button>
                 <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button variant="outline" className="w-full">{w("wSignIn")}</Button>
                 </Link>
                 <Link to="/register" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full">Open Account</Button>
+                  <Button className="w-full">{w("wOpenAccount")}</Button>
                 </Link>
               </div>
             </div>

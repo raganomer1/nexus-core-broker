@@ -7,24 +7,25 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, Shield, Zap, BarChart3 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useWT } from "@/hooks/useWebsiteTranslation";
 
 const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const w = useWT();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast({ title: "Account created!", description: "Welcome to SPI Trade." });
+      toast({ title: w("regCreatedTitle"), description: w("regCreatedDesc") });
       navigate("/login");
     }, 1500);
   };
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left panel - branding */}
       <div className="hidden lg:flex flex-col justify-center bg-website-dark relative overflow-hidden p-16">
         <div className="absolute inset-0 hero-grid opacity-20" />
         <motion.div
@@ -40,36 +41,29 @@ const RegisterPage = () => {
             <span className="text-2xl font-bold text-white">SPI Trade</span>
           </Link>
 
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Start Your Trading Journey
-          </h2>
-          <p className="text-gray-400 text-lg leading-relaxed mb-12">
-            Join thousands of traders worldwide who trust SPI Trade for access to global financial markets.
-          </p>
+          <h2 className="text-3xl font-bold text-white mb-4">{w("regTitle")}</h2>
+          <p className="text-gray-400 text-lg leading-relaxed mb-12">{w("regDesc")}</p>
 
           <div className="space-y-6">
             {[
-              { icon: Zap, text: "Lightning-fast execution" },
-              { icon: BarChart3, text: "1,200+ trading instruments" },
-              { icon: Shield, text: "Bank-grade security" },
+              { icon: Zap, textKey: "regFastExec" as const },
+              { icon: BarChart3, textKey: "regInstruments" as const },
+              { icon: Shield, textKey: "regSecurity" as const },
             ].map((item) => (
-              <div key={item.text} className="flex items-center gap-3 text-gray-300">
+              <div key={item.textKey} className="flex items-center gap-3 text-gray-300">
                 <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                   <item.icon className="w-5 h-5 text-primary" />
                 </div>
-                <span>{item.text}</span>
+                <span>{w(item.textKey)}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right panel - form */}
       <div className="flex items-center justify-center p-8 pt-24 lg:pt-8 bg-background">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
@@ -81,55 +75,53 @@ const RegisterPage = () => {
             </Link>
           </div>
 
-          <h1 className="text-2xl font-bold text-foreground mb-2">Create Account</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{w("regCreateTitle")}</h1>
           <p className="text-muted-foreground mb-8">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline font-medium">Sign in</Link>
+            {w("regHaveAccount")}{" "}
+            <Link to="/login" className="text-primary hover:underline font-medium">{w("wSignIn")}</Link>
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>First Name</Label>
+                <Label>{w("regFirstName")}</Label>
                 <Input required placeholder="John" />
               </div>
               <div className="space-y-2">
-                <Label>Last Name</Label>
+                <Label>{w("regLastName")}</Label>
                 <Input required placeholder="Doe" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{w("regEmail")}</Label>
               <Input required type="email" placeholder="john@example.com" />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{w("regPhone")}</Label>
               <Input required type="tel" placeholder="+1 234 567 890" />
             </div>
             <div className="space-y-2">
-              <Label>Password</Label>
-              <Input required type="password" placeholder="Min. 8 characters" />
+              <Label>{w("regPassword")}</Label>
+              <Input required type="password" placeholder={w("regPasswordPlaceholder")} />
             </div>
 
             <div className="flex items-start gap-2">
               <Checkbox id="terms" required className="mt-1" />
               <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
-                I agree to the{" "}
-                <a href="#" className="text-primary hover:underline">Terms of Service</a>
-                {" "}and{" "}
-                <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                {w("regAgree")}{" "}
+                <a href="#" className="text-primary hover:underline">{w("regTerms")}</a>
+                {" "}{w("regAnd")}{" "}
+                <a href="#" className="text-primary hover:underline">{w("regPrivacy")}</a>
               </label>
             </div>
 
             <Button type="submit" size="lg" className="w-full gap-2" disabled={loading}>
-              {loading ? "Creating Account..." : "Open Account"}
+              {loading ? w("regCreating") : w("wOpenAccount")}
               {!loading && <ArrowRight className="w-4 h-4" />}
             </Button>
           </form>
 
-          <p className="text-xs text-muted-foreground mt-6 text-center">
-            Trading involves significant risk. Please ensure you understand the risks involved.
-          </p>
+          <p className="text-xs text-muted-foreground mt-6 text-center">{w("regRisk")}</p>
         </motion.div>
       </div>
     </div>
