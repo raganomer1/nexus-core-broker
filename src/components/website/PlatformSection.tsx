@@ -4,6 +4,10 @@ import { AnimatedSection } from "./AnimatedSection";
 import { LayoutDashboard, BarChart3, CreditCard, FileText, Check } from "lucide-react";
 import { useWT } from "@/hooks/useWebsiteTranslation";
 import type { WebsiteTranslationKey } from "@/i18n/websiteTranslations";
+import platformDashboard from "@/assets/platform-dashboard.jpg";
+import platformTerminal from "@/assets/platform-terminal.jpg";
+import platformPayments from "@/assets/platform-payments.jpg";
+import platformAnalytics from "@/assets/platform-analytics.jpg";
 
 const tabKeys: { id: string; icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; featureKeys: WebsiteTranslationKey[] }[] = [
   { id: "dashboard", icon: LayoutDashboard, titleKey: "platDashTitle", descKey: "platDashDesc", featureKeys: ["platDashF1", "platDashF2", "platDashF3", "platDashF4"] },
