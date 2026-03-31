@@ -91,7 +91,9 @@ interface AppStore {
   messages: SupportMessage[];
   addTicket: (ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'lastMessageAt' | 'status'>) => void;
   addMessage: (message: Omit<SupportMessage, 'id' | 'createdAt'>) => void;
+  updateTicket: (id: string, updates: Partial<SupportTicket>) => void;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
+  deleteTicket: (id: string) => void;
 
   // Verification
   verificationRequests: VerificationRequest[];
