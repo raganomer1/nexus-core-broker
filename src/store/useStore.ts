@@ -35,6 +35,7 @@ interface AppStore {
   leads: Lead[];
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
   updateLead: (id: string, updates: Partial<Lead>) => void;
+  deleteLead: (id: string) => void;
   convertLeadToClient: (leadId: string) => void;
 
   // Employees
