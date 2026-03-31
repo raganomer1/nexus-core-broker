@@ -400,7 +400,7 @@ export default function AdminClients() {
                   <FieldRow label="Статус" required>
                     <Select value={nc.status} onValueChange={v => setNc('status', v)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>{['New','Hot','Cold','Lead','Live','Demo','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectContent>{['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </FieldRow>
                   <FieldRow label="Affiliate ID"><Input className="h-8 text-sm" value={nc.affiliateId} onChange={e => setNc('affiliateId', e.target.value)} /></FieldRow>
