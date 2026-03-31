@@ -473,8 +473,17 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ==================== SETTINGS ====================
   clientStatusConfigs: [...mock.clientStatusConfigs],
+  addClientStatusConfig: (config) => set(s => ({ clientStatusConfigs: [...s.clientStatusConfigs, { ...config, id: genId() }] })),
+  updateClientStatusConfig: (id, updates) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
+  deleteClientStatusConfig: (id) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.filter(c => c.id !== id) })),
   actionStatusConfigs: [...mock.actionStatusConfigs],
+  addActionStatusConfig: (config) => set(s => ({ actionStatusConfigs: [...s.actionStatusConfigs, { ...config, id: genId() }] })),
+  updateActionStatusConfig: (id, updates) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
+  deleteActionStatusConfig: (id) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.filter(c => c.id !== id) })),
   reminderIntervals: [...mock.reminderIntervals],
+  addReminderInterval: (interval) => set(s => ({ reminderIntervals: [...s.reminderIntervals, { ...interval, id: genId() }] })),
+  updateReminderInterval: (id, updates) => set(s => ({ reminderIntervals: s.reminderIntervals.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteReminderInterval: (id) => set(s => ({ reminderIntervals: s.reminderIntervals.filter(r => r.id !== id) })),
   securitySettings: { ...mock.defaultSecuritySettings },
   updateSecuritySettings: (settings) => set(s => ({ securitySettings: { ...s.securitySettings, ...settings } })),
   savedViews: [...mock.savedViews],
