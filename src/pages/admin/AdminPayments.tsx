@@ -16,6 +16,7 @@ import TablePagination from '@/components/TablePagination';
 
 export default function AdminPayments() {
   const { payments, clients, tradingAccounts, employees, updatePaymentStatus, updatePayment, deletePayment, auth } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'All'>('All');

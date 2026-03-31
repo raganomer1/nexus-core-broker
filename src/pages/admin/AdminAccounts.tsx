@@ -17,6 +17,7 @@ import TablePagination from '@/components/TablePagination';
 
 export default function AdminAccounts() {
   const { tradingAccounts, clients, employees, positions, payments, addTradingAccount, updateTradingAccount, deleteTradingAccount, addPayment, addHistoryEvent, auth } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
