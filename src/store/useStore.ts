@@ -80,6 +80,8 @@ interface AppStore {
   payments: PaymentRequest[];
   paymentMethods: PaymentMethod[];
   addPayment: (payment: Omit<PaymentRequest, 'id' | 'createdAt' | 'status'>) => void;
+  updatePayment: (id: string, updates: Partial<PaymentRequest>) => void;
+  deletePayment: (id: string) => void;
   updatePaymentStatus: (id: string, status: PaymentStatus, processedBy?: string) => void;
 
   // Support
