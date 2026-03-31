@@ -181,6 +181,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const lead = { ...data, id: genId(), createdAt: new Date().toISOString() };
     set(s => ({ leads: [...s.leads, lead as Lead] }));
   },
+  updateLead: (id, updates) => set(s => ({ leads: s.leads.map(l => l.id === id ? { ...l, ...updates } : l) })),
   deleteLead: (id) => set(s => ({ leads: s.leads.filter(l => l.id !== id) })),
   convertLeadToClient: (leadId) => {
     const lead = get().leads.find(l => l.id === leadId);
