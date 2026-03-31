@@ -264,7 +264,7 @@ export default function AdminPayments() {
                   <Button size="sm" variant="outline" onClick={() => { setDetailPayment(null); setEditPayment({ ...detailPayment }); }}>
                     <Edit2 size={14} className="mr-1" /> Редактировать
                   </Button>
-                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive ml-auto" onClick={() => { deletePayment(detailPayment.id); setDetailPayment(null); toast.success('Платёж удалён'); }}>
+                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive ml-auto" onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(detailPayment.id); setDetailPayment(null); toast.success('Платёж удалён'); })}>
                     <Trash2 size={14} className="mr-1" /> Удалить
                   </Button>
                 </div>
