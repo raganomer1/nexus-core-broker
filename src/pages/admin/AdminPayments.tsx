@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Check, X, Clock, Filter, Trash2, Edit2 } from 'lucide-react';
+import { Search, Check, X, Clock, Filter, Trash2, Edit2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,9 +13,11 @@ import { PaymentStatus, PaymentRequest } from '@/types';
 import { toast } from 'sonner';
 import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
+import { exportPaymentsToXlsx } from '@/lib/xlsxUtils';
 
 export default function AdminPayments() {
   const { payments, clients, tradingAccounts, employees, updatePaymentStatus, updatePayment, deletePayment, auth } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'All'>('All');
@@ -93,7 +96,10 @@ export default function AdminPayments() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'payments')}</h1>
-        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportPaymentsToXlsx(filtered, (id) => { const c = clients.find(cl => cl.id === id); return c ? `${c.lastName} ${c.firstName}` : '—'; })}><Download size={14} className="mr-1" />Excel</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+        </div>
       </div>
 
       <div className="flex gap-1 mb-4 flex-wrap">
@@ -195,7 +201,7 @@ export default function AdminPayments() {
                           </>
                         )}
                         <button onClick={() => setEditPayment({ ...p })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Редактировать"><Edit2 size={14} /></button>
-                        <button onClick={() => { deletePayment(p.id); toast.success('Платёж удалён'); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить"><Trash2 size={14} /></button>
+                        <button onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(p.id); toast.success('Платёж удалён'); })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -262,7 +268,7 @@ export default function AdminPayments() {
                   <Button size="sm" variant="outline" onClick={() => { setDetailPayment(null); setEditPayment({ ...detailPayment }); }}>
                     <Edit2 size={14} className="mr-1" /> Редактировать
                   </Button>
-                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive ml-auto" onClick={() => { deletePayment(detailPayment.id); setDetailPayment(null); toast.success('Платёж удалён'); }}>
+                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive ml-auto" onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(detailPayment.id); setDetailPayment(null); toast.success('Платёж удалён'); })}>
                     <Trash2 size={14} className="mr-1" /> Удалить
                   </Button>
                 </div>
@@ -310,7 +316,7 @@ export default function AdminPayments() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={handleSaveEdit}>Сохранить</Button>
                 <Button variant="outline" onClick={() => setEditPayment(null)}>Отмена</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deletePayment(editPayment.id); setEditPayment(null); toast.success('Платёж удалён'); }}>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(editPayment.id); setEditPayment(null); toast.success('Платёж удалён'); })}>
                   <Trash2 size={14} className="mr-1" /> Удалить
                 </Button>
               </div>
@@ -318,6 +324,7 @@ export default function AdminPayments() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }

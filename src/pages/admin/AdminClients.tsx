@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays, Settings2, Pencil, Save, MoreHorizontal } from 'lucide-react';
@@ -65,6 +66,7 @@ const FieldRow = ({ label, required, children }: { label: string; required?: boo
 export default function AdminClients() {
   const navigate = useNavigate();
   const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -383,7 +385,7 @@ export default function AdminClients() {
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
               <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
             </Select>
-            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); }}>
+            <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => confirmDelete('Удаление клиентов', `Удалить ${selected.size} выбранных клиентов? Это действие нельзя отменить.`, () => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); })}>
               <Trash2 size={12} className="mr-1" /> Удалить
             </Button>
           </div>
@@ -460,7 +462,7 @@ export default function AdminClients() {
                     <td onClick={e => e.stopPropagation()}>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/admin/clients/${client.id}`)}><Pencil size={13} /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteClient(client.id); toast.success('Клиент удалён'); }}><Trash2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDelete('Удаление клиента', `Удалить клиента ${client.lastName} ${client.firstName}?`, () => { deleteClient(client.id); toast.success('Клиент удалён'); })}><Trash2 size={13} /></Button>
                       </div>
                     </td>
                   </tr>
@@ -579,6 +581,7 @@ export default function AdminClients() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }

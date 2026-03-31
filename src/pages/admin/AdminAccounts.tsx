@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
@@ -16,6 +17,7 @@ import TablePagination from '@/components/TablePagination';
 
 export default function AdminAccounts() {
   const { tradingAccounts, clients, employees, positions, payments, addTradingAccount, updateTradingAccount, deleteTradingAccount, addPayment, addHistoryEvent, auth } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
@@ -163,7 +165,7 @@ export default function AdminAccounts() {
       <button onClick={() => setEditAccount({ ...a })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Редактировать">
         <Edit2 size={14} />
       </button>
-      <button onClick={() => { deleteTradingAccount(a.id); toast.success('Счёт удалён'); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить">
+      <button onClick={() => confirmDelete('Удаление счёта', `Удалить счёт ${a.accountNumber}?`, () => { deleteTradingAccount(a.id); toast.success('Счёт удалён'); })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить">
         <X size={14} />
       </button>
     </div>
@@ -346,7 +348,7 @@ export default function AdminAccounts() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); toast.success('Счёт обновлён'); }}>{t(lang, 'save')}</Button>
                 <Button variant="outline" onClick={() => setEditAccount(null)}>{t(lang, 'cancel')}</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deleteTradingAccount(editAccount.id); setEditAccount(null); toast.success('Счёт удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление счёта', `Удалить счёт ${editAccount.accountNumber}?`, () => { deleteTradingAccount(editAccount.id); setEditAccount(null); toast.success('Счёт удалён'); })}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}
@@ -577,6 +579,7 @@ export default function AdminAccounts() {
           })()}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }

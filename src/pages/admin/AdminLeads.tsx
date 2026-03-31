@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
@@ -46,6 +47,7 @@ const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
 
 export default function AdminLeads() {
   const { leads, employees, addLead, updateLead, deleteLead, convertLeadToClient } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const [editLead, setEditLead] = useState<any>(null);
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
@@ -301,7 +303,7 @@ export default function AdminLeads() {
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => setEditLead({ ...lead })}><Pencil size={14} /></Button>
                   <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${lead.lastName} ${lead.firstName}?`, () => { deleteLead(lead.id); toast.success('Лид удалён'); })}><Trash2 size={14} /></Button>
                 </div>
               </div>
             </div>
@@ -342,7 +344,7 @@ export default function AdminLeads() {
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditLead({ ...lead })}><Pencil size={13} /></Button>
                         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={13} /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${lead.lastName} ${lead.firstName}?`, () => { deleteLead(lead.id); toast.success('Лид удалён'); })}><Trash2 size={13} /></Button>
                       </div>
                     </td>
                   </tr>
@@ -434,12 +436,13 @@ export default function AdminLeads() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateLead(editLead.id, editLead); setEditLead(null); toast.success('Лид обновлён'); }}>Сохранить</Button>
                 <Button variant="outline" onClick={() => setEditLead(null)}>Отмена</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${editLead.lastName} ${editLead.firstName}?`, () => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); })}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }
