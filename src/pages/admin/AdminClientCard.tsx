@@ -258,7 +258,7 @@ export default function AdminClientCard() {
             <div className="flex gap-2 pt-2">
               <Button onClick={() => {
                 if (auth.employeeId) {
-                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: actionData.type, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: actionData.description });
+                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
                   toast.success('Действие добавлено');
                   setShowAction(false);
                   setActionData({ type: 'Phone call', description: '', responsibleId: '' });
