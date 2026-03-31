@@ -304,7 +304,6 @@ export default function AdminLeads() {
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={14} /></Button>
                 </div>
               </div>
-              </div>
             </div>
           );
         })}
