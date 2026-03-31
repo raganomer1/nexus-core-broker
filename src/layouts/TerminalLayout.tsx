@@ -32,7 +32,7 @@ export default function TerminalLayout() {
     const interval = setInterval(() => {
       simulatePriceMovement();
       checkOverrideExpiry();
-    }, 3000);
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
