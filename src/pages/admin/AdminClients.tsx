@@ -13,21 +13,7 @@ import { toast } from 'sonner';
 import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
 
-const statusTabs: { label: string; value: ClientStatus | 'All' }[] = [
-  { label: 'Все', value: 'All' },
-  { label: 'New', value: 'New' },
-  { label: 'Hot', value: 'Hot' },
-  { label: 'Warm', value: 'Warm' },
-  { label: 'Cold', value: 'Cold' },
-  { label: 'Lead', value: 'Lead' },
-  { label: 'Live', value: 'Live' },
-  { label: 'Demo', value: 'Demo' },
-  { label: 'Call Back', value: 'Call Back' },
-  { label: 'No potential', value: 'No potential' },
-  { label: 'Not intr.', value: 'Not interesting' },
-  { label: 'No answer', value: 'No answer' },
-  { label: 'Spam', value: 'Spam' },
-];
+const allStatuses: ClientStatus[] = ['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'];
 
 const statusColors: Record<string, string> = {
   New: 'status-new', Hot: 'status-hot', Warm: 'bg-orange-100 text-orange-700',
@@ -37,6 +23,26 @@ const statusColors: Record<string, string> = {
   'No potential': 'bg-slate-100 text-slate-600', 'Call Back': 'bg-indigo-100 text-indigo-700',
 };
 
+interface SavedFilter {
+  id: string;
+  label: string;
+  statuses: ClientStatus[];
+  managerId: string;
+  deskId: string;
+  country: string;
+  verification: string;
+  deposit: string;
+  dateFrom: string;
+  dateTo: string;
+  source: string;
+  affiliateId: string;
+}
+
+const defaultFilters: SavedFilter[] = [
+  { id: 'all', label: 'Все', statuses: [], managerId: '', deskId: '', country: '', verification: '', deposit: '', dateFrom: '', dateTo: '', source: '', affiliateId: '' },
+  ...allStatuses.map(s => ({ id: s, label: s === 'Not interesting' ? 'Not intr.' : s, statuses: [s], managerId: '', deskId: '', country: '', verification: '', deposit: '', dateFrom: '', dateTo: '', source: '', affiliateId: '' })),
+];
+
 const emptyClient = {
   salutation: '', lastName: '', firstName: '', middleName: '', deskId: '', responsibleId: '',
   status: 'New' as ClientStatus, affiliateId: '', country: '', region: '', city: '', zip: '',
@@ -45,31 +51,25 @@ const emptyClient = {
   type: 'Lead' as const,
 };
 
-const FieldRow = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
-  <div className="flex items-center gap-3">
-    <label className="text-xs text-muted-foreground w-28 shrink-0">{label}{required && <span className="text-destructive ml-0.5">*</span>}</label>
-    <div className="flex-1">{children}</div>
-  </div>
-);
+const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
+  label: '', statuses: [], managerId: '', deskId: '', country: '', verification: '', deposit: '', dateFrom: '', dateTo: '', source: '', affiliateId: '',
+});
 
 export default function AdminClients() {
   const navigate = useNavigate();
   const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ClientStatus | 'All'>('All');
   const [showCreate, setShowCreate] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [contactsVisible, setContactsVisible] = useState<Set<string>>(new Set());
 
-  // Advanced filters
-  const [filterManager, setFilterManager] = useState('All');
-  const [filterCountry, setFilterCountry] = useState('');
-  const [filterDesk, setFilterDesk] = useState('All');
-  const [filterVerification, setFilterVerification] = useState('All');
-  const [filterDeposit, setFilterDeposit] = useState('All'); // All | HasDeposit | NoDeposit
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
+  // Saved filters (custom views)
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(defaultFilters);
+  const [activeFilterId, setActiveFilterId] = useState('all');
+  const [editingFilter, setEditingFilter] = useState<SavedFilter | null>(null);
+  const [showFilterEditor, setShowFilterEditor] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const [newClient, setNewClient] = useState({ ...emptyClient });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,22 +89,31 @@ export default function AdminClients() {
 
   const countries = useMemo(() => [...new Set(clients.map(c => c.country).filter(Boolean))].sort(), [clients]);
 
-  const filtered = useMemo(() => {
-    let result = clients;
-    if (statusFilter !== 'All') result = result.filter(c => c.status === statusFilter);
-    if (filterManager !== 'All') result = result.filter(c => c.responsibleId === filterManager);
-    if (filterDesk !== 'All') result = result.filter(c => c.deskId === filterDesk);
-    if (filterCountry) result = result.filter(c => c.country?.toLowerCase().includes(filterCountry.toLowerCase()));
-    if (filterVerification !== 'All') result = result.filter(c => c.verificationStatus === filterVerification);
-    if (filterDeposit === 'HasDeposit') {
-      const clientsWithDeposit = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
-      result = result.filter(c => clientsWithDeposit.has(c.id));
-    } else if (filterDeposit === 'NoDeposit') {
-      const clientsWithDeposit = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
-      result = result.filter(c => !clientsWithDeposit.has(c.id));
+  const activeFilter = savedFilters.find(f => f.id === activeFilterId) || savedFilters[0];
+
+  const applyFilter = useCallback((f: SavedFilter, list: typeof clients) => {
+    let result = list;
+    if (f.statuses.length > 0) result = result.filter(c => f.statuses.includes(c.status));
+    if (f.managerId) result = result.filter(c => c.responsibleId === f.managerId);
+    if (f.deskId) result = result.filter(c => c.deskId === f.deskId);
+    if (f.country) result = result.filter(c => c.country?.toLowerCase().includes(f.country.toLowerCase()));
+    if (f.verification) result = result.filter(c => c.verificationStatus === f.verification);
+    if (f.deposit === 'HasDeposit') {
+      const withDep = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
+      result = result.filter(c => withDep.has(c.id));
+    } else if (f.deposit === 'NoDeposit') {
+      const withDep = new Set(tradingAccounts.filter(a => a.deposited > 0).map(a => a.clientId));
+      result = result.filter(c => !withDep.has(c.id));
     }
-    if (filterDateFrom) result = result.filter(c => c.createdAt >= filterDateFrom);
-    if (filterDateTo) result = result.filter(c => c.createdAt <= filterDateTo);
+    if (f.dateFrom) result = result.filter(c => c.createdAt >= f.dateFrom);
+    if (f.dateTo) result = result.filter(c => c.createdAt <= f.dateTo);
+    if (f.source) result = result.filter(c => c.source?.toLowerCase().includes(f.source.toLowerCase()));
+    if (f.affiliateId) result = result.filter(c => c.affiliateId?.toLowerCase().includes(f.affiliateId.toLowerCase()));
+    return result;
+  }, [tradingAccounts]);
+
+  const filtered = useMemo(() => {
+    let result = applyFilter(activeFilter, clients);
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(c =>
@@ -113,7 +122,9 @@ export default function AdminClients() {
       );
     }
     return result;
-  }, [clients, statusFilter, search, filterManager, filterDesk, filterCountry, filterVerification, filterDeposit, filterDateFrom, filterDateTo, tradingAccounts]);
+  }, [clients, activeFilter, search, applyFilter]);
+
+  const getFilterCount = useCallback((f: SavedFilter) => applyFilter(f, clients).length, [applyFilter, clients]);
 
   const toggleContact = (id: string) => {
     setContactsVisible(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -133,13 +144,35 @@ export default function AdminClients() {
     else setSelected(new Set(filtered.map(c => c.id)));
   };
 
-  const clearFilters = () => {
-    setFilterManager('All'); setFilterCountry(''); setFilterDesk('All');
-    setFilterVerification('All'); setFilterDeposit('All');
-    setFilterDateFrom(''); setFilterDateTo('');
+  const handleSaveFilter = () => {
+    if (!editingFilter) return;
+    if (!editingFilter.label.trim()) { toast.error('Введите название'); return; }
+    if (editingFilter.id) {
+      setSavedFilters(prev => prev.map(f => f.id === editingFilter.id ? editingFilter : f));
+    } else {
+      const newF = { ...editingFilter, id: `custom-${Date.now()}` };
+      setSavedFilters(prev => [...prev, newF]);
+      setActiveFilterId(newF.id);
+    }
+    setShowFilterEditor(false);
+    setEditingFilter(null);
+    toast.success('Фильтр сохранён');
   };
 
-  const hasActiveFilters = filterManager !== 'All' || filterCountry || filterDesk !== 'All' || filterVerification !== 'All' || filterDeposit !== 'All' || filterDateFrom || filterDateTo;
+  const handleDeleteFilter = (fId: string) => {
+    setSavedFilters(prev => prev.filter(f => f.id !== fId));
+    if (activeFilterId === fId) setActiveFilterId('all');
+    toast.success('Фильтр удалён');
+  };
+
+  const handleRename = (fId: string) => {
+    setSavedFilters(prev => prev.map(f => f.id === fId ? { ...f, label: renameValue } : f));
+    setRenamingId(null);
+    setRenameValue('');
+  };
+
+  const isCustom = (fId: string) => fId.startsWith('custom-');
+  const isDefault = (fId: string) => !fId.startsWith('custom-');
 
   const { paginated, page, setPage, perPage, setPerPage, totalPages, toggleSort, sortIcon } = useTableControls(filtered);
 
