@@ -459,6 +459,7 @@ export const useStore = create<AppStore>((set, get) => ({
       clients: s.clients.map(c => c.id === req.clientId ? { ...c, verificationStatus: status } : c),
     }));
   },
+  deleteVerificationRequest: (id) => set(s => ({ verificationRequests: s.verificationRequests.filter(r => r.id !== id) })),
 
   // ==================== HISTORY ====================
   history: [...mock.historyEvents],
