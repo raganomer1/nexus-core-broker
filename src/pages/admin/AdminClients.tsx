@@ -268,7 +268,7 @@ export default function AdminClients() {
           <div className="flex flex-wrap gap-2">
             <Select onValueChange={v => { selected.forEach(id => updateClient(id, { status: v as ClientStatus })); toast.success(`Статус изменён у ${selected.size} клиентов`); setSelected(new Set()); }}>
               <SelectTrigger className="w-36 h-8 text-xs"><Tag size={12} className="mr-1" /><SelectValue placeholder="Сменить статус" /></SelectTrigger>
-              <SelectContent>{['New', 'Hot', 'Lead', 'Live', 'Demo', 'Cold', 'Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
             <Select onValueChange={v => { selected.forEach(id => updateClient(id, { responsibleId: v })); const emp = employees.find(e => e.id === v); toast.success(`Ответственный: ${emp?.firstName} ${emp?.lastName}`); setSelected(new Set()); }}>
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
