@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
+import { ResizableTh } from '@/components/ResizableTableHeader';
 
 export default function AdminTrading() {
   const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice } = useStore();
