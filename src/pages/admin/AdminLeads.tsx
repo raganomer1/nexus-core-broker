@@ -45,7 +45,8 @@ const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
 });
 
 export default function AdminLeads() {
-  const { leads, employees, addLead, convertLeadToClient } = useStore();
+  const { leads, employees, addLead, updateLead, deleteLead, convertLeadToClient } = useStore();
+  const [editLead, setEditLead] = useState<any>(null);
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
