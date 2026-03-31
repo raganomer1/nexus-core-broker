@@ -4,6 +4,7 @@ import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
 import { ThemeLangToggle } from '@/components/ThemeLangToggle';
+import { Button } from '@/components/ui/button';
 import {
   Home, CreditCard, MessageSquare, User, ChevronDown, ChevronRight, LogOut,
   TrendingUp, DollarSign, ArrowDownCircle, ArrowUpCircle, RefreshCw, Clock, Menu, X
