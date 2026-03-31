@@ -33,7 +33,23 @@ export function exportLeadsToXlsx(leads: Lead[]) {
   downloadXlsx(data, 'leads');
 }
 
-function downloadXlsx(data: Record<string, string>[], name: string) {
+export function exportPaymentsToXlsx(payments: PaymentRequest[], getClientName: (id: string) => string) {
+  const data = payments.map(p => ({
+    'ID': p.id,
+    'Дата': new Date(p.createdAt).toLocaleString(),
+    'Клиент': getClientName(p.clientId),
+    'Тип': p.type,
+    'Сумма': p.amount,
+    'Валюта': p.currency,
+    'Метод': p.paymentMethod,
+    'Статус': p.status,
+    'Кошелёк': p.wallet || '',
+    'Комментарий': p.comment || '',
+  }));
+  downloadXlsx(data, 'payments');
+}
+
+function downloadXlsx(data: Record<string, string | number>[], name: string) {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, name);
