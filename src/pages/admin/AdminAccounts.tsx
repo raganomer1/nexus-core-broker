@@ -557,8 +557,8 @@ export default function AdminAccounts() {
                             <td className="whitespace-nowrap">{new Date(p.createdAt).toLocaleString('ru-RU')}</td>
                             <td><span className={p.type === 'Deposit' ? 'text-emerald-600 font-medium' : 'text-destructive font-medium'}>{p.type === 'Deposit' ? 'Пополнение' : 'Вывод'}</span></td>
                             <td className="font-semibold">{p.type === 'Deposit' ? '+' : '-'}{p.amount.toFixed(2)} {p.currency}</td>
-                            <td>{p.method || '—'}</td>
-                            <td><span className={`status-badge ${p.status === 'Completed' ? 'status-live' : p.status === 'Pending' ? 'status-pending' : 'status-rejected'}`}>{p.status}</span></td>
+                            <td>{p.paymentMethod || '—'}</td>
+                            <td><span className={`status-badge ${p.status === 'Approved' ? 'status-live' : p.status === 'Pending' ? 'status-pending' : 'status-rejected'}`}>{p.status}</span></td>
                             <td className="text-muted-foreground">{(p as any).comment || '—'}</td>
                           </tr>
                         ))}
