@@ -38,6 +38,13 @@ const emptyClient = {
   type: 'Lead' as const,
 };
 
+const FieldRow = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+  <div className="flex items-center gap-3">
+    <label className="text-xs text-muted-foreground w-28 shrink-0">{label}{required && <span className="text-destructive ml-0.5">*</span>}</label>
+    <div className="flex-1">{children}</div>
+  </div>
+);
+
 export default function AdminClients() {
   const navigate = useNavigate();
   const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
@@ -342,87 +349,109 @@ export default function AdminClients() {
         <TablePagination page={page} totalPages={totalPages} total={filtered.length} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} selectedCount={selected.size} />
       </div>
 
-      {/* Create Client Dialog — Multi-block structured form */}
+      {/* Create Client — Full page form matching screenshot layout */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
-          <DialogHeader><DialogTitle>Новый клиент</DialogTitle></DialogHeader>
-          <div className="space-y-5">
-            {/* 1. General Information */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-primary">Общая информация</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div><label className="text-xs text-muted-foreground">Обращение</label>
-                  <Select value={nc.salutation} onValueChange={v => setNc('salutation', v)}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent><SelectItem value="Mr">Mr</SelectItem><SelectItem value="Mrs">Mrs</SelectItem><SelectItem value="Ms">Ms</SelectItem></SelectContent>
-                  </Select>
+        <DialogContent className="max-w-[95vw] w-[1400px] h-[85vh] flex flex-col p-0 gap-0 mx-4">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-6 py-3 border-b shrink-0">
+            <DialogTitle className="text-base font-semibold">Новый клиент</DialogTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="text-primary border-primary/30" onClick={handleCreate}>Сохранить</Button>
+              <Button variant="outline" size="sm" onClick={() => { handleCreate(); }}>Сохранить и закрыть</Button>
+              <Button variant="outline" size="sm" onClick={() => setShowCreate(false)}>Отмена</Button>
+            </div>
+          </div>
+
+          {/* Form body — 3 columns + description, no scroll */}
+          <div className="flex-1 overflow-hidden p-6 flex flex-col gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1 min-h-0">
+              {/* Column 1: General */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-4">Общая информация</h3>
+                <div className="space-y-3">
+                  <FieldRow label="Обращение">
+                    <Select value={nc.salutation} onValueChange={v => setNc('salutation', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent><SelectItem value="Mr">Mr</SelectItem><SelectItem value="Mrs">Mrs</SelectItem><SelectItem value="Ms">Ms</SelectItem></SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Фамилия"><Input className="h-8 text-sm" value={nc.lastName} onChange={e => setNc('lastName', e.target.value)} /></FieldRow>
+                  <FieldRow label="Имя" required><Input className="h-8 text-sm" value={nc.firstName} onChange={e => setNc('firstName', e.target.value)} /></FieldRow>
+                  <FieldRow label="Отчество"><Input className="h-8 text-sm" value={nc.middleName} onChange={e => setNc('middleName', e.target.value)} /></FieldRow>
+                  <FieldRow label="Деск" required>
+                    <Select value={nc.deskId} onValueChange={v => setNc('deskId', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Выберите" /></SelectTrigger>
+                      <SelectContent>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Ответственный">
+                    <Select value={nc.responsibleId} onValueChange={v => setNc('responsibleId', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Выберите" /></SelectTrigger>
+                      <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Статус" required>
+                    <Select value={nc.status} onValueChange={v => setNc('status', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>{['New','Hot','Cold','Lead','Live','Demo','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Affiliate ID"><Input className="h-8 text-sm" value={nc.affiliateId} onChange={e => setNc('affiliateId', e.target.value)} /></FieldRow>
                 </div>
-                <div><label className="text-xs text-muted-foreground">Фамилия *</label><Input value={nc.lastName} onChange={e => setNc('lastName', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Имя *</label><Input value={nc.firstName} onChange={e => setNc('firstName', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Отчество</label><Input value={nc.middleName} onChange={e => setNc('middleName', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Desk</label>
-                  <Select value={nc.deskId} onValueChange={v => setNc('deskId', v)}>
-                    <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
-                    <SelectContent>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-                  </Select>
+              </div>
+
+              {/* Column 2: Contacts */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-4">Контактная информация</h3>
+                <div className="space-y-3">
+                  <FieldRow label="Страна">
+                    <Select value={nc.country} onValueChange={v => setNc('country', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Default" /></SelectTrigger>
+                      <SelectContent>
+                        {['Russia','United States','United Kingdom','Germany','France','China','Japan','Turkey','UAE','Cyprus','Default'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Регион"><Input className="h-8 text-sm" value={nc.region} onChange={e => setNc('region', e.target.value)} /></FieldRow>
+                  <FieldRow label="Город"><Input className="h-8 text-sm" value={nc.city} onChange={e => setNc('city', e.target.value)} /></FieldRow>
+                  <FieldRow label="Индекс"><Input className="h-8 text-sm" value={nc.zip} onChange={e => setNc('zip', e.target.value)} /></FieldRow>
+                  <FieldRow label="Адрес"><Input className="h-8 text-sm" value={nc.address} onChange={e => setNc('address', e.target.value)} /></FieldRow>
+                  <FieldRow label="Email" required><Input className="h-8 text-sm" value={nc.email} onChange={e => setNc('email', e.target.value)} /></FieldRow>
+                  <FieldRow label="Телефон"><Input className="h-8 text-sm" value={nc.phone} onChange={e => setNc('phone', e.target.value)} /></FieldRow>
+                  <FieldRow label="Доп. контакт"><Input className="h-8 text-sm" value={nc.additionalContact} onChange={e => setNc('additionalContact', e.target.value)} /></FieldRow>
                 </div>
-                <div><label className="text-xs text-muted-foreground">Ответственный</label>
-                  <Select value={nc.responsibleId} onValueChange={v => setNc('responsibleId', v)}>
-                    <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
-                    <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
-                  </Select>
+              </div>
+
+              {/* Column 3: Additional */}
+              <div className="border rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-4">Дополнительная информация</h3>
+                <div className="space-y-3">
+                  <FieldRow label="Гражданство"><Input className="h-8 text-sm" value={nc.citizenship} onChange={e => setNc('citizenship', e.target.value)} /></FieldRow>
+                  <FieldRow label="Campaign ID"><Input className="h-8 text-sm" value={nc.campaignId} onChange={e => setNc('campaignId', e.target.value)} /></FieldRow>
+                  <FieldRow label="Tag 1"><Input className="h-8 text-sm" value={nc.tag1} onChange={e => setNc('tag1', e.target.value)} /></FieldRow>
+                  <FieldRow label="Tag 2"><Input className="h-8 text-sm" value={nc.tag2} onChange={e => setNc('tag2', e.target.value)} /></FieldRow>
+                  <FieldRow label="Паспорт"><Input className="h-8 text-sm" value={nc.passport} onChange={e => setNc('passport', e.target.value)} /></FieldRow>
+                  <FieldRow label="Дата рождения"><Input type="date" className="h-8 text-sm" value={nc.birthday} onChange={e => setNc('birthday', e.target.value)} /></FieldRow>
+                  <FieldRow label="Цель">
+                    <Select value={nc.purpose} onValueChange={v => setNc('purpose', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent><SelectItem value="trading">Trading</SelectItem><SelectItem value="investment">Investment</SelectItem><SelectItem value="hedging">Hedging</SelectItem></SelectContent>
+                    </Select>
+                  </FieldRow>
+                  <FieldRow label="Источник">
+                    <Select value={nc.source} onValueChange={v => setNc('source', v)}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Default source" /></SelectTrigger>
+                      <SelectContent><SelectItem value="website">Website</SelectItem><SelectItem value="referral">Referral</SelectItem><SelectItem value="ads">Ads</SelectItem><SelectItem value="organic">Organic</SelectItem></SelectContent>
+                    </Select>
+                  </FieldRow>
                 </div>
-                <div><label className="text-xs text-muted-foreground">Статус</label>
-                  <Select value={nc.status} onValueChange={v => setNc('status', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{['New','Hot','Cold','Lead','Live','Demo','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div><label className="text-xs text-muted-foreground">Affiliate ID</label><Input value={nc.affiliateId} onChange={e => setNc('affiliateId', e.target.value)} /></div>
               </div>
             </div>
 
-            {/* 2. Contact Information */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-primary">Контактная информация</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div><label className="text-xs text-muted-foreground">Страна</label><Input value={nc.country} onChange={e => setNc('country', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Регион</label><Input value={nc.region} onChange={e => setNc('region', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Город</label><Input value={nc.city} onChange={e => setNc('city', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Индекс</label><Input value={nc.zip} onChange={e => setNc('zip', e.target.value)} /></div>
-                <div className="col-span-2"><label className="text-xs text-muted-foreground">Адрес</label><Input value={nc.address} onChange={e => setNc('address', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Email *</label><Input value={nc.email} onChange={e => setNc('email', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Телефон</label><Input value={nc.phone} onChange={e => setNc('phone', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Доп. контакт</label><Input value={nc.additionalContact} onChange={e => setNc('additionalContact', e.target.value)} /></div>
-              </div>
-            </div>
-
-            {/* 3. Additional Information */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-primary">Дополнительная информация</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div><label className="text-xs text-muted-foreground">Гражданство</label><Input value={nc.citizenship} onChange={e => setNc('citizenship', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Campaign ID</label><Input value={nc.campaignId} onChange={e => setNc('campaignId', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Тег 1</label><Input value={nc.tag1} onChange={e => setNc('tag1', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Тег 2</label><Input value={nc.tag2} onChange={e => setNc('tag2', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Паспорт</label><Input value={nc.passport} onChange={e => setNc('passport', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Дата рождения</label><Input type="date" value={nc.birthday} onChange={e => setNc('birthday', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Цель</label><Input value={nc.purpose} onChange={e => setNc('purpose', e.target.value)} /></div>
-                <div><label className="text-xs text-muted-foreground">Источник</label><Input value={nc.source} onChange={e => setNc('source', e.target.value)} /></div>
-              </div>
-            </div>
-
-            {/* 4. Description */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-primary">Описание</h3>
-              <Textarea value={nc.description} onChange={e => setNc('description', e.target.value)} placeholder="Комментарий к клиенту..." rows={3} />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button variant="outline" onClick={() => setShowCreate(false)}>Отмена</Button>
-              <Button variant="outline" onClick={() => { handleCreate(); }}>Сохранить и закрыть</Button>
-              <Button onClick={handleCreate}>Сохранить</Button>
+            {/* Description — full width bottom */}
+            <div className="border rounded-lg p-4 shrink-0">
+              <h3 className="text-sm font-semibold mb-3">Описание</h3>
+              <Textarea value={nc.description} onChange={e => setNc('description', e.target.value)} placeholder="Введите текст" rows={3} className="text-sm resize-none" />
             </div>
           </div>
         </DialogContent>
