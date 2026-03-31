@@ -1,5 +1,5 @@
 // ===================== ENUMS =====================
-export type ClientStatus = 'New' | 'Hot' | 'Cold' | 'Not interesting' | 'Spam' | 'No answer' | 'Lead' | 'Live' | 'Demo';
+export type ClientStatus = 'New' | 'Hot' | 'Warm' | 'Cold' | 'No potential' | 'Not interesting' | 'Spam' | 'No answer' | 'Call Back' | 'Lead' | 'Live' | 'Demo';
 export type ClientType = 'Lead' | 'Live' | 'Demo';
 export type ActionStatus = 'New' | 'In process' | 'Complete' | 'Processed, is not completed';
 export type PaymentStatus = 'New' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';

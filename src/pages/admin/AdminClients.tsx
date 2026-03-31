@@ -15,19 +15,26 @@ import TablePagination from '@/components/TablePagination';
 
 const statusTabs: { label: string; value: ClientStatus | 'All' }[] = [
   { label: 'Все', value: 'All' },
+  { label: 'New', value: 'New' },
   { label: 'Hot', value: 'Hot' },
+  { label: 'Warm', value: 'Warm' },
+  { label: 'Cold', value: 'Cold' },
   { label: 'Lead', value: 'Lead' },
   { label: 'Live', value: 'Live' },
   { label: 'Demo', value: 'Demo' },
-  { label: 'New', value: 'New' },
-  { label: 'Cold', value: 'Cold' },
+  { label: 'Call Back', value: 'Call Back' },
+  { label: 'No potential', value: 'No potential' },
+  { label: 'Not intr.', value: 'Not interesting' },
+  { label: 'No answer', value: 'No answer' },
   { label: 'Spam', value: 'Spam' },
 ];
 
 const statusColors: Record<string, string> = {
-  New: 'status-new', Hot: 'status-hot', Lead: 'status-lead', Spam: 'status-spam',
+  New: 'status-new', Hot: 'status-hot', Warm: 'bg-orange-100 text-orange-700',
+  Lead: 'status-lead', Spam: 'status-spam',
   Live: 'status-live', Demo: 'status-demo', Cold: 'bg-gray-100 text-gray-600',
   'Not interesting': 'bg-gray-100 text-gray-500', 'No answer': 'status-pending',
+  'No potential': 'bg-slate-100 text-slate-600', 'Call Back': 'bg-indigo-100 text-indigo-700',
 };
 
 const emptyClient = {
@@ -261,7 +268,7 @@ export default function AdminClients() {
           <div className="flex flex-wrap gap-2">
             <Select onValueChange={v => { selected.forEach(id => updateClient(id, { status: v as ClientStatus })); toast.success(`Статус изменён у ${selected.size} клиентов`); setSelected(new Set()); }}>
               <SelectTrigger className="w-36 h-8 text-xs"><Tag size={12} className="mr-1" /><SelectValue placeholder="Сменить статус" /></SelectTrigger>
-              <SelectContent>{['New', 'Hot', 'Lead', 'Live', 'Demo', 'Cold', 'Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              <SelectContent>{['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
             <Select onValueChange={v => { selected.forEach(id => updateClient(id, { responsibleId: v })); const emp = employees.find(e => e.id === v); toast.success(`Ответственный: ${emp?.firstName} ${emp?.lastName}`); setSelected(new Set()); }}>
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
@@ -393,7 +400,7 @@ export default function AdminClients() {
                   <FieldRow label="Статус" required>
                     <Select value={nc.status} onValueChange={v => setNc('status', v)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                      <SelectContent>{['New','Hot','Cold','Lead','Live','Demo','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <SelectContent>{['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                     </Select>
                   </FieldRow>
                   <FieldRow label="Affiliate ID"><Input className="h-8 text-sm" value={nc.affiliateId} onChange={e => setNc('affiliateId', e.target.value)} /></FieldRow>
