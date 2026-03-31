@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Plus, Edit2, Filter } from 'lucide-react';
+import { Search, Plus, Edit2, Filter, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
