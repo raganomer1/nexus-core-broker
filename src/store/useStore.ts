@@ -127,6 +127,19 @@ interface AppStore {
   addSavedView: (view: Omit<SavedView, 'id'>) => void;
   deleteSavedView: (id: string) => void;
 
+  // API Integrations
+  apiIntegrations: ApiIntegration[];
+  addApiIntegration: (integration: Omit<ApiIntegration, 'id' | 'createdAt' | 'apiKey'>) => void;
+  updateApiIntegration: (id: string, updates: Partial<ApiIntegration>) => void;
+  deleteApiIntegration: (id: string) => void;
+
+  // Client Restrictions
+  clientRestrictions: ClientRestriction[];
+  addClientRestriction: (restriction: Omit<ClientRestriction, 'id' | 'createdAt'>) => void;
+  updateClientRestriction: (id: string, updates: Partial<ClientRestriction>) => void;
+  deleteClientRestriction: (id: string) => void;
+  getActiveRestriction: (clientId: string) => ClientRestriction | undefined;
+
   // Helpers
   getClientById: (id: string) => Client | undefined;
   getEmployeeById: (id: string) => Employee | undefined;
