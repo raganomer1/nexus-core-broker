@@ -58,6 +58,12 @@
     --buy-color: 142 71% 45%;
     --sell-color: 0 84% 60%;
 
+    /* Website */
+    --website-dark: 222 47% 5%;
+    --website-dark-secondary: 222 30% 10%;
+    --website-dark-card: 222 25% 13%;
+    --website-glow: 217 91% 60%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -159,5 +165,20 @@
     background: hsl(var(--sell-color));
     color: hsl(var(--primary-foreground));
     @apply px-6 py-2 rounded font-semibold text-sm;
+  }
+
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent;
   }
 }

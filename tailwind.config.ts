@@ -49,6 +49,9 @@ export default {
           green: "hsl(var(--terminal-green))",
           red: "hsl(var(--terminal-red))",
         },
+        "website-dark": "hsl(var(--website-dark))",
+        "website-dark-secondary": "hsl(var(--website-dark-secondary))",
+        "website-dark-card": "hsl(var(--website-dark-card))",
       },
       borderRadius: {
         lg: "var(--radius)",
