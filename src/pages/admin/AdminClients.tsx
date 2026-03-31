@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays, Settings2, Pencil, Save } from 'lucide-react';
+import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays, Settings2, Pencil, Save, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
