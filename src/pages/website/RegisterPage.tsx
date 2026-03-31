@@ -35,9 +35,9 @@ const RegisterPage = () => {
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-2.5 mb-12">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">N</span>
+              <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className="text-2xl font-bold text-white">Nexus</span>
+            <span className="text-2xl font-bold text-white">SPI Trade</span>
           </Link>
 
           <h2 className="text-3xl font-bold text-white mb-4">
