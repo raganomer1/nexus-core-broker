@@ -48,10 +48,12 @@ interface AppStore {
   roles: Role[];
   addRole: (role: Omit<Role, 'id'>) => void;
   updateRole: (id: string, updates: Partial<Role>) => void;
+  deleteRole: (id: string) => void;
 
   // Desks
   desks: Desk[];
   addDesk: (desk: Omit<Desk, 'id' | 'createdAt'>) => void;
+  updateDesk: (id: string, updates: Partial<Desk>) => void;
   deleteDesk: (id: string) => void;
 
   // Trading Accounts
@@ -89,11 +91,14 @@ interface AppStore {
   messages: SupportMessage[];
   addTicket: (ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'lastMessageAt' | 'status'>) => void;
   addMessage: (message: Omit<SupportMessage, 'id' | 'createdAt'>) => void;
+  updateTicket: (id: string, updates: Partial<SupportTicket>) => void;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
+  deleteTicket: (id: string) => void;
 
   // Verification
   verificationRequests: VerificationRequest[];
   updateVerificationStatus: (id: string, status: VerificationStatus, processedBy?: string) => void;
+  deleteVerificationRequest: (id: string) => void;
 
   // History
   history: HistoryEvent[];
@@ -104,8 +109,17 @@ interface AppStore {
 
   // Settings
   clientStatusConfigs: ClientStatusConfig[];
+  addClientStatusConfig: (config: Omit<ClientStatusConfig, 'id'>) => void;
+  updateClientStatusConfig: (id: string, updates: Partial<ClientStatusConfig>) => void;
+  deleteClientStatusConfig: (id: string) => void;
   actionStatusConfigs: ActionStatusConfig[];
+  addActionStatusConfig: (config: Omit<ActionStatusConfig, 'id'>) => void;
+  updateActionStatusConfig: (id: string, updates: Partial<ActionStatusConfig>) => void;
+  deleteActionStatusConfig: (id: string) => void;
   reminderIntervals: ReminderInterval[];
+  addReminderInterval: (interval: Omit<ReminderInterval, 'id'>) => void;
+  updateReminderInterval: (id: string, updates: Partial<ReminderInterval>) => void;
+  deleteReminderInterval: (id: string) => void;
   securitySettings: SecuritySettings;
   updateSecuritySettings: (settings: Partial<SecuritySettings>) => void;
   savedViews: SavedView[];
@@ -208,6 +222,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set(s => ({ roles: [...s.roles, role] }));
   },
   updateRole: (id, updates) => set(s => ({ roles: s.roles.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteRole: (id) => set(s => ({ roles: s.roles.filter(r => r.id !== id) })),
 
   // ==================== DESKS ====================
   desks: [...mock.desks],
@@ -215,6 +230,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const desk = { ...data, id: genId(), createdAt: new Date().toISOString() } as Desk;
     set(s => ({ desks: [...s.desks, desk] }));
   },
+  updateDesk: (id, updates) => set(s => ({ desks: s.desks.map(d => d.id === id ? { ...d, ...updates } : d) })),
   deleteDesk: (id) => set(s => ({ desks: s.desks.filter(d => d.id !== id) })),
 
   // ==================== TRADING ACCOUNTS ====================
@@ -430,6 +446,8 @@ export const useStore = create<AppStore>((set, get) => ({
     }));
   },
   updateTicketStatus: (id, status) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, status } : t) })),
+  updateTicket: (id, updates) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, ...updates } : t) })),
+  deleteTicket: (id) => set(s => ({ tickets: s.tickets.filter(t => t.id !== id), messages: s.messages.filter(m => m.ticketId !== id) })),
 
   // ==================== VERIFICATION ====================
   verificationRequests: [...mock.verificationRequests],
@@ -441,6 +459,7 @@ export const useStore = create<AppStore>((set, get) => ({
       clients: s.clients.map(c => c.id === req.clientId ? { ...c, verificationStatus: status } : c),
     }));
   },
+  deleteVerificationRequest: (id) => set(s => ({ verificationRequests: s.verificationRequests.filter(r => r.id !== id) })),
 
   // ==================== HISTORY ====================
   history: [...mock.historyEvents],
@@ -454,8 +473,17 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ==================== SETTINGS ====================
   clientStatusConfigs: [...mock.clientStatusConfigs],
+  addClientStatusConfig: (config) => set(s => ({ clientStatusConfigs: [...s.clientStatusConfigs, { ...config, id: genId() }] })),
+  updateClientStatusConfig: (id, updates) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
+  deleteClientStatusConfig: (id) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.filter(c => c.id !== id) })),
   actionStatusConfigs: [...mock.actionStatusConfigs],
+  addActionStatusConfig: (config) => set(s => ({ actionStatusConfigs: [...s.actionStatusConfigs, { ...config, id: genId() }] })),
+  updateActionStatusConfig: (id, updates) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
+  deleteActionStatusConfig: (id) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.filter(c => c.id !== id) })),
   reminderIntervals: [...mock.reminderIntervals],
+  addReminderInterval: (interval) => set(s => ({ reminderIntervals: [...s.reminderIntervals, { ...interval, id: genId() }] })),
+  updateReminderInterval: (id, updates) => set(s => ({ reminderIntervals: s.reminderIntervals.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteReminderInterval: (id) => set(s => ({ reminderIntervals: s.reminderIntervals.filter(r => r.id !== id) })),
   securitySettings: { ...mock.defaultSecuritySettings },
   updateSecuritySettings: (settings) => set(s => ({ securitySettings: { ...s.securitySettings, ...settings } })),
   savedViews: [...mock.savedViews],
