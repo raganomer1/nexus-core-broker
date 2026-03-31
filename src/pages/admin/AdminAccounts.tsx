@@ -152,7 +152,12 @@ export default function AdminAccounts() {
                     <td>${a.freeMargin.toFixed(2)}</td>
                     <td className={a.profit >= 0 ? 'text-green-600' : 'text-destructive'}>{a.profit >= 0 ? '+' : ''}{a.profit.toFixed(2)}</td>
                     <td><span className={`status-badge ${a.status === 'Active' ? 'status-live' : a.status === 'Blocked' ? 'status-rejected' : 'status-pending'}`}>{a.status}</span></td>
-                    <td><Button variant="ghost" size="sm" onClick={() => setEditAccount({ ...a })}><Edit2 size={14} /></Button></td>
+                    <td>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditAccount({ ...a })}><Edit2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteTradingAccount(a.id)}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
