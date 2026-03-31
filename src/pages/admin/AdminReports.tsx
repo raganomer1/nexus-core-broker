@@ -4,22 +4,39 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function AdminReports() {
   const { clients, tradingAccounts, positions, payments } = useStore();
   const { lang } = useSettingsStore();
-  const [period, setPeriod] = useState<'week' | 'month' | 'all'>('month');
+  const [period, setPeriod] = useState<'week' | 'month' | 'all' | 'custom'>('month');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const now = Date.now();
-  const periodMs = period === 'week' ? 7 * 86400000 : period === 'month' ? 30 * 86400000 : Infinity;
+  let periodMs: number;
+  if (period === 'custom' && dateFrom && dateTo) {
+    periodMs = now; // will use custom logic below
+  } else {
+    periodMs = period === 'week' ? 7 * 86400000 : period === 'month' ? 30 * 86400000 : Infinity;
+  }
 
-  const totalDeposits = payments.filter(p => p.status === 'Approved' && p.type === 'Deposit' && (now - new Date(p.createdAt).getTime()) < periodMs).reduce((s, p) => s + p.amount, 0);
-  const totalWithdrawals = payments.filter(p => p.status === 'Approved' && p.type === 'Withdrawal' && (now - new Date(p.createdAt).getTime()) < periodMs).reduce((s, p) => s + p.amount, 0);
+  const inPeriod = (dateStr: string) => {
+    if (period === 'all') return true;
+    if (period === 'custom' && dateFrom && dateTo) {
+      const d = new Date(dateStr).getTime();
+      return d >= new Date(dateFrom).getTime() && d <= new Date(dateTo + 'T23:59:59').getTime();
+    }
+    return (now - new Date(dateStr).getTime()) < periodMs;
+  };
+
+  const totalDeposits = payments.filter(p => p.status === 'Approved' && p.type === 'Deposit' && inPeriod(p.createdAt)).reduce((s, p) => s + p.amount, 0);
+  const totalWithdrawals = payments.filter(p => p.status === 'Approved' && p.type === 'Withdrawal' && inPeriod(p.createdAt)).reduce((s, p) => s + p.amount, 0);
   const totalBalance = tradingAccounts.reduce((s, a) => s + a.balance, 0);
   const totalEquity = tradingAccounts.reduce((s, a) => s + a.equity, 0);
   const totalProfit = tradingAccounts.reduce((s, a) => s + a.profit, 0);
   const openPositionsCount = positions.filter(p => p.status === 'Open').length;
-  const closedPositionsCount = positions.filter(p => p.status === 'Closed' && (now - new Date(p.closeDate || '').getTime()) < periodMs).length;
+  const closedPositionsCount = positions.filter(p => p.status === 'Closed' && inPeriod(p.closeDate || '')).length;
 
   const stats = [
     { label: t(lang, 'totalClients'), value: clients.length },
@@ -40,13 +57,20 @@ export default function AdminReports() {
         <Button variant="outline" size="sm"><Download size={14} className="mr-1" /> {t(lang, 'download')}</Button>
       </div>
 
-      <div className="flex gap-1 mb-6">
-        {(['week', 'month', 'all'] as const).map(p => (
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {(['week', 'month', 'all', 'custom'] as const).map(p => (
           <button key={p} onClick={() => setPeriod(p)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium ${period === p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-            {p === 'week' ? t(lang, 'week') : p === 'month' ? t(lang, 'month') : t(lang, 'allTime')}
+            {p === 'week' ? t(lang, 'week') : p === 'month' ? t(lang, 'month') : p === 'all' ? t(lang, 'allTime') : 'Произвольный'}
           </button>
         ))}
+        {period === 'custom' && (
+          <div className="flex items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 h-8 text-xs" />
+            <span className="text-xs text-muted-foreground">—</span>
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 h-8 text-xs" />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
