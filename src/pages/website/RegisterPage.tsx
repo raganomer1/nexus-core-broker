@@ -44,7 +44,7 @@ const RegisterPage = () => {
             Start Your Trading Journey
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed mb-12">
-            Join thousands of traders worldwide who trust Nexus for access to global financial markets.
+            Join thousands of traders worldwide who trust SPI Trade for access to global financial markets.
           </p>
 
           <div className="space-y-6">
