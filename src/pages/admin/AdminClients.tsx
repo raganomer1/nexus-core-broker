@@ -457,6 +457,12 @@ export default function AdminClients() {
                     <td><span className={`status-badge ${client.type === 'Live' ? 'status-live' : client.type === 'Demo' ? 'status-demo' : 'status-lead'}`}>{client.type}</span></td>
                     <td><span className={`status-badge ${statusColors[client.status] || 'status-new'}`}>{client.status}</span></td>
                     <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/admin/clients/${client.id}`)}><Pencil size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteClient(client.id); toast.success('Клиент удалён'); }}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
