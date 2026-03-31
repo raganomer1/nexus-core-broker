@@ -2,16 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Check, X, Clock, Ban } from 'lucide-react';
+import { Search, Check, X, Clock, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PaymentStatus } from '@/types';
 
 export default function AdminPayments() {
-  const { payments, clients, tradingAccounts, updatePaymentStatus, auth } = useStore();
+  const { payments, clients, tradingAccounts, employees, updatePaymentStatus, auth } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'All'>('All');
+  const [typeFilter, setTypeFilter] = useState<'All' | 'Deposit' | 'Withdrawal' | 'Transfer'>('All');
+  const [managerFilter, setManagerFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   const statusTabs: { label: string; value: PaymentStatus | 'All' }[] = [
     { label: t(lang, 'all'), value: 'All' },
@@ -23,9 +29,23 @@ export default function AdminPayments() {
 
   const typeLabel = (type: string) => type === 'Deposit' ? t(lang, 'depositType') : type === 'Withdrawal' ? t(lang, 'withdrawalType') : t(lang, 'transferType');
 
+  const managers = useMemo(() => {
+    const ids = new Set(clients.map(c => c.responsibleId).filter(Boolean));
+    return employees.filter(e => ids.has(e.id));
+  }, [clients, employees]);
+
   const filtered = useMemo(() => {
     let result = [...payments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     if (statusFilter !== 'All') result = result.filter(p => p.status === statusFilter);
+    if (typeFilter !== 'All') result = result.filter(p => p.type === typeFilter);
+    if (managerFilter !== 'All') {
+      result = result.filter(p => {
+        const client = clients.find(c => c.id === p.clientId);
+        return client?.responsibleId === managerFilter;
+      });
+    }
+    if (dateFrom) result = result.filter(p => new Date(p.createdAt) >= new Date(dateFrom));
+    if (dateTo) result = result.filter(p => new Date(p.createdAt) <= new Date(dateTo + 'T23:59:59'));
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(p => {
@@ -34,11 +54,14 @@ export default function AdminPayments() {
       });
     }
     return result;
-  }, [payments, statusFilter, search, clients]);
+  }, [payments, statusFilter, typeFilter, managerFilter, dateFrom, dateTo, search, clients]);
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-lg md:text-xl font-semibold mb-4">{t(lang, 'payments')}</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'payments')}</h1>
+        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+      </div>
 
       <div className="flex gap-1 mb-4 flex-wrap">
         {statusTabs.map(tab => (
@@ -50,10 +73,36 @@ export default function AdminPayments() {
         ))}
       </div>
 
-      <div className="relative mb-4 max-w-md">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder={t(lang, 'search')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative max-w-md flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder={t(lang, 'search')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
       </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-muted/30 rounded-lg border">
+          <Select value={typeFilter} onValueChange={v => setTypeFilter(v as any)}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Тип" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все типы</SelectItem>
+              <SelectItem value="Deposit">Депозит</SelectItem>
+              <SelectItem value="Withdrawal">Вывод</SelectItem>
+              <SelectItem value="Transfer">Перевод</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={managerFilter} onValueChange={setManagerFilter}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="Менеджер" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все менеджеры</SelectItem>
+              {managers.map(m => <SelectItem key={m.id} value={m.id}>{m.lastName} {m.firstName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36" placeholder="От" />
+          <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36" placeholder="До" />
+          <Button variant="ghost" size="sm" onClick={() => { setTypeFilter('All'); setManagerFilter('All'); setDateFrom(''); setDateTo(''); }}>Сброс</Button>
+        </div>
+      )}
 
       <div className="md:hidden space-y-3">
         {filtered.map(p => {
@@ -121,6 +170,7 @@ export default function AdminPayments() {
             </tbody>
           </table>
         </div>
+        <div className="px-4 py-3 border-t text-sm text-muted-foreground">Показано {filtered.length} из {payments.length}</div>
       </div>
     </div>
   );

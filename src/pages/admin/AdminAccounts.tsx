@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Plus, Edit2 } from 'lucide-react';
+import { Search, Plus, Edit2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,24 +10,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminAccounts() {
-  const { tradingAccounts, clients, addTradingAccount, updateTradingAccount } = useStore();
+  const { tradingAccounts, clients, employees, addTradingAccount, updateTradingAccount } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [managerFilter, setManagerFilter] = useState('All');
+  const [demoFilter, setDemoFilter] = useState<'All' | 'Real' | 'Demo'>('All');
+  const [showFilters, setShowFilters] = useState(false);
   const [editAccount, setEditAccount] = useState<any>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ clientId: '', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 0, equity: 0, margin: 0, freeMargin: 0, profit: 0, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: false, spendBonus: false, status: 'Active' as const, deposited: 0, withdrawn: 0, tradesCount: 0, bonusSpent: 0, accountNumber: '' });
 
   const groups = [...new Set(tradingAccounts.map(a => a.group))];
-  const filtered = tradingAccounts.filter(a => {
-    if (groupFilter !== 'All' && a.group !== groupFilter) return false;
-    if (search) {
-      const client = clients.find(c => c.id === a.clientId);
-      const q = search.toLowerCase();
-      return a.accountNumber.includes(q) || (client && (client.lastName.toLowerCase().includes(q) || client.firstName.toLowerCase().includes(q)));
-    }
-    return true;
-  });
+  const managers = useMemo(() => {
+    const ids = new Set(clients.map(c => c.responsibleId).filter(Boolean));
+    return employees.filter(e => ids.has(e.id));
+  }, [clients, employees]);
+
+  const filtered = useMemo(() => {
+    return tradingAccounts.filter(a => {
+      if (groupFilter !== 'All' && a.group !== groupFilter) return false;
+      if (statusFilter !== 'All' && a.status !== statusFilter) return false;
+      if (demoFilter === 'Real' && a.isDemo) return false;
+      if (demoFilter === 'Demo' && !a.isDemo) return false;
+      if (managerFilter !== 'All') {
+        const client = clients.find(c => c.id === a.clientId);
+        if (client?.responsibleId !== managerFilter) return false;
+      }
+      if (search) {
+        const client = clients.find(c => c.id === a.clientId);
+        const q = search.toLowerCase();
+        return a.accountNumber.includes(q) || (client && (client.lastName.toLowerCase().includes(q) || client.firstName.toLowerCase().includes(q)));
+      }
+      return true;
+    });
+  }, [tradingAccounts, groupFilter, statusFilter, demoFilter, managerFilter, search, clients]);
 
   const handleCreate = () => {
     if (!form.clientId) return;
@@ -40,7 +58,10 @@ export default function AdminAccounts() {
     <div className="p-4 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'accounts')}</h1>
-        <Button size="sm" onClick={() => setShowCreate(true)}><Plus size={14} className="mr-1" /> {t(lang, 'newAccount')}</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}><Plus size={14} className="mr-1" /> {t(lang, 'newAccount')}</Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -56,6 +77,36 @@ export default function AdminAccounts() {
           </SelectContent>
         </Select>
       </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-muted/30 rounded-lg border">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32"><SelectValue placeholder="Статус" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все статусы</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="Blocked">Blocked</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={demoFilter} onValueChange={v => setDemoFilter(v as any)}>
+            <SelectTrigger className="w-28"><SelectValue placeholder="Тип" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все</SelectItem>
+              <SelectItem value="Real">Real</SelectItem>
+              <SelectItem value="Demo">Demo</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={managerFilter} onValueChange={setManagerFilter}>
+            <SelectTrigger className="w-44"><SelectValue placeholder="Менеджер" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">Все менеджеры</SelectItem>
+              {managers.map(m => <SelectItem key={m.id} value={m.id}>{m.lastName} {m.firstName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="sm" onClick={() => { setStatusFilter('All'); setDemoFilter('All'); setManagerFilter('All'); }}>Сброс</Button>
+        </div>
+      )}
 
       <div className="md:hidden space-y-3">
         {filtered.map(a => {
@@ -107,6 +158,7 @@ export default function AdminAccounts() {
             </tbody>
           </table>
         </div>
+        <div className="px-4 py-3 border-t text-sm text-muted-foreground">Показано {filtered.length} из {tradingAccounts.length}</div>
       </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
