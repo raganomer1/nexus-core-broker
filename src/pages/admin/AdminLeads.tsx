@@ -298,7 +298,12 @@ export default function AdminLeads() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-muted-foreground">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</span>
-                <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => setEditLead({ ...lead })}><Pencil size={14} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={14} /></Button>
+                </div>
+              </div>
               </div>
             </div>
           );
