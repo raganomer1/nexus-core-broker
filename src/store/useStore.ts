@@ -4,7 +4,8 @@ import {
   AssetSymbol, PaymentRequest, SupportTicket, SupportMessage, VerificationRequest,
   HistoryEvent, ClientNote, ManualPriceOverride, ClientSession, SecuritySettings,
   ClientStatusConfig, ActionStatusConfig, PaymentMethod, SavedView, ReminderInterval,
-  OrderType, PaymentStatus, VerificationStatus, TicketStatus
+  OrderType, PaymentStatus, VerificationStatus, TicketStatus,
+  ApiIntegration, ClientRestriction
 } from '@/types';
 import * as mock from '@/data/mockData';
 import { useNotificationStore } from './useNotificationStore';
@@ -125,6 +126,19 @@ interface AppStore {
   savedViews: SavedView[];
   addSavedView: (view: Omit<SavedView, 'id'>) => void;
   deleteSavedView: (id: string) => void;
+
+  // API Integrations
+  apiIntegrations: ApiIntegration[];
+  addApiIntegration: (integration: Omit<ApiIntegration, 'id' | 'createdAt' | 'apiKey'>) => void;
+  updateApiIntegration: (id: string, updates: Partial<ApiIntegration>) => void;
+  deleteApiIntegration: (id: string) => void;
+
+  // Client Restrictions
+  clientRestrictions: ClientRestriction[];
+  addClientRestriction: (restriction: Omit<ClientRestriction, 'id' | 'createdAt'>) => void;
+  updateClientRestriction: (id: string, updates: Partial<ClientRestriction>) => void;
+  deleteClientRestriction: (id: string) => void;
+  getActiveRestriction: (clientId: string) => ClientRestriction | undefined;
 
   // Helpers
   getClientById: (id: string) => Client | undefined;
@@ -489,6 +503,36 @@ export const useStore = create<AppStore>((set, get) => ({
   savedViews: [...mock.savedViews],
   addSavedView: (view) => set(s => ({ savedViews: [...s.savedViews, { ...view, id: genId() }] })),
   deleteSavedView: (id) => set(s => ({ savedViews: s.savedViews.filter(v => v.id !== id) })),
+
+  // ==================== API INTEGRATIONS ====================
+  apiIntegrations: [],
+  addApiIntegration: (data) => set(s => ({
+    apiIntegrations: [...s.apiIntegrations, {
+      ...data, id: genId(), createdAt: new Date().toISOString(),
+      apiKey: 'ak_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+    }],
+  })),
+  updateApiIntegration: (id, updates) => set(s => ({ apiIntegrations: s.apiIntegrations.map(i => i.id === id ? { ...i, ...updates } : i) })),
+  deleteApiIntegration: (id) => set(s => ({ apiIntegrations: s.apiIntegrations.filter(i => i.id !== id) })),
+
+  // ==================== CLIENT RESTRICTIONS ====================
+  clientRestrictions: [],
+  addClientRestriction: (data) => set(s => ({
+    clientRestrictions: [...s.clientRestrictions, { ...data, id: genId(), createdAt: new Date().toISOString() }],
+  })),
+  updateClientRestriction: (id, updates) => set(s => ({ clientRestrictions: s.clientRestrictions.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteClientRestriction: (id) => set(s => ({ clientRestrictions: s.clientRestrictions.filter(r => r.id !== id) })),
+  getActiveRestriction: (clientId) => {
+    const store = get();
+    const client = store.clients.find(c => c.id === clientId);
+    if (!client) return undefined;
+    return store.clientRestrictions.find(r => {
+      if (!r.isActive) return false;
+      if (r.targetType === 'clients') return r.targetIds.includes(clientId);
+      if (r.targetType === 'desks') return client.deskId ? r.targetIds.includes(client.deskId) : false;
+      return false;
+    });
+  },
 
   // ==================== HELPERS ====================
   getClientById: (id) => get().clients.find(c => c.id === id),
