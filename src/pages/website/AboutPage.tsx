@@ -19,12 +19,12 @@ const AboutPage = () => (
       <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full bg-primary/10 blur-[120px]" />
       <div className="container mx-auto px-6 relative z-10">
         <AnimatedSection className="max-w-3xl">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">About Nexus</span>
+          <span className="text-primary text-sm font-semibold uppercase tracking-wider">About SPI Trade</span>
           <h1 className="text-4xl md:text-6xl font-bold text-white mt-4 mb-6">
             Building the Future of <span className="gradient-text">Online Trading</span>
           </h1>
           <p className="text-lg text-gray-400 leading-relaxed">
-            Nexus is a technology-driven brokerage platform built for the modern trader.
+            SPI Trade is a technology-driven brokerage platform built for the modern trader.
             We combine institutional-grade infrastructure with an intuitive user experience
             to make professional trading accessible to everyone.
           </p>
@@ -64,7 +64,7 @@ const AboutPage = () => (
           {[
             { value: 50000, suffix: "+", label: "Active Traders" },
             { value: 150, suffix: "+", label: "Countries" },
-            { value: 2024, suffix: "", label: "Founded", prefix: "" },
+            { value: 2014, suffix: "", label: "Founded", prefix: "" },
             { value: 99.9, suffix: "%", label: "Uptime" },
           ].map((stat, i) => (
             <AnimatedSection key={stat.label} delay={i * 0.1} className="text-center">
@@ -84,7 +84,7 @@ const AboutPage = () => (
         <AnimatedSection className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-5">Our Values</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            The principles that guide everything we do at Nexus.
+            The principles that guide everything we do at SPI Trade.
           </p>
         </AnimatedSection>
 

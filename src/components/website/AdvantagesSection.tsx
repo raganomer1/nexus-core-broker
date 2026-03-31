@@ -19,7 +19,7 @@ const AdvantagesSection = () => (
   <section className="py-24 md:py-32 bg-background">
     <div className="container mx-auto px-6">
       <AnimatedSection className="text-center mb-16">
-        <span className="text-primary text-sm font-semibold uppercase tracking-wider">Why Nexus</span>
+        <span className="text-primary text-sm font-semibold uppercase tracking-wider">Why SPI Trade</span>
         <h2 className="text-3xl md:text-5xl font-bold text-foreground mt-3 mb-5">
           Built for Serious Traders
         </h2>

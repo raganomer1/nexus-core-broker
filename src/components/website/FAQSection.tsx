@@ -14,7 +14,7 @@ const faqs = [
   { q: "What trading instruments are available?", a: "We offer 1,200+ instruments across Forex (70+ pairs), cryptocurrencies (50+ coins), stocks (500+ companies), commodities, and major global indices." },
   { q: "Is there a demo account available?", a: "Yes! Our demo account comes with $10,000 in virtual funds, access to all instruments, and no time limit. It's the perfect way to learn and test strategies risk-free." },
   { q: "How does the trading terminal work?", a: "Our web-based terminal features advanced charting, multiple order types, real-time market data, and one-click execution. No downloads required — trade directly from your browser." },
-  { q: "How can I contact support?", a: "Our support team is available 24/7 via live chat, email (support@nexustrade.com), and phone. VIP clients have a dedicated personal manager." },
+  { q: "How can I contact support?", a: "Our support team is available 24/7 via live chat, email (support@spitrade.com), and phone. VIP clients have a dedicated personal manager." },
 ];
 
 interface FAQSectionProps {

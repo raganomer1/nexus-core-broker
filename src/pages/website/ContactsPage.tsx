@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { Mail, Clock, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const contactInfo = [
-  { icon: Mail, title: "Email", value: "support@nexustrade.com", href: "mailto:support@nexustrade.com" },
-  { icon: Phone, title: "Phone", value: "+44 20 1234 5678", href: "tel:+442012345678" },
-  { icon: MapPin, title: "Office", value: "71 Queen Victoria St, London EC4V 4AY, UK" },
+  { icon: Mail, title: "Email", value: "support@spitrade.com", href: "mailto:support@spitrade.com" },
+  { icon: Clock, title: "Working Hours", value: "24/7 — Support never sleeps" },
   { icon: Clock, title: "Working Hours", value: "24/7 — Support never sleeps" },
 ];
 
@@ -72,10 +71,6 @@ const ContactsPage = () => {
                 ))}
               </div>
 
-              {/* Map placeholder */}
-              <div className="mt-10 rounded-2xl border border-border bg-muted/50 h-48 flex items-center justify-center">
-                <MapPin className="w-8 h-8 text-muted-foreground/30" />
-              </div>
             </AnimatedSection>
 
             {/* Contact form */}

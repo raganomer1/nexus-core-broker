@@ -17,7 +17,7 @@ const RegisterPage = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast({ title: "Account created!", description: "Welcome to Nexus." });
+      toast({ title: "Account created!", description: "Welcome to SPI Trade." });
       navigate("/login");
     }, 1500);
   };
@@ -35,16 +35,16 @@ const RegisterPage = () => {
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-2.5 mb-12">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">N</span>
+              <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className="text-2xl font-bold text-white">Nexus</span>
+            <span className="text-2xl font-bold text-white">SPI Trade</span>
           </Link>
 
           <h2 className="text-3xl font-bold text-white mb-4">
             Start Your Trading Journey
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed mb-12">
-            Join thousands of traders worldwide who trust Nexus for access to global financial markets.
+            Join thousands of traders worldwide who trust SPI Trade for access to global financial markets.
           </p>
 
           <div className="space-y-6">
@@ -75,9 +75,9 @@ const RegisterPage = () => {
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-                <span className="text-white font-bold">N</span>
+                <span className="text-white font-bold">S</span>
               </div>
-              <span className="text-xl font-bold text-foreground">Nexus</span>
+              <span className="text-xl font-bold text-foreground">SPI Trade</span>
             </Link>
           </div>
 
