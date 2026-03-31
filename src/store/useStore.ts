@@ -98,6 +98,7 @@ interface AppStore {
   // Verification
   verificationRequests: VerificationRequest[];
   updateVerificationStatus: (id: string, status: VerificationStatus, processedBy?: string) => void;
+  deleteVerificationRequest: (id: string) => void;
 
   // History
   history: HistoryEvent[];
