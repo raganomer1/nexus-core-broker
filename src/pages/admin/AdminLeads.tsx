@@ -45,7 +45,8 @@ const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
 });
 
 export default function AdminLeads() {
-  const { leads, employees, addLead, convertLeadToClient } = useStore();
+  const { leads, employees, addLead, updateLead, deleteLead, convertLeadToClient } = useStore();
+  const [editLead, setEditLead] = useState<any>(null);
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -297,7 +298,11 @@ export default function AdminLeads() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-muted-foreground">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</span>
-                <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => setEditLead({ ...lead })}><Pencil size={14} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={14} /></Button>
+                </div>
               </div>
             </div>
           );
@@ -333,7 +338,13 @@ export default function AdminLeads() {
                     <td className="text-sm text-muted-foreground">{lead.source || '—'}</td>
                     <td className="text-xs text-muted-foreground">{new Date(lead.createdAt).toLocaleDateString()}</td>
                     <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</td>
-                    <td><Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button></td>
+                    <td>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditLead({ ...lead })}><Pencil size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -388,6 +399,45 @@ export default function AdminLeads() {
               <Button onClick={handleCreate}>{t(lang, 'create')}</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={!!editLead} onOpenChange={() => setEditLead(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Редактировать лид</DialogTitle></DialogHeader>
+          {editLead && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'lastName')}</label><Input value={editLead.lastName} onChange={e => setEditLead({ ...editLead, lastName: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'firstName')}</label><Input value={editLead.firstName} onChange={e => setEditLead({ ...editLead, firstName: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'email')}</label><Input value={editLead.email} onChange={e => setEditLead({ ...editLead, email: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'phone')}</label><Input value={editLead.phone || ''} onChange={e => setEditLead({ ...editLead, phone: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'country')}</label><Input value={editLead.country || ''} onChange={e => setEditLead({ ...editLead, country: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">{t(lang, 'source')}</label><Input value={editLead.source || ''} onChange={e => setEditLead({ ...editLead, source: e.target.value })} /></div>
+              </div>
+              <div><label className="text-xs text-muted-foreground">{t(lang, 'status')}</label>
+                <Select value={editLead.status} onValueChange={v => setEditLead({ ...editLead, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><label className="text-xs text-muted-foreground">{t(lang, 'responsible')}</label>
+                <Select value={editLead.responsibleId || '_none'} onValueChange={v => setEditLead({ ...editLead, responsibleId: v === '_none' ? '' : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">—</SelectItem>
+                    {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-2 border-t">
+                <Button onClick={() => { updateLead(editLead.id, editLead); setEditLead(null); toast.success('Лид обновлён'); }}>Сохранить</Button>
+                <Button variant="outline" onClick={() => setEditLead(null)}>Отмена</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => { deleteLead(editLead.id); setEditLead(null); toast.success('Лид удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

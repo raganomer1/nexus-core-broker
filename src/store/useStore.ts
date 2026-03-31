@@ -35,12 +35,14 @@ interface AppStore {
   leads: Lead[];
   addLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
   updateLead: (id: string, updates: Partial<Lead>) => void;
+  deleteLead: (id: string) => void;
   convertLeadToClient: (leadId: string) => void;
 
   // Employees
   employees: Employee[];
   addEmployee: (emp: Omit<Employee, 'id' | 'createdAt'>) => void;
   updateEmployee: (id: string, updates: Partial<Employee>) => void;
+  deleteEmployee: (id: string) => void;
 
   // Roles
   roles: Role[];
@@ -50,11 +52,13 @@ interface AppStore {
   // Desks
   desks: Desk[];
   addDesk: (desk: Omit<Desk, 'id' | 'createdAt'>) => void;
+  deleteDesk: (id: string) => void;
 
   // Trading Accounts
   tradingAccounts: TradingAccount[];
   addTradingAccount: (account: Omit<TradingAccount, 'id' | 'createdAt'>) => void;
   updateTradingAccount: (id: string, updates: Partial<TradingAccount>) => void;
+  deleteTradingAccount: (id: string) => void;
 
   // Positions
   positions: TradingPosition[];
@@ -178,6 +182,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set(s => ({ leads: [...s.leads, lead as Lead] }));
   },
   updateLead: (id, updates) => set(s => ({ leads: s.leads.map(l => l.id === id ? { ...l, ...updates } : l) })),
+  deleteLead: (id) => set(s => ({ leads: s.leads.filter(l => l.id !== id) })),
   convertLeadToClient: (leadId) => {
     const lead = get().leads.find(l => l.id === leadId);
     if (!lead) return;
@@ -192,6 +197,7 @@ export const useStore = create<AppStore>((set, get) => ({
     set(s => ({ employees: [...s.employees, emp] }));
   },
   updateEmployee: (id, updates) => set(s => ({ employees: s.employees.map(e => e.id === id ? { ...e, ...updates } : e) })),
+  deleteEmployee: (id) => set(s => ({ employees: s.employees.filter(e => e.id !== id) })),
 
   // ==================== ROLES ====================
   roles: [...mock.roles],
@@ -207,6 +213,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const desk = { ...data, id: genId(), createdAt: new Date().toISOString() } as Desk;
     set(s => ({ desks: [...s.desks, desk] }));
   },
+  deleteDesk: (id) => set(s => ({ desks: s.desks.filter(d => d.id !== id) })),
 
   // ==================== TRADING ACCOUNTS ====================
   tradingAccounts: [...mock.tradingAccounts],
@@ -217,6 +224,7 @@ export const useStore = create<AppStore>((set, get) => ({
   updateTradingAccount: (id, updates) => set(s => ({
     tradingAccounts: s.tradingAccounts.map(a => a.id === id ? { ...a, ...updates } : a)
   })),
+  deleteTradingAccount: (id) => set(s => ({ tradingAccounts: s.tradingAccounts.filter(a => a.id !== id) })),
 
   // ==================== POSITIONS ====================
   positions: [...mock.tradingPositions],

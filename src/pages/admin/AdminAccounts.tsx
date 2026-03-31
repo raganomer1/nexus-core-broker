@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Plus, Edit2, Filter } from 'lucide-react';
+import { Search, Plus, Edit2, Filter, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminAccounts() {
-  const { tradingAccounts, clients, employees, addTradingAccount, updateTradingAccount } = useStore();
+  const { tradingAccounts, clients, employees, addTradingAccount, updateTradingAccount, deleteTradingAccount } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
@@ -118,6 +118,7 @@ export default function AdminAccounts() {
                 <div className="flex items-center gap-2">
                   <span className={`status-badge ${a.status === 'Active' ? 'status-live' : a.status === 'Blocked' ? 'status-rejected' : 'status-pending'}`}>{a.status}</span>
                   <Button variant="ghost" size="sm" onClick={() => setEditAccount({ ...a })}><Edit2 size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteTradingAccount(a.id); }}><Trash2 size={14} /></Button>
                 </div>
               </div>
               <div className="text-sm text-muted-foreground mb-2">{client ? `${client.lastName} ${client.firstName}` : '—'}</div>
@@ -151,7 +152,12 @@ export default function AdminAccounts() {
                     <td>${a.freeMargin.toFixed(2)}</td>
                     <td className={a.profit >= 0 ? 'text-green-600' : 'text-destructive'}>{a.profit >= 0 ? '+' : ''}{a.profit.toFixed(2)}</td>
                     <td><span className={`status-badge ${a.status === 'Active' ? 'status-live' : a.status === 'Blocked' ? 'status-rejected' : 'status-pending'}`}>{a.status}</span></td>
-                    <td><Button variant="ghost" size="sm" onClick={() => setEditAccount({ ...a })}><Edit2 size={14} /></Button></td>
+                    <td>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditAccount({ ...a })}><Edit2 size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteTradingAccount(a.id)}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -205,9 +211,10 @@ export default function AdminAccounts() {
                   <SelectContent><SelectItem value="Active">Active</SelectItem><SelectItem value="Inactive">Inactive</SelectItem><SelectItem value="Blocked">Blocked</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); }}>{t(lang, 'save')}</Button>
                 <Button variant="outline" onClick={() => setEditAccount(null)}>{t(lang, 'cancel')}</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => { deleteTradingAccount(editAccount.id); setEditAccount(null); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}

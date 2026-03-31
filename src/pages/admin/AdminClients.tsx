@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays, Settings2, Pencil, Save } from 'lucide-react';
+import { Search, Plus, Filter, Download, Upload, Eye, EyeOff, Trash2, UserCheck, Tag, X, CalendarDays, Settings2, Pencil, Save, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -428,6 +428,7 @@ export default function AdminClients() {
                   </th>
                 ))}
                 <th>Ответственный</th>
+                <th className="w-20"></th>
               </tr>
             </thead>
             <tbody>
@@ -456,6 +457,12 @@ export default function AdminClients() {
                     <td><span className={`status-badge ${client.type === 'Live' ? 'status-live' : client.type === 'Demo' ? 'status-demo' : 'status-lead'}`}>{client.type}</span></td>
                     <td><span className={`status-badge ${statusColors[client.status] || 'status-new'}`}>{client.status}</span></td>
                     <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => navigate(`/admin/clients/${client.id}`)}><Pencil size={13} /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => { deleteClient(client.id); toast.success('Клиент удалён'); }}><Trash2 size={13} /></Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
