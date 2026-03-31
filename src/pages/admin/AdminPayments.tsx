@@ -3,7 +3,7 @@ import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDelet
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Check, X, Clock, Filter, Trash2, Edit2 } from 'lucide-react';
+import { Search, Check, X, Clock, Filter, Trash2, Edit2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
