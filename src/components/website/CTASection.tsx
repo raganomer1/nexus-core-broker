@@ -19,7 +19,7 @@ const CTASection = () => (
           Ready to Start Trading?
         </h2>
         <p className="text-lg text-gray-400 mb-10 leading-relaxed">
-          Join thousands of traders who already trust Nexus for their trading needs.
+          Join thousands of traders who already trust SPI Trade for their trading needs.
           Open your account today and get access to global markets.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

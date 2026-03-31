@@ -75,9 +75,9 @@ const RegisterPage = () => {
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center">
-                <span className="text-white font-bold">N</span>
+                <span className="text-white font-bold">S</span>
               </div>
-              <span className="text-xl font-bold text-foreground">Nexus</span>
+              <span className="text-xl font-bold text-foreground">SPI Trade</span>
             </Link>
           </div>
 

@@ -64,7 +64,7 @@ const AboutPage = () => (
           {[
             { value: 50000, suffix: "+", label: "Active Traders" },
             { value: 150, suffix: "+", label: "Countries" },
-            { value: 2024, suffix: "", label: "Founded", prefix: "" },
+            { value: 2014, suffix: "", label: "Founded", prefix: "" },
             { value: 99.9, suffix: "%", label: "Uptime" },
           ].map((stat, i) => (
             <AnimatedSection key={stat.label} delay={i * 0.1} className="text-center">
