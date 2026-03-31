@@ -446,6 +446,8 @@ export const useStore = create<AppStore>((set, get) => ({
     }));
   },
   updateTicketStatus: (id, status) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, status } : t) })),
+  updateTicket: (id, updates) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, ...updates } : t) })),
+  deleteTicket: (id) => set(s => ({ tickets: s.tickets.filter(t => t.id !== id), messages: s.messages.filter(m => m.ticketId !== id) })),
 
   // ==================== VERIFICATION ====================
   verificationRequests: [...mock.verificationRequests],
