@@ -4,7 +4,8 @@ import {
   AssetSymbol, PaymentRequest, SupportTicket, SupportMessage, VerificationRequest,
   HistoryEvent, ClientNote, ManualPriceOverride, ClientSession, SecuritySettings,
   ClientStatusConfig, ActionStatusConfig, PaymentMethod, SavedView, ReminderInterval,
-  OrderType, PaymentStatus, VerificationStatus, TicketStatus
+  OrderType, PaymentStatus, VerificationStatus, TicketStatus,
+  ApiIntegration, ClientRestriction
 } from '@/types';
 import * as mock from '@/data/mockData';
 import { useNotificationStore } from './useNotificationStore';
