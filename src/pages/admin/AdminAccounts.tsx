@@ -211,9 +211,10 @@ export default function AdminAccounts() {
                   <SelectContent><SelectItem value="Active">Active</SelectItem><SelectItem value="Inactive">Inactive</SelectItem><SelectItem value="Blocked">Blocked</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); }}>{t(lang, 'save')}</Button>
                 <Button variant="outline" onClick={() => setEditAccount(null)}>{t(lang, 'cancel')}</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => { deleteTradingAccount(editAccount.id); setEditAccount(null); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}
