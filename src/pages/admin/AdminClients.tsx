@@ -66,6 +66,7 @@ const FieldRow = ({ label, required, children }: { label: string; required?: boo
 export default function AdminClients() {
   const navigate = useNavigate();
   const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
+  const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
