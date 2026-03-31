@@ -34,7 +34,7 @@ export default function AdminClientCard() {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
-  const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '' });
+  const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
 
   const client = clients.find(c => c.id === id);
   const resp = client ? employees.find(e => e.id === client.responsibleId) : null;
@@ -227,13 +227,24 @@ export default function AdminClientCard() {
         </div>
       </div>
 
-      {/* Add Action Dialog */}
+      {/* Add Action Dialog — matching screenshot layout */}
       <Dialog open={showAction} onOpenChange={setShowAction}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Новое действие</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground">Тип</label>
+          <div className="space-y-5 pt-2">
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Клиент *</label>
+              <Input value={`${client.lastName} ${client.firstName}`} disabled className="bg-muted/30" />
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Ответственный *</label>
+              <Select value={actionData.responsibleId || (auth.employeeId || '')} onValueChange={v => setActionData({ ...actionData, responsibleId: v })}>
+                <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+                <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Тип</label>
               <Select value={actionData.type} onValueChange={v => setActionData({ ...actionData, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -244,26 +255,45 @@ export default function AdminClientCard() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Описание</label>
-              <Input value={actionData.description} onChange={e => setActionData({ ...actionData, description: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Ответственный</label>
-              <Select value={actionData.responsibleId} onValueChange={v => setActionData({ ...actionData, responsibleId: v })}>
-                <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
-                <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Статус</label>
+              <Select value={actionData.status} onValueChange={v => setActionData({ ...actionData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="In progress">In progress</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={() => {
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Дата действия *</label>
+              <Input type="datetime-local" value={actionData.actionDate} onChange={e => setActionData({ ...actionData, actionDate: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">Описание *</label>
+              <Textarea value={actionData.description} onChange={e => setActionData({ ...actionData, description: e.target.value })} placeholder="О чём пообщались с клиентом..." rows={5} />
+            </div>
+            <div className="flex justify-center gap-3 pt-2 border-t">
+              <Button variant="outline" onClick={() => {
+                if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
                 if (auth.employeeId) {
+                  const respEmp = employees.find(e => e.id === (actionData.responsibleId || auth.employeeId));
                   addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
-                  toast.success('Действие добавлено');
+                  toast.success('Действие сохранено');
                   setShowAction(false);
-                  setActionData({ type: 'Phone call', description: '', responsibleId: '' });
+                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
                 }
               }}>Сохранить</Button>
+              <Button onClick={() => {
+                if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
+                if (auth.employeeId) {
+                  const respEmp = employees.find(e => e.id === (actionData.responsibleId || auth.employeeId));
+                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
+                  toast.success('Действие сохранено');
+                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
+                }
+              }}>Сохранить и создать</Button>
               <Button variant="outline" onClick={() => setShowAction(false)}>Отмена</Button>
             </div>
           </div>
