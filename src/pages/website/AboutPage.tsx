@@ -19,7 +19,7 @@ const AboutPage = () => (
       <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] rounded-full bg-primary/10 blur-[120px]" />
       <div className="container mx-auto px-6 relative z-10">
         <AnimatedSection className="max-w-3xl">
-          <span className="text-primary text-sm font-semibold uppercase tracking-wider">About Nexus</span>
+          <span className="text-primary text-sm font-semibold uppercase tracking-wider">About SPI Trade</span>
           <h1 className="text-4xl md:text-6xl font-bold text-white mt-4 mb-6">
             Building the Future of <span className="gradient-text">Online Trading</span>
           </h1>
