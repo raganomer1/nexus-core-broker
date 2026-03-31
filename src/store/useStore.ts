@@ -52,6 +52,7 @@ interface AppStore {
   // Desks
   desks: Desk[];
   addDesk: (desk: Omit<Desk, 'id' | 'createdAt'>) => void;
+  deleteDesk: (id: string) => void;
 
   // Trading Accounts
   tradingAccounts: TradingAccount[];
