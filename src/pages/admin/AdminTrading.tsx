@@ -1,138 +1,451 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Edit2 } from 'lucide-react';
+import { Search, Edit2, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTableControls } from '@/hooks/useTableControls';
+import TablePagination from '@/components/TablePagination';
 
 export default function AdminTrading() {
-  const { tradingAccounts, positions, clients, assets, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice } = useStore();
+  const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice } = useStore();
   const { lang } = useSettingsStore();
+
+  // Filters
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState('All');
+  const [balanceFilter, setBalanceFilter] = useState('All');
+  const [withdrawnFilter, setWithdrawnFilter] = useState('All');
+  const [profitFilter, setProfitFilter] = useState('All');
+  const [demoFilter, setDemoFilter] = useState('All');
+  const [showFilters, setShowFilters] = useState(true);
+
+  // Selected account & position edit
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [editPosition, setEditPosition] = useState<any>(null);
   const [editAccount, setEditAccount] = useState<any>(null);
 
-  const accounts = tradingAccounts.filter(a => {
-    if (groupFilter !== 'All' && a.group !== groupFilter) return false;
-    if (search) {
-      const client = clients.find(c => c.id === a.clientId);
-      const s = search.toLowerCase();
-      return a.accountNumber.includes(s) || (client && (client.lastName.toLowerCase().includes(s) || client.firstName.toLowerCase().includes(s)));
-    }
-    return true;
-  });
+  // TP/SL toggles for edit dialog
+  const [tpEnabled, setTpEnabled] = useState(false);
+  const [slEnabled, setSlEnabled] = useState(false);
 
-  const openPositions = selectedAccount ? positions.filter(p => p.accountId === selectedAccount && p.status === 'Open') : [];
-  const groups = [...new Set(tradingAccounts.map(a => a.group))];
+  const groups = useMemo(() => [...new Set(tradingAccounts.map(a => a.group))], [tradingAccounts]);
+
+  const filtered = useMemo(() => {
+    let result = [...tradingAccounts];
+    if (groupFilter !== 'All') result = result.filter(a => a.group === groupFilter);
+    if (demoFilter !== 'All') {
+      if (demoFilter === 'Real') result = result.filter(a => !a.isDemo);
+      else result = result.filter(a => a.isDemo);
+    }
+    if (balanceFilter !== 'All') {
+      if (balanceFilter === '>0') result = result.filter(a => a.balance > 0);
+      else if (balanceFilter === '=0') result = result.filter(a => a.balance === 0);
+    }
+    if (withdrawnFilter !== 'All') {
+      if (withdrawnFilter === '>0') result = result.filter(a => a.withdrawn > 0);
+      else if (withdrawnFilter === '=0') result = result.filter(a => a.withdrawn === 0);
+    }
+    if (profitFilter !== 'All') {
+      if (profitFilter === '>0') result = result.filter(a => a.profit > 0);
+      else if (profitFilter === '<0') result = result.filter(a => a.profit < 0);
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      result = result.filter(a => {
+        const client = clients.find(c => c.id === a.clientId);
+        return a.accountNumber.includes(s) || (client && (client.lastName.toLowerCase().includes(s) || client.firstName.toLowerCase().includes(s)));
+      });
+    }
+    return result;
+  }, [tradingAccounts, groupFilter, demoFilter, balanceFilter, withdrawnFilter, profitFilter, search, clients]);
+
+  const { paginated, page, setPage, perPage, setPerPage, totalPages } = useTableControls(filtered);
+
+  const selectedAcc = tradingAccounts.find(a => a.id === selectedAccount);
+  const accountPositions = selectedAccount ? positions.filter(p => p.accountId === selectedAccount && p.status === 'Open') : [];
+
+  const getMarginDeposit = (pos: any) => {
+    return (pos.openPrice * pos.volume * 100000 / (selectedAcc?.leverage || 100)).toFixed(2);
+  };
+
+  const openEditPosition = (p: any) => {
+    setEditPosition({ ...p });
+    setTpEnabled(!!p.takeProfit);
+    setSlEnabled(!!p.stopLoss);
+  };
+
+  const handleSavePosition = () => {
+    if (!editPosition) return;
+    const updates = {
+      volume: editPosition.volume,
+      openPrice: editPosition.openPrice,
+      openDate: editPosition.openDate,
+      swap: editPosition.swap,
+      commission: editPosition.commission,
+      takeProfit: tpEnabled ? editPosition.takeProfit : undefined,
+      stopLoss: slEnabled ? editPosition.stopLoss : undefined,
+    };
+    updatePosition(editPosition.id, updates);
+    setEditPosition(null);
+  };
+
+  const resetFilters = () => {
+    setGroupFilter('All'); setBalanceFilter('All'); setWithdrawnFilter('All'); setProfitFilter('All'); setDemoFilter('All'); setSearch('');
+  };
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-lg md:text-xl font-semibold mb-4">{t(lang, 'trading')}</h1>
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative max-w-sm flex-1"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input placeholder={t(lang, 'search')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
-        <Select value={groupFilter} onValueChange={setGroupFilter}><SelectTrigger className="w-36 md:w-40"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="All">{t(lang, 'allGroups')}</SelectItem>{groups.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'trading')}</h1>
+        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+          <Filter size={14} className="mr-1" />Фильтры
+        </Button>
       </div>
 
-      <div className="bg-card rounded-lg border overflow-hidden mb-6">
+      {/* Filter bar */}
+      {showFilters && (
+        <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/30 rounded-lg border items-end">
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Группа</label>
+            <Select value={groupFilter} onValueChange={setGroupFilter}>
+              <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Все</SelectItem>
+                {groups.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Средства</label>
+            <Select value={balanceFilter} onValueChange={setBalanceFilter}>
+              <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Все</SelectItem>
+                <SelectItem value=">0">&gt; 0</SelectItem>
+                <SelectItem value="=0">= 0</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Выводил</label>
+            <Select value={withdrawnFilter} onValueChange={setWithdrawnFilter}>
+              <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Все</SelectItem>
+                <SelectItem value=">0">Да</SelectItem>
+                <SelectItem value="=0">Нет</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Торгует прибыльно</label>
+            <Select value={profitFilter} onValueChange={setProfitFilter}>
+              <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Все</SelectItem>
+                <SelectItem value=">0">Да</SelectItem>
+                <SelectItem value="<0">Нет</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Демо/Реальный</label>
+            <Select value={demoFilter} onValueChange={setDemoFilter}>
+              <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">Все</SelectItem>
+                <SelectItem value="Real">Реальный</SelectItem>
+                <SelectItem value="Demo">Демо</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="relative flex-1 min-w-[160px]">
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Поиск</label>
+            <div className="relative">
+              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Имя или номер счёта" value={search} onChange={e => setSearch(e.target.value)} className="pl-7 h-8 text-xs" />
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={resetFilters}>Сброс</Button>
+        </div>
+      )}
+
+      {/* Accounts table */}
+      <div className="bg-card rounded-lg border overflow-hidden mb-1">
         <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead><tr className="bg-muted/30"><th>{t(lang, 'group')}</th><th>{t(lang, 'account')}</th><th>{t(lang, 'fullName')}</th><th className="hidden sm:table-cell">{t(lang, 'deposited')}</th><th className="hidden sm:table-cell">{t(lang, 'withdrawn')}</th><th>{t(lang, 'balance')}</th><th className="hidden md:table-cell">{t(lang, 'equity')}</th><th>{t(lang, 'profit')}</th><th className="hidden sm:table-cell">{t(lang, 'trades')}</th><th></th></tr></thead>
-            <tbody>{accounts.map(a => {
-              const client = clients.find(c => c.id === a.clientId);
-              return (
-                <tr key={a.id} className={`cursor-pointer ${selectedAccount === a.id ? 'bg-primary/5' : ''}`} onClick={() => setSelectedAccount(a.id)}>
-                  <td><span className="status-badge status-new">{a.group}</span></td>
-                  <td className="font-medium">{a.accountNumber}</td>
-                  <td className="whitespace-nowrap">{client ? `${client.lastName} ${client.firstName}` : '—'}</td>
-                  <td className="text-success hidden sm:table-cell">${a.deposited.toLocaleString()}</td>
-                  <td className="text-destructive hidden sm:table-cell">${a.withdrawn.toLocaleString()}</td>
-                  <td className="font-semibold">${a.balance.toFixed(2)}</td>
-                  <td className="hidden md:table-cell">${a.equity.toFixed(2)}</td>
-                  <td className={a.profit >= 0 ? 'text-success' : 'text-destructive'}>{a.profit >= 0 ? '+' : ''}{a.profit.toFixed(2)}</td>
-                  <td className="hidden sm:table-cell">{a.tradesCount}</td>
-                  <td><Button variant="ghost" size="sm" onClick={e => { e.stopPropagation(); setEditAccount({ ...a }); }}><Edit2 size={14} /></Button></td>
-                </tr>
-              );
-            })}</tbody>
+          <table className="data-table text-xs">
+            <thead>
+              <tr className="bg-muted/30">
+                <th className="whitespace-nowrap">Группа</th>
+                <th className="whitespace-nowrap">Номер</th>
+                <th className="whitespace-nowrap">Ф.И.О</th>
+                <th className="whitespace-nowrap text-right">Введено</th>
+                <th className="whitespace-nowrap text-right">Снято</th>
+                <th className="whitespace-nowrap text-right">Введено/выведено</th>
+                <th className="whitespace-nowrap text-right">Ввод-вывод</th>
+                <th className="whitespace-nowrap text-right">Сделки</th>
+                <th className="whitespace-nowrap text-right">Уровень средств</th>
+                <th className="whitespace-nowrap text-right">Потрачено бонусов</th>
+                <th className="whitespace-nowrap text-right">Прибыль</th>
+                <th className="whitespace-nowrap text-right">Средства</th>
+                <th className="w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.map(a => {
+                const client = clients.find(c => c.id === a.clientId);
+                const netDeposit = a.deposited - a.withdrawn;
+                const depositWithdrawnRatio = `${a.deposited.toFixed(2)}/${a.withdrawn.toFixed(2)}`;
+                const marginLevel = a.margin > 0 ? ((a.equity / a.margin) * 100).toFixed(2) : '0.00';
+                const isSelected = selectedAccount === a.id;
+                return (
+                  <tr key={a.id}
+                    className={`cursor-pointer transition-colors ${isSelected ? 'bg-primary/10 font-medium' : 'hover:bg-muted/20'}`}
+                    onClick={() => setSelectedAccount(a.id)}
+                  >
+                    <td><span className="text-xs px-1.5 py-0.5 rounded bg-muted">{a.group} ({a.isDemo ? 'demo' : 'live'})</span></td>
+                    <td className="font-medium">{a.accountNumber}</td>
+                    <td className="whitespace-nowrap">{client ? `${client.lastName} ${client.firstName}` : '—'}</td>
+                    <td className="text-right tabular-nums">{a.deposited.toFixed(2)}</td>
+                    <td className="text-right tabular-nums">{a.withdrawn.toFixed(2)}</td>
+                    <td className="text-right tabular-nums text-muted-foreground">{depositWithdrawnRatio}</td>
+                    <td className="text-right tabular-nums">{netDeposit.toFixed(2)}</td>
+                    <td className="text-right tabular-nums">{a.tradesCount}</td>
+                    <td className="text-right tabular-nums">{marginLevel}</td>
+                    <td className="text-right tabular-nums">{a.bonusSpent.toFixed(2)}</td>
+                    <td className={`text-right tabular-nums font-medium ${a.profit > 0 ? 'text-emerald-500' : a.profit < 0 ? 'text-red-500' : ''}`}>
+                      {a.profit.toFixed(2)}
+                    </td>
+                    <td className="text-right tabular-nums font-semibold">{a.equity.toFixed(2)}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <button onClick={() => setEditAccount({ ...a })} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Edit2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
           </table>
+        </div>
+        <div className="flex items-center justify-between px-3 py-2 border-t text-xs text-muted-foreground">
+          <span>Всего счетов: {filtered.length}</span>
+          <TablePagination page={page} totalPages={totalPages} total={filtered.length} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} />
         </div>
       </div>
 
+      {/* Positions for selected account */}
       {selectedAccount && (
-        <div>
-          <h2 className="text-base md:text-lg font-semibold mb-3">{t(lang, 'openPositionsFor')} — #{tradingAccounts.find(a => a.id === selectedAccount)?.accountNumber}</h2>
+        <div className="mt-4">
+          <h2 className="text-sm font-semibold mb-2">
+            Торговля — {selectedAcc?.accountNumber}
+          </h2>
           <div className="bg-card rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead><tr className="bg-muted/30"><th>{t(lang, 'symbol')}</th><th>{t(lang, 'type')}</th><th>{t(lang, 'volume')}</th><th>{t(lang, 'openPrice')}</th><th>{t(lang, 'currentPrice')}</th><th className="hidden sm:table-cell">{t(lang, 'swap')}</th><th className="hidden sm:table-cell">{t(lang, 'commission')}</th><th>{t(lang, 'profit')}</th><th>{t(lang, 'actions')}</th></tr></thead>
-                <tbody>{openPositions.map(p => (
-                  <tr key={p.id}>
-                    <td className="font-medium">{p.symbol}</td>
-                    <td><span className={`status-badge ${p.type === 'Buy' ? 'status-live' : 'status-hot'}`}>{p.type}</span></td>
-                    <td>{p.volume}</td><td>{p.openPrice}</td><td>{p.currentPrice}</td>
-                    <td className="hidden sm:table-cell">{p.swap.toFixed(2)}</td>
-                    <td className="hidden sm:table-cell">{p.commission.toFixed(2)}</td>
-                    <td className={p.profit >= 0 ? 'text-success font-semibold' : 'text-destructive font-semibold'}>{p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</td>
-                    <td>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setEditPosition({ ...p })}><Edit2 size={14} /></Button>
-                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => closePosition(p.id)}>{t(lang, 'closePosition')}</Button>
-                      </div>
-                    </td>
+              <table className="data-table text-xs">
+                <thead>
+                  <tr className="bg-muted/30">
+                    <th>Символ</th>
+                    <th>Номер</th>
+                    <th>Тип</th>
+                    <th className="text-right">Объем</th>
+                    <th className="text-right">Цена открытия</th>
+                    <th className="text-right">Текущая цена</th>
+                    <th className="text-right">Прибыль</th>
+                    <th className="w-16"></th>
                   </tr>
-                ))}</tbody>
+                </thead>
+                <tbody>
+                  {accountPositions.length === 0 ? (
+                    <tr><td colSpan={8} className="text-center text-muted-foreground py-6">Нет открытых позиций</td></tr>
+                  ) : accountPositions.map(p => (
+                    <tr key={p.id}>
+                      <td className="font-medium">{p.symbol}</td>
+                      <td className="text-muted-foreground">{p.id}</td>
+                      <td>
+                        <span className={`inline-flex items-center gap-1 ${p.type === 'Buy' ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {p.type === 'Buy' ? '↑' : '↓'} {p.type === 'Buy' ? 'Покупка' : 'Продажа'}
+                        </span>
+                      </td>
+                      <td className="text-right tabular-nums">{p.volume.toFixed(2)} лот</td>
+                      <td className="text-right tabular-nums">{p.openPrice}</td>
+                      <td className="text-right tabular-nums">{p.currentPrice}</td>
+                      <td className={`text-right tabular-nums font-medium ${p.profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}
+                      </td>
+                      <td>
+                        <div className="flex gap-0.5 justify-end">
+                          <button onClick={() => openEditPosition(p)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground" title="Изменить">
+                            <Edit2 size={12} />
+                          </button>
+                          <button onClick={() => closePosition(p.id)} className="p-1 rounded hover:bg-muted text-red-500" title="Закрыть">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
-            {openPositions.length === 0 && <div className="p-6 text-center text-muted-foreground text-sm">{t(lang, 'noOpenPositions')}</div>}
           </div>
         </div>
       )}
 
+      {/* Edit Position Dialog — matching reference screenshot */}
       <Dialog open={!!editPosition} onOpenChange={() => setEditPosition(null)}>
-        <DialogContent className="mx-4"><DialogHeader><DialogTitle>{t(lang, 'editPosition')}</DialogTitle></DialogHeader>
-          {editPosition && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'symbol')}</label><Input value={editPosition.symbol} disabled /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'type')}</label><Input value={editPosition.type} disabled /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'volume')}</label><Input type="number" value={editPosition.volume} onChange={e => setEditPosition({...editPosition, volume: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'openPrice')}</label><Input type="number" value={editPosition.openPrice} onChange={e => setEditPosition({...editPosition, openPrice: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'swap')}</label><Input type="number" value={editPosition.swap} onChange={e => setEditPosition({...editPosition, swap: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'commission')}</label><Input type="number" value={editPosition.commission} onChange={e => setEditPosition({...editPosition, commission: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'takeProfit')}</label><Input type="number" value={editPosition.takeProfit||''} onChange={e => setEditPosition({...editPosition, takeProfit: Number(e.target.value)||undefined})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'stopLoss')}</label><Input type="number" value={editPosition.stopLoss||''} onChange={e => setEditPosition({...editPosition, stopLoss: Number(e.target.value)||undefined})} /></div>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Изменить позицию #{editPosition?.id}</DialogTitle>
+          </DialogHeader>
+          {editPosition && (() => {
+            const currentPrice = getEffectivePrice(editPosition.symbol);
+            const price = editPosition.type === 'Buy' ? currentPrice.bid : currentPrice.ask;
+            const pipDiff = editPosition.type === 'Buy'
+              ? (price - editPosition.openPrice)
+              : (editPosition.openPrice - price);
+            const calcProfit = pipDiff * editPosition.volume * 100000;
+            const marginVal = (editPosition.openPrice * editPosition.volume * 100000 / (selectedAcc?.leverage || 100));
+
+            return (
+              <div className="space-y-4">
+                {/* Symbol header */}
+                <div className="flex items-center gap-2 text-base font-semibold">
+                  <span>{editPosition.symbol}</span>
+                  <span className={editPosition.type === 'Buy' ? 'text-emerald-600' : 'text-red-500'}>
+                    {editPosition.type === 'Buy' ? '▲ Покупка' : '▼ Продажа'}
+                  </span>
+                </div>
+
+                {/* Row 1: Volume, Open Price, Open Date */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Объем (лот)</label>
+                    <Input type="number" value={editPosition.volume} step="0.01" min="0.01"
+                      onChange={e => setEditPosition({ ...editPosition, volume: Number(e.target.value) })} className="h-9" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Цена открытия</label>
+                    <Input type="number" value={editPosition.openPrice} step="0.00001"
+                      onChange={e => setEditPosition({ ...editPosition, openPrice: Number(e.target.value) })} className="h-9" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Дата открытия</label>
+                    <Input type="date" value={editPosition.openDate?.split('T')[0] || ''}
+                      onChange={e => setEditPosition({ ...editPosition, openDate: e.target.value + 'T' + (editPosition.openDate?.split('T')[1] || '00:00:00') })} className="h-9" />
+                  </div>
+                </div>
+
+                {/* Margin info */}
+                <div className="text-xs text-muted-foreground">
+                  Залог: <span className="font-medium text-foreground">${marginVal.toFixed(2)}</span>
+                </div>
+
+                {/* Row 2: Swap, Commission, Open Time */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Своп (USD)</label>
+                    <Input type="number" value={editPosition.swap} step="0.01"
+                      onChange={e => setEditPosition({ ...editPosition, swap: Number(e.target.value) })} className="h-9" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Комиссия (USD)</label>
+                    <Input type="number" value={editPosition.commission} step="0.01"
+                      onChange={e => setEditPosition({ ...editPosition, commission: Number(e.target.value) })} className="h-9" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground mb-1 block">Время открытия</label>
+                    <Input type="time" value={editPosition.openDate?.split('T')[1]?.substring(0, 5) || '00:00'}
+                      onChange={e => setEditPosition({ ...editPosition, openDate: (editPosition.openDate?.split('T')[0] || '2026-01-01') + 'T' + e.target.value + ':00' })} className="h-9" />
+                  </div>
+                </div>
+
+                {/* TP / SL */}
+                <div className="border-t pt-3">
+                  <div className="text-xs font-medium mb-2">Ограничения</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2 text-xs mb-1.5">
+                        <Checkbox checked={tpEnabled} onCheckedChange={v => setTpEnabled(!!v)} />
+                        Take Profit
+                      </label>
+                      {tpEnabled && (
+                        <Input type="number" value={editPosition.takeProfit || ''} step="0.00001" placeholder="—"
+                          onChange={e => setEditPosition({ ...editPosition, takeProfit: Number(e.target.value) || undefined })} className="h-9" />
+                      )}
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-xs mb-1.5">
+                        <Checkbox checked={slEnabled} onCheckedChange={v => setSlEnabled(!!v)} />
+                        Stop Loss
+                      </label>
+                      {slEnabled && (
+                        <Input type="number" value={editPosition.stopLoss || ''} step="0.00001" placeholder="—"
+                          onChange={e => setEditPosition({ ...editPosition, stopLoss: Number(e.target.value) || undefined })} className="h-9" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current price & profit display */}
+                <div className="border-t pt-3 flex items-center gap-6 text-sm">
+                  <div>
+                    Текущая цена: <span className="font-semibold tabular-nums">{price.toFixed(5)}</span>
+                  </div>
+                  <div>
+                    Прибыль: <span className={`font-semibold tabular-nums ${calcProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {calcProfit >= 0 ? '+' : ''}${calcProfit.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button onClick={handleSavePosition}>Изменить</Button>
+                  <Button variant="outline" onClick={() => setEditPosition(null)}>Отмена</Button>
+                </div>
               </div>
-              <div className="flex gap-2"><Button onClick={() => { updatePosition(editPosition.id, editPosition); setEditPosition(null); }}>{t(lang, 'save')}</Button><Button variant="outline" onClick={() => setEditPosition(null)}>{t(lang, 'cancel')}</Button></div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
+      {/* Edit Account Dialog */}
       <Dialog open={!!editAccount} onOpenChange={() => setEditAccount(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto mx-4"><DialogHeader><DialogTitle>{t(lang, 'editAccount')} #{editAccount?.accountNumber}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Редактировать счёт #{editAccount?.accountNumber}</DialogTitle></DialogHeader>
           {editAccount && (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'group')}</label><Input value={editAccount.group} onChange={e => setEditAccount({...editAccount, group: e.target.value})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'leverage')}</label><Input type="number" value={editAccount.leverage} onChange={e => setEditAccount({...editAccount, leverage: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'stopOut')}</label><Input type="number" value={editAccount.stopOut} onChange={e => setEditAccount({...editAccount, stopOut: Number(e.target.value)})} /></div>
-                <div><label className="text-xs text-muted-foreground">{t(lang, 'maxOrders')}</label><Input type="number" value={editAccount.maxOrders} onChange={e => setEditAccount({...editAccount, maxOrders: Number(e.target.value)})} /></div>
+                <div><label className="text-xs text-muted-foreground">Группа</label><Input value={editAccount.group} onChange={e => setEditAccount({ ...editAccount, group: e.target.value })} /></div>
+                <div><label className="text-xs text-muted-foreground">Плечо</label><Input type="number" value={editAccount.leverage} onChange={e => setEditAccount({ ...editAccount, leverage: Number(e.target.value) })} /></div>
+                <div><label className="text-xs text-muted-foreground">Stop Out (%)</label><Input type="number" value={editAccount.stopOut} onChange={e => setEditAccount({ ...editAccount, stopOut: Number(e.target.value) })} /></div>
+                <div><label className="text-xs text-muted-foreground">Макс. ордеров</label><Input type="number" value={editAccount.maxOrders} onChange={e => setEditAccount({ ...editAccount, maxOrders: Number(e.target.value) })} /></div>
               </div>
               <div className="flex items-center gap-4 flex-wrap">
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={editAccount.tradingAllowed} onCheckedChange={v => setEditAccount({...editAccount, tradingAllowed: !!v})} /> {t(lang, 'tradingAllowed')}</label>
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={editAccount.robotsAllowed} onCheckedChange={v => setEditAccount({...editAccount, robotsAllowed: !!v})} /> {t(lang, 'robotsAllowed')}</label>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={editAccount.tradingAllowed} onCheckedChange={v => setEditAccount({ ...editAccount, tradingAllowed: !!v })} /> Торговля разрешена</label>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={editAccount.robotsAllowed} onCheckedChange={v => setEditAccount({ ...editAccount, robotsAllowed: !!v })} /> Роботы разрешены</label>
               </div>
-              <div><label className="text-xs text-muted-foreground">{t(lang, 'status')}</label>
-                <Select value={editAccount.status} onValueChange={v => setEditAccount({...editAccount, status: v})}><SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="Active">Active</SelectItem><SelectItem value="Inactive">Inactive</SelectItem><SelectItem value="Blocked">Blocked</SelectItem></SelectContent></Select></div>
-              <div className="flex gap-2"><Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); }}>{t(lang, 'save')}</Button><Button variant="outline" onClick={() => setEditAccount(null)}>{t(lang, 'cancel')}</Button></div>
+              <div>
+                <label className="text-xs text-muted-foreground">Статус</label>
+                <Select value={editAccount.status} onValueChange={v => setEditAccount({ ...editAccount, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Blocked">Blocked</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-2 border-t">
+                <Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); }}>Сохранить</Button>
+                <Button variant="outline" onClick={() => setEditAccount(null)}>Отмена</Button>
+              </div>
             </div>
           )}
         </DialogContent>
