@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Plus, Download, Upload, ArrowRight, Filter, X } from 'lucide-react';
+import { Search, Plus, Download, Upload, ArrowRight, X, Pencil, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,19 +13,50 @@ import { toast } from 'sonner';
 import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
 
+type LeadStatus = 'New' | 'Hot' | 'Warm' | 'Cold' | 'Lead' | 'Call Back' | 'No potential' | 'Not interesting' | 'No answer';
+
+const allStatuses: LeadStatus[] = ['New', 'Hot', 'Warm', 'Cold', 'Lead', 'Call Back', 'No potential', 'Not interesting', 'No answer'];
+
+const statusColors: Record<string, string> = {
+  New: 'status-new', Hot: 'status-hot', Warm: 'bg-orange-100 text-orange-700',
+  Lead: 'status-lead', Cold: 'bg-gray-100 text-gray-600',
+  'Not interesting': 'bg-gray-100 text-gray-500', 'No answer': 'status-pending',
+  'No potential': 'bg-slate-100 text-slate-600', 'Call Back': 'bg-indigo-100 text-indigo-700',
+};
+
+interface SavedFilter {
+  id: string;
+  label: string;
+  statuses: LeadStatus[];
+  managerId: string;
+  country: string;
+  source: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+const defaultFilters: SavedFilter[] = [
+  { id: 'all', label: 'Все', statuses: [], managerId: '', country: '', source: '', dateFrom: '', dateTo: '' },
+  ...allStatuses.map(s => ({ id: s, label: s === 'Not interesting' ? 'Not intr.' : s, statuses: [s] as LeadStatus[], managerId: '', country: '', source: '', dateFrom: '', dateTo: '' })),
+];
+
+const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
+  label: '', statuses: [], managerId: '', country: '', source: '', dateFrom: '', dateTo: '',
+});
+
 export default function AdminLeads() {
-  const { leads, employees, desks, addLead, convertLeadToClient, updateLead } = useStore();
+  const { leads, employees, addLead, convertLeadToClient } = useStore();
   const { lang } = useSettingsStore();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   const [showCreate, setShowCreate] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Advanced filters
-  const [filterManager, setFilterManager] = useState('All');
-  const [filterCountry, setFilterCountry] = useState('');
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
+  // Saved filters
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(defaultFilters);
+  const [activeFilterId, setActiveFilterId] = useState('all');
+  const [editingFilter, setEditingFilter] = useState<SavedFilter | null>(null);
+  const [showFilterEditor, setShowFilterEditor] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const [newLead, setNewLead] = useState({
     lastName: '', firstName: '', email: '', phone: '', country: '', status: 'New' as any,
@@ -46,19 +77,29 @@ export default function AdminLeads() {
     e.target.value = '';
   };
 
+  const activeFilter = savedFilters.find(f => f.id === activeFilterId) || savedFilters[0];
+
+  const applyFilter = useCallback((f: SavedFilter, list: typeof leads) => {
+    let result = list.filter(l => !l.convertedClientId);
+    if (f.statuses.length > 0) result = result.filter(l => f.statuses.includes(l.status as LeadStatus));
+    if (f.managerId) result = result.filter(l => l.responsibleId === f.managerId);
+    if (f.country) result = result.filter(l => l.country?.toLowerCase().includes(f.country.toLowerCase()));
+    if (f.source) result = result.filter(l => l.source?.toLowerCase().includes(f.source.toLowerCase()));
+    if (f.dateFrom) result = result.filter(l => l.createdAt >= f.dateFrom);
+    if (f.dateTo) result = result.filter(l => l.createdAt <= f.dateTo);
+    return result;
+  }, []);
+
   const filtered = useMemo(() => {
-    let result = leads.filter(l => !l.convertedClientId);
-    if (statusFilter !== 'All') result = result.filter(l => l.status === statusFilter);
-    if (filterManager !== 'All') result = result.filter(l => l.responsibleId === filterManager);
-    if (filterCountry) result = result.filter(l => l.country?.toLowerCase().includes(filterCountry.toLowerCase()));
-    if (filterDateFrom) result = result.filter(l => l.createdAt >= filterDateFrom);
-    if (filterDateTo) result = result.filter(l => l.createdAt <= filterDateTo);
+    let result = applyFilter(activeFilter, leads);
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(l => l.lastName.toLowerCase().includes(s) || l.firstName.toLowerCase().includes(s) || l.email.toLowerCase().includes(s));
     }
     return result;
-  }, [leads, statusFilter, search, filterManager, filterCountry, filterDateFrom, filterDateTo]);
+  }, [leads, activeFilter, search, applyFilter]);
+
+  const getFilterCount = useCallback((f: SavedFilter) => applyFilter(f, leads).length, [applyFilter, leads]);
 
   const handleCreate = () => {
     if (!newLead.lastName || !newLead.email) { toast.error('Фамилия и Email обязательны'); return; }
@@ -68,8 +109,34 @@ export default function AdminLeads() {
     toast.success('Лид создан');
   };
 
-  const hasActiveFilters = filterManager !== 'All' || filterCountry || filterDateFrom || filterDateTo;
-  const clearFilters = () => { setFilterManager('All'); setFilterCountry(''); setFilterDateFrom(''); setFilterDateTo(''); };
+  const handleSaveFilter = () => {
+    if (!editingFilter) return;
+    if (!editingFilter.label.trim()) { toast.error('Введите название'); return; }
+    if (editingFilter.id) {
+      setSavedFilters(prev => prev.map(f => f.id === editingFilter.id ? editingFilter : f));
+    } else {
+      const newF = { ...editingFilter, id: `custom-${Date.now()}` };
+      setSavedFilters(prev => [...prev, newF]);
+      setActiveFilterId(newF.id);
+    }
+    setShowFilterEditor(false);
+    setEditingFilter(null);
+    toast.success('Фильтр сохранён');
+  };
+
+  const handleDeleteFilter = (fId: string) => {
+    setSavedFilters(prev => prev.filter(f => f.id !== fId));
+    if (activeFilterId === fId) setActiveFilterId('all');
+    toast.success('Фильтр удалён');
+  };
+
+  const handleRename = (fId: string) => {
+    setSavedFilters(prev => prev.map(f => f.id === fId ? { ...f, label: renameValue } : f));
+    setRenamingId(null);
+    setRenameValue('');
+  };
+
+  const isCustom = (fId: string) => fId.startsWith('custom-');
 
   const { paginated, page, setPage, perPage, setPerPage, totalPages, toggleSort, sortIcon } = useTableControls(filtered);
 
@@ -88,9 +155,6 @@ export default function AdminLeads() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'leads')}</h1>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className={hasActiveFilters ? 'border-primary text-primary' : ''}>
-            <Filter size={14} className="mr-1" /> {t(lang, 'filters') || 'Фильтры'}
-          </Button>
           <input type="file" ref={fileInputRef} accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}><Upload size={14} className="mr-1" /> {t(lang, 'import')}</Button>
           <Button variant="outline" size="sm" onClick={() => exportLeadsToXlsx(filtered)}><Download size={14} className="mr-1" /> {t(lang, 'export')}</Button>
@@ -98,56 +162,124 @@ export default function AdminLeads() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative max-w-sm flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t(lang, 'search')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 md:w-40"><SelectValue placeholder={t(lang, 'status')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">{t(lang, 'all')}</SelectItem>
-            <SelectItem value="New">New</SelectItem>
-            <SelectItem value="Hot">Hot</SelectItem>
-            <SelectItem value="Lead">Lead</SelectItem>
-            <SelectItem value="No answer">No answer</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Search */}
+      <div className="relative max-w-md mb-3">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder={t(lang, 'search')} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      {/* Advanced filters */}
-      {showFilters && (
-        <div className="mb-4 p-4 bg-card rounded-lg border space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Расширенные фильтры</span>
-            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs h-7"><X size={12} className="mr-1" /> Сбросить</Button>}
+      {/* Saved filter tabs */}
+      <div className="flex gap-1.5 mb-4 flex-wrap items-center">
+        {savedFilters.map(f => (
+          <div key={f.id} className="relative group">
+            {renamingId === f.id ? (
+              <div className="flex items-center gap-1">
+                <Input value={renameValue} onChange={e => setRenameValue(e.target.value)} className="h-7 w-28 text-xs" autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') handleRename(f.id); if (e.key === 'Escape') setRenamingId(null); }} />
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleRename(f.id)}><Save size={12} /></Button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setActiveFilterId(f.id)}
+                onDoubleClick={() => { setRenamingId(f.id); setRenameValue(f.label); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                  activeFilterId === f.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {f.label}
+                <span className="ml-1 opacity-60">{getFilterCount(f)}</span>
+              </button>
+            )}
+            {renamingId !== f.id && activeFilterId === f.id && (
+              <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={e => { e.stopPropagation(); setEditingFilter({ ...f }); setShowFilterEditor(true); }} className="w-4 h-4 rounded-full bg-card border shadow flex items-center justify-center"><Pencil size={8} /></button>
+                {isCustom(f.id) && <button onClick={e => { e.stopPropagation(); handleDeleteFilter(f.id); }} className="w-4 h-4 rounded-full bg-card border shadow flex items-center justify-center text-destructive"><X size={8} /></button>}
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Менеджер</label>
-              <Select value={filterManager} onValueChange={setFilterManager}>
-                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">Все</SelectItem>
-                  {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
-                </SelectContent>
-              </Select>
+        ))}
+        <button
+          onClick={() => { setEditingFilter({ ...emptyFilterEdit(), id: '' } as any); setShowFilterEditor(true); }}
+          className="px-2.5 py-1.5 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted border border-dashed border-border transition-colors"
+        >
+          <Plus size={12} className="inline mr-0.5" /> Фильтр
+        </button>
+      </div>
+
+      {/* Filter editor dialog */}
+      <Dialog open={showFilterEditor} onOpenChange={setShowFilterEditor}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editingFilter?.id ? 'Редактировать фильтр' : 'Новый фильтр'}</DialogTitle></DialogHeader>
+          {editingFilter && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Название фильтра</label>
+                <Input value={editingFilter.label} onChange={e => setEditingFilter({ ...editingFilter, label: e.target.value })} placeholder="Например: Горячие лиды EU" className="h-9" />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Статусы (множественный выбор)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {allStatuses.map(s => (
+                    <button key={s} onClick={() => {
+                      const has = editingFilter.statuses.includes(s);
+                      setEditingFilter({ ...editingFilter, statuses: has ? editingFilter.statuses.filter(x => x !== s) : [...editingFilter.statuses, s] });
+                    }} className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      editingFilter.statuses.includes(s) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}>{s}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Менеджер</label>
+                  <Select value={editingFilter.managerId || '_none'} onValueChange={v => setEditingFilter({ ...editingFilter, managerId: v === '_none' ? '' : v })}>
+                    <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Все</SelectItem>
+                      {employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Страна</label>
+                  <Input value={editingFilter.country} onChange={e => setEditingFilter({ ...editingFilter, country: e.target.value })} placeholder="Любая" className="h-9 text-xs" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Источник</label>
+                  <Input value={editingFilter.source} onChange={e => setEditingFilter({ ...editingFilter, source: e.target.value })} placeholder="Любой" className="h-9 text-xs" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Дата создания от</label>
+                  <Input type="date" value={editingFilter.dateFrom} onChange={e => setEditingFilter({ ...editingFilter, dateFrom: e.target.value })} className="h-9 text-xs" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Дата создания до</label>
+                  <Input type="date" value={editingFilter.dateTo} onChange={e => setEditingFilter({ ...editingFilter, dateTo: e.target.value })} className="h-9 text-xs" />
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-2 border-t">
+                <div>
+                  {editingFilter.id && isCustom(editingFilter.id) && (
+                    <Button variant="destructive" size="sm" onClick={() => { handleDeleteFilter(editingFilter.id); setShowFilterEditor(false); }}>
+                      <Trash2 size={12} className="mr-1" /> Удалить
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowFilterEditor(false)}>Отмена</Button>
+                  <Button size="sm" onClick={handleSaveFilter}><Save size={12} className="mr-1" /> Сохранить</Button>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Страна</label>
-              <Input value={filterCountry} onChange={e => setFilterCountry(e.target.value)} placeholder="Страна" className="h-9 text-xs" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Дата от</label>
-              <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="h-9 text-xs" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Дата до</label>
-              <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="h-9 text-xs" />
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
@@ -157,7 +289,7 @@ export default function AdminLeads() {
             <div key={lead.id} className="bg-card rounded-lg border p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-sm">{lead.lastName} {lead.firstName}</span>
-                <span className={`status-badge ${lead.status === 'Hot' ? 'status-hot' : lead.status === 'New' ? 'status-new' : 'status-lead'}`}>{lead.status}</span>
+                <span className={`status-badge ${statusColors[lead.status] || 'status-new'}`}>{lead.status}</span>
               </div>
               <div className="text-xs text-muted-foreground space-y-0.5">
                 <div>{lead.email}</div>
@@ -197,7 +329,7 @@ export default function AdminLeads() {
                     <td>{lead.email}</td>
                     <td>{lead.phone || '—'}</td>
                     <td>{lead.country || '—'}</td>
-                    <td><span className={`status-badge ${lead.status === 'Hot' ? 'status-hot' : lead.status === 'New' ? 'status-new' : 'status-lead'}`}>{lead.status}</span></td>
+                    <td><span className={`status-badge ${statusColors[lead.status] || 'status-new'}`}>{lead.status}</span></td>
                     <td className="text-sm text-muted-foreground">{lead.source || '—'}</td>
                     <td className="text-xs text-muted-foreground">{new Date(lead.createdAt).toLocaleDateString()}</td>
                     <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName[0]}.` : '—'}</td>
@@ -211,7 +343,7 @@ export default function AdminLeads() {
         <TablePagination page={page} totalPages={totalPages} total={filtered.length} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} />
       </div>
 
-      {/* Create Lead Dialog — Multi-block */}
+      {/* Create Lead Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto mx-4">
           <DialogHeader><DialogTitle>{t(lang, 'newLead')}</DialogTitle></DialogHeader>
@@ -224,7 +356,7 @@ export default function AdminLeads() {
                 <div><label className="text-xs text-muted-foreground">{t(lang, 'status')}</label>
                   <Select value={newLead.status} onValueChange={v => setNewLead(n => ({ ...n, status: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{['New','Hot','Lead','No answer'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent>{allStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div><label className="text-xs text-muted-foreground">{t(lang, 'responsible')}</label>
