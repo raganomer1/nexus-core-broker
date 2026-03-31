@@ -579,6 +579,7 @@ export default function AdminAccounts() {
           })()}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }

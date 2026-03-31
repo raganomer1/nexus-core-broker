@@ -197,7 +197,7 @@ export default function AdminPayments() {
                           </>
                         )}
                         <button onClick={() => setEditPayment({ ...p })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Редактировать"><Edit2 size={14} /></button>
-                        <button onClick={() => { deletePayment(p.id); toast.success('Платёж удалён'); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить"><Trash2 size={14} /></button>
+                        <button onClick={() => confirmDelete('Удаление платежа', 'Удалить этот платёж?', () => { deletePayment(p.id); toast.success('Платёж удалён'); })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors" title="Удалить"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
