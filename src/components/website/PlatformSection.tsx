@@ -71,10 +71,15 @@ const PlatformSection = () => {
               </div>
               <div className="relative">
                 <div className="rounded-3xl border border-border bg-card p-3 shadow-2xl premium-border">
-                  <div className="rounded-2xl bg-gradient-to-br from-muted/80 to-muted aspect-video flex items-center justify-center overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-primary/5 via-transparent to-primary/10 flex items-center justify-center">
-                      <current.icon className="w-20 h-20 text-primary/20" />
-                    </div>
+                  <div className="rounded-2xl overflow-hidden aspect-video">
+                    <img
+                      src={current.image}
+                      alt={w(current.titleKey)}
+                      loading="lazy"
+                      width={1280}
+                      height={720}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
                 <div className="absolute -inset-6 bg-primary/5 rounded-[2rem] blur-3xl -z-10" />
