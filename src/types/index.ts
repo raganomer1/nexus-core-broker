@@ -382,6 +382,33 @@ export interface Notification {
   createdAt: string;
 }
 
+// ===================== API INTEGRATION =====================
+export interface ApiIntegration {
+  id: string;
+  name: string;
+  apiKey: string;
+  webhookUrl?: string;
+  type: 'leads' | 'clients' | 'both';
+  isActive: boolean;
+  createdAt: string;
+  lastUsed?: string;
+}
+
+// ===================== CLIENT RESTRICTION =====================
+export interface ClientRestriction {
+  id: string;
+  name: string;
+  message: string;
+  restrictTrading: boolean;
+  restrictWithdrawal: boolean;
+  restrictFullAccess: boolean;
+  targetType: 'clients' | 'desks' | 'filters';
+  targetIds: string[];
+  filterConditions?: FilterCondition[];
+  isActive: boolean;
+  createdAt: string;
+}
+
 // ===================== FILTER =====================
 export interface FilterCondition {
   id: string;
