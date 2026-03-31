@@ -348,7 +348,7 @@ export default function AdminAccounts() {
               <div className="flex gap-2 pt-2 border-t">
                 <Button onClick={() => { updateTradingAccount(editAccount.id, editAccount); setEditAccount(null); toast.success('Счёт обновлён'); }}>{t(lang, 'save')}</Button>
                 <Button variant="outline" onClick={() => setEditAccount(null)}>{t(lang, 'cancel')}</Button>
-                <Button variant="destructive" className="ml-auto" onClick={() => { deleteTradingAccount(editAccount.id); setEditAccount(null); toast.success('Счёт удалён'); }}><Trash2 size={14} className="mr-1" /> Удалить</Button>
+                <Button variant="destructive" className="ml-auto" onClick={() => confirmDelete('Удаление счёта', `Удалить счёт ${editAccount.accountNumber}?`, () => { deleteTradingAccount(editAccount.id); setEditAccount(null); toast.success('Счёт удалён'); })}><Trash2 size={14} className="mr-1" /> Удалить</Button>
               </div>
             </div>
           )}

@@ -442,6 +442,7 @@ export default function AdminLeads() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmDeleteDialog state={confirmState} onClose={closeConfirm} />
     </div>
   );
 }
