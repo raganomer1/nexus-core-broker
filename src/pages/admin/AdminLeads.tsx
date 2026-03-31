@@ -303,7 +303,7 @@ export default function AdminLeads() {
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => setEditLead({ ...lead })}><Pencil size={14} /></Button>
                   <Button variant="ghost" size="sm" onClick={() => convertLeadToClient(lead.id)} title={t(lang, 'convertToClient')}><ArrowRight size={14} /></Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { deleteLead(lead.id); toast.success('Лид удалён'); }}><Trash2 size={14} /></Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => confirmDelete('Удаление лида', `Удалить лида ${lead.lastName} ${lead.firstName}?`, () => { deleteLead(lead.id); toast.success('Лид удалён'); })}><Trash2 size={14} /></Button>
                 </div>
               </div>
             </div>
