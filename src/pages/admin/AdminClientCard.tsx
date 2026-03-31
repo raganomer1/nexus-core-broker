@@ -34,7 +34,7 @@ export default function AdminClientCard() {
   const [showAddNote, setShowAddNote] = useState(false);
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
-  const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '' });
+  const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
 
   const client = clients.find(c => c.id === id);
   const resp = client ? employees.find(e => e.id === client.responsibleId) : null;
