@@ -212,6 +212,7 @@ export const useStore = create<AppStore>((set, get) => ({
     const desk = { ...data, id: genId(), createdAt: new Date().toISOString() } as Desk;
     set(s => ({ desks: [...s.desks, desk] }));
   },
+  deleteDesk: (id) => set(s => ({ desks: s.desks.filter(d => d.id !== id) })),
 
   // ==================== TRADING ACCOUNTS ====================
   tradingAccounts: [...mock.tradingAccounts],
