@@ -3,12 +3,16 @@ import { LayoutDashboard, BarChart3, CreditCard, FileText, Shield, Headphones } 
 import CTASection from "@/components/website/CTASection";
 import { useWT } from "@/hooks/useWebsiteTranslation";
 import type { WebsiteTranslationKey } from "@/i18n/websiteTranslations";
+import platformDashboard from "@/assets/platform-dashboard.jpg";
+import platformTerminal from "@/assets/platform-terminal.jpg";
+import platformPayments from "@/assets/platform-payments.jpg";
+import platformAnalytics from "@/assets/platform-analytics.jpg";
 
-const featureKeys: { icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; itemKeys: WebsiteTranslationKey[] }[] = [
-  { icon: LayoutDashboard, titleKey: "platPageDashTitle", descKey: "platPageDashDesc", itemKeys: ["platPageDashF1", "platPageDashF2", "platPageDashF3", "platPageDashF4"] },
-  { icon: BarChart3, titleKey: "platPageTermTitle", descKey: "platPageTermDesc", itemKeys: ["platPageTermF1", "platPageTermF2", "platPageTermF3", "platPageTermF4"] },
-  { icon: CreditCard, titleKey: "platPagePayTitle", descKey: "platPagePayDesc", itemKeys: ["platPagePayF1", "platPagePayF2", "platPagePayF3", "platPagePayF4"] },
-  { icon: FileText, titleKey: "platPageRepTitle", descKey: "platPageRepDesc", itemKeys: ["platPageRepF1", "platPageRepF2", "platPageRepF3", "platPageRepF4"] },
+const featureKeys: { icon: typeof LayoutDashboard; titleKey: WebsiteTranslationKey; descKey: WebsiteTranslationKey; itemKeys: WebsiteTranslationKey[]; image?: string }[] = [
+  { icon: LayoutDashboard, titleKey: "platPageDashTitle", descKey: "platPageDashDesc", itemKeys: ["platPageDashF1", "platPageDashF2", "platPageDashF3", "platPageDashF4"], image: platformDashboard },
+  { icon: BarChart3, titleKey: "platPageTermTitle", descKey: "platPageTermDesc", itemKeys: ["platPageTermF1", "platPageTermF2", "platPageTermF3", "platPageTermF4"], image: platformTerminal },
+  { icon: CreditCard, titleKey: "platPagePayTitle", descKey: "platPagePayDesc", itemKeys: ["platPagePayF1", "platPagePayF2", "platPagePayF3", "platPagePayF4"], image: platformPayments },
+  { icon: FileText, titleKey: "platPageRepTitle", descKey: "platPageRepDesc", itemKeys: ["platPageRepF1", "platPageRepF2", "platPageRepF3", "platPageRepF4"], image: platformAnalytics },
   { icon: Shield, titleKey: "platPageKYCTitle", descKey: "platPageKYCDesc", itemKeys: ["platPageKYCF1", "platPageKYCF2", "platPageKYCF3", "platPageKYCF4"] },
   { icon: Headphones, titleKey: "platPageSupportTitle", descKey: "platPageSupportDesc", itemKeys: ["platPageSupportF1", "platPageSupportF2", "platPageSupportF3", "platPageSupportF4"] },
 ];
