@@ -248,16 +248,16 @@ export default function AdminTrading() {
           </h2>
           <div className="bg-card rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="data-table text-xs">
+              <table className="data-table text-xs" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead>
                   <tr className="bg-muted/30">
-                    <th>Символ</th>
-                    <th>Номер</th>
-                    <th>Тип</th>
-                    <th className="text-right">Объем</th>
-                    <th className="text-right">Цена открытия</th>
-                    <th className="text-right">Текущая цена</th>
-                    <th className="text-right">Прибыль</th>
+                    <ResizableTh initialWidth={100}>Символ</ResizableTh>
+                    <ResizableTh initialWidth={80}>Номер</ResizableTh>
+                    <ResizableTh initialWidth={100}>Тип</ResizableTh>
+                    <ResizableTh className="text-right" initialWidth={90}>Объем</ResizableTh>
+                    <ResizableTh className="text-right" initialWidth={120}>Цена открытия</ResizableTh>
+                    <ResizableTh className="text-right" initialWidth={120}>Текущая цена</ResizableTh>
+                    <ResizableTh className="text-right" initialWidth={100}>Прибыль</ResizableTh>
                     <th className="w-16"></th>
                   </tr>
                 </thead>
