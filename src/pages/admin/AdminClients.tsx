@@ -428,6 +428,7 @@ export default function AdminClients() {
                   </th>
                 ))}
                 <th>Ответственный</th>
+                <th className="w-20"></th>
               </tr>
             </thead>
             <tbody>
