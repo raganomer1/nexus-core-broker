@@ -55,6 +55,13 @@ const emptyFilterEdit = (): Omit<SavedFilter, 'id'> => ({
   label: '', statuses: [], managerId: '', deskId: '', country: '', verification: '', deposit: '', dateFrom: '', dateTo: '', source: '', affiliateId: '',
 });
 
+const FieldRow = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+  <div className="flex items-center gap-3">
+    <label className="text-xs text-muted-foreground w-28 shrink-0">{label}{required && <span className="text-destructive ml-0.5">*</span>}</label>
+    <div className="flex-1">{children}</div>
+  </div>
+);
+
 export default function AdminClients() {
   const navigate = useNavigate();
   const { clients, employees, desks, addClient, deleteClient, updateClient, securitySettings, tradingAccounts } = useStore();
