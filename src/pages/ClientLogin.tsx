@@ -38,7 +38,7 @@ export default function ClientLogin() {
             <Button className="w-full" onClick={handleLogin}>{t(lang, 'login')}</Button>
           </div>
           <div className="mt-6 p-3 bg-muted/50 rounded-lg"><p className="text-xs font-medium text-muted-foreground mb-2">{t(lang, 'demoAccess')}</p><div className="text-xs text-muted-foreground"><button className="text-primary hover:underline" onClick={() => setEmail('smirnov@mail.com')}>smirnov@mail.com</button></div></div>
-          <div className="mt-4 text-center"><button onClick={() => navigate('/admin/login')} className="text-xs text-muted-foreground hover:text-primary">{t(lang, 'employeeLogin')}</button></div>
+          
         </div>
       </div>
     </div>
