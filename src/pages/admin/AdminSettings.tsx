@@ -542,6 +542,7 @@ export default function AdminSettings() {
                   <SelectContent>
                     <SelectItem value="clients">Конкретные клиенты</SelectItem>
                     <SelectItem value="desks">Дески</SelectItem>
+                    <SelectItem value="manager">Клиенты менеджера</SelectItem>
                     <SelectItem value="filters">По фильтрам</SelectItem>
                   </SelectContent>
                 </Select>
@@ -549,9 +550,14 @@ export default function AdminSettings() {
 
               {editRestriction.targetType === 'clients' && (
                 <div>
-                  <label className="text-xs text-muted-foreground">Выберите клиентов</label>
-                  <div className="max-h-40 overflow-y-auto border rounded p-2 mt-1 space-y-1">
-                    {clients.map(c => (
+                  <label className="text-xs text-muted-foreground">Поиск клиентов</label>
+                  <Input value={restrictionSearch} onChange={e => setRestrictionSearch(e.target.value)} placeholder="Имя, фамилия или email..." className="h-8 text-xs mt-1 mb-2" />
+                  <div className="max-h-40 overflow-y-auto border rounded p-2 space-y-1">
+                    {clients.filter(c => {
+                      if (!restrictionSearch) return true;
+                      const q = restrictionSearch.toLowerCase();
+                      return c.lastName.toLowerCase().includes(q) || c.firstName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q);
+                    }).map(c => (
                       <label key={c.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/30 p-1 rounded">
                         <Checkbox checked={editRestriction.targetIds.includes(c.id)}
                           onCheckedChange={v => {
@@ -581,6 +587,25 @@ export default function AdminSettings() {
                       </label>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {editRestriction.targetType === 'manager' && (
+                <div>
+                  <label className="text-xs text-muted-foreground">Выберите менеджеров</label>
+                  <div className="max-h-40 overflow-y-auto border rounded p-2 mt-1 space-y-1">
+                    {employees.filter(e => e.isActive).map(e => (
+                      <label key={e.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/30 p-1 rounded">
+                        <Checkbox checked={editRestriction.targetIds.includes(e.id)}
+                          onCheckedChange={v => {
+                            const ids = v ? [...editRestriction.targetIds, e.id] : editRestriction.targetIds.filter(i => i !== e.id);
+                            setEditRestriction({...editRestriction, targetIds: ids});
+                          }} />
+                        {e.lastName} {e.firstName} — {e.position}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Все клиенты выбранных менеджеров будут ограничены</div>
                 </div>
               )}
 
