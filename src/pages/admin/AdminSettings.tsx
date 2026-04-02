@@ -20,10 +20,11 @@ export default function AdminSettings() {
     securitySettings, updateSecuritySettings,
     apiIntegrations, addApiIntegration, updateApiIntegration, deleteApiIntegration,
     clientRestrictions, addClientRestriction, updateClientRestriction, deleteClientRestriction,
-    clients, desks,
+    clients, desks, employees,
+    roles, addRole, updateRole, deleteRole,
   } = useStore();
   const { lang } = useSettingsStore();
-  const [tab, setTab] = useState<'statuses' | 'actions' | 'reminders' | 'security' | 'api' | 'restrictions' | 'misc'>('statuses');
+  const [tab, setTab] = useState<'statuses' | 'actions' | 'reminders' | 'security' | 'api' | 'restrictions' | 'roles' | 'emailTemplates' | 'misc'>('statuses');
   const { state: delState, confirmDelete, close: closeDelete } = useConfirmDelete();
 
   const [editStatus, setEditStatus] = useState<{ id?: string; name: string; color: string; isDefault: boolean } | null>(null);
@@ -42,6 +43,45 @@ export default function AdminSettings() {
     targetType: 'clients' | 'desks' | 'filters'; targetIds: string[]; isActive: boolean;
   } | null>(null);
 
+  // Roles
+  const [roleForm, setRoleForm] = useState({ name: '', employeeType: 'Admin' as any, permissions: {} as Record<string, boolean> });
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [showRoleForm, setShowRoleForm] = useState(false);
+
+  // Email templates
+  const [emailTemplates, setEmailTemplates] = useState([
+    { id: '1', name: 'Регистрация', subject: 'Добро пожаловать!', body: 'Здравствуйте, {{name}}! Ваш аккаунт создан.', isActive: true },
+    { id: '2', name: 'Смена пароля', subject: 'Пароль изменён', body: 'Ваш пароль был изменён. Если это не вы — обратитесь в поддержку.', isActive: true },
+    { id: '3', name: 'Восстановление пароля', subject: 'Восстановление доступа', body: 'Для восстановления пароля перейдите по ссылке: {{link}}', isActive: true },
+    { id: '4', name: 'Блокировка счета', subject: 'Ваш аккаунт заблокирован', body: 'Ваш аккаунт был заблокирован. Обратитесь в поддержку.', isActive: false },
+    { id: '5', name: 'Рассылка', subject: 'Новости платформы', body: 'Уважаемый клиент, рады сообщить вам...', isActive: false },
+  ]);
+  const [editTemplate, setEditTemplate] = useState<any>(null);
+
+  // Restriction search
+  const [restrictionSearch, setRestrictionSearch] = useState('');
+
+  const permissionGroups = [
+    { key: 'Основное', perms: [{ k: 'main.view', l: 'Просмотр' }] },
+    { key: 'Сотрудники', perms: [{ k: 'employees.view', l: 'Смотреть' }, { k: 'employees.create', l: 'Создать/Изменить' }, { k: 'employees.delete', l: 'Удалить' }] },
+    { key: 'Клиенты', perms: [{ k: 'clients.view', l: 'Смотреть' }, { k: 'clients.create', l: 'Создать' }, { k: 'clients.edit', l: 'Редактировать' }] },
+    { key: 'Торговые счета', perms: [{ k: 'accounts.view', l: 'Смотреть' }, { k: 'accounts.edit', l: 'Создать/Изменить' }, { k: 'accounts.deposit', l: 'Пополнить/Вывести' }] },
+    { key: 'Платежи', perms: [{ k: 'payments.view', l: 'Смотреть' }, { k: 'payments.edit', l: 'Редактировать' }, { k: 'payments.delete', l: 'Удалить' }] },
+    { key: 'Обращения', perms: [{ k: 'support.view', l: 'Смотреть' }, { k: 'support.reply', l: 'Ответить' }, { k: 'support.delete', l: 'Удалить' }] },
+    { key: 'Верификация', perms: [{ k: 'verification.view', l: 'Смотреть' }, { k: 'verification.changeStatus', l: 'Изменить статус' }] },
+    { key: 'Настройки', perms: [{ k: 'settings.view', l: 'Смотреть' }, { k: 'settings.edit', l: 'Создать/Изменить' }] },
+  ];
+
+  const togglePerm = (perm: string) => setRoleForm(f => ({ ...f, permissions: { ...f.permissions, [perm]: !f.permissions[perm] } }));
+  const startEditRole = (id: string) => {
+    const r = roles.find(ro => ro.id === id);
+    if (r) { setRoleForm({ name: r.name, employeeType: r.employeeType, permissions: { ...r.permissions } }); setEditingRoleId(id); setShowRoleForm(true); }
+  };
+  const saveRole = () => {
+    if (editingRoleId) { updateRole(editingRoleId, roleForm); } else if (roleForm.name) { addRole(roleForm); }
+    setEditingRoleId(null); setShowRoleForm(false); setRoleForm({ name: '', employeeType: 'Admin', permissions: {} });
+  };
+
   const tabs = [
     { id: 'statuses', label: 'Статусы клиентов' },
     { id: 'actions', label: 'Статусы действий' },
@@ -49,6 +89,8 @@ export default function AdminSettings() {
     { id: 'security', label: 'Безопасность' },
     { id: 'api', label: 'API интеграции' },
     { id: 'restrictions', label: 'Ограничения' },
+    { id: 'roles', label: 'Роли и права' },
+    { id: 'emailTemplates', label: 'Шаблоны писем' },
     { id: 'misc', label: 'Дополнительно' },
   ];
 
@@ -308,6 +350,59 @@ export default function AdminSettings() {
                   <div className="mt-2 text-xs text-muted-foreground">
                     Цель: {r.targetType === 'clients' ? `Клиенты (${r.targetIds.length})` : r.targetType === 'desks' ? `Дески (${r.targetIds.length})` : 'По фильтрам'}
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ ROLES ============ */}
+      {tab === 'roles' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-card rounded-lg border p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">Роли и права доступа</h3>
+              <Button size="sm" variant="outline" onClick={() => { setRoleForm({ name: '', employeeType: 'Admin', permissions: {} }); setEditingRoleId(null); setShowRoleForm(true); }}><Plus size={14} className="mr-1" />Новая роль</Button>
+            </div>
+            <div className="space-y-2">
+              {roles.map(r => (
+                <div key={r.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded">
+                  <span className="text-sm font-medium flex-1">{r.name}</span>
+                  <span className="text-xs text-muted-foreground">{r.employeeType}</span>
+                  <Button variant="ghost" size="sm" onClick={() => startEditRole(r.id)}><Edit2 size={12} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDelete('Удалить роль', `Удалить роль "${r.name}"?`, () => deleteRole(r.id))}><Trash2 size={12} className="text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ EMAIL TEMPLATES ============ */}
+      {tab === 'emailTemplates' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-card rounded-lg border p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-semibold">Шаблоны писем</h3>
+                <p className="text-xs text-muted-foreground mt-1">Автоматические письма клиентам</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setEditTemplate({ name: '', subject: '', body: '', isActive: true })}>
+                <Plus size={14} className="mr-1" />Новый шаблон
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {emailTemplates.map(tpl => (
+                <div key={tpl.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded">
+                  <div className={`w-2 h-2 rounded-full ${tpl.isActive ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{tpl.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">— {tpl.subject}</span>
+                  </div>
+                  <Switch checked={tpl.isActive} onCheckedChange={v => setEmailTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, isActive: v } : t))} />
+                  <Button variant="ghost" size="sm" onClick={() => setEditTemplate({ ...tpl })}><Edit2 size={12} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDelete('Удалить шаблон', `Удалить "${tpl.name}"?`, () => setEmailTemplates(prev => prev.filter(t => t.id !== tpl.id)))}><Trash2 size={12} className="text-destructive" /></Button>
                 </div>
               ))}
             </div>

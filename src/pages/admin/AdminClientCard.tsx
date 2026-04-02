@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { ExternalLink, Save, Plus, X, Pencil } from 'lucide-react';
+import { ExternalLink, Save, Plus, X, Pencil, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,14 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-const InfoRow = ({ label, value, isLink }: { label: string; value?: string | null; isLink?: boolean }) => (
-  <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-0 min-h-[40px]">
+const InfoRow = ({ label, value, isLink, onEdit }: { label: string; value?: string | null; isLink?: boolean; onEdit?: () => void }) => (
+  <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-0 min-h-[40px] group">
     <span className="text-sm text-muted-foreground shrink-0">{label}</span>
-    {isLink && value ? (
-      <a href={`mailto:${value}`} className="text-sm font-medium text-primary hover:underline truncate ml-4">{value}</a>
-    ) : (
-      <span className="text-sm font-medium text-right truncate ml-4">{value || ''}</span>
-    )}
+    <div className="flex items-center gap-1 ml-4">
+      {isLink && value ? (
+        <a href={`mailto:${value}`} className="text-sm font-medium text-primary hover:underline truncate">{value}</a>
+      ) : (
+        <span className="text-sm font-medium text-right truncate">{value || ''}</span>
+      )}
+      {onEdit && (
+        <button onClick={onEdit} className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-all">
+          <Pencil size={11} />
+        </button>
+      )}
+    </div>
   </div>
 );
 
@@ -27,7 +34,7 @@ export default function AdminClientCard() {
   const navigate = useNavigate();
   const store = useStore();
   const { lang } = useSettingsStore();
-  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, impersonateClient, auth, addHistoryEvent, history } = store;
+  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, addTradingAccount, impersonateClient, auth, addHistoryEvent, history } = store;
 
   const [newNote, setNewNote] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -35,6 +42,9 @@ export default function AdminClientCard() {
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
+
+  // Inline edit
+  const [editField, setEditField] = useState<{ field: string; value: string; label: string } | null>(null);
 
   const client = clients.find(c => c.id === id);
   const resp = client ? employees.find(e => e.id === client.responsibleId) : null;
@@ -53,6 +63,28 @@ export default function AdminClientCard() {
 
   const handleImpersonate = () => { if (auth.employeeId) { impersonateClient(client.id, auth.employeeId); navigate('/client'); } };
 
+  const handleRegisterAccount = () => {
+    const num = `${Math.floor(100000 + Math.random() * 900000)}`;
+    addTradingAccount({
+      clientId: client.id, accountNumber: num, group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200,
+      minDeposit: 100, balance: 0, equity: 0, margin: 0, freeMargin: 0, profit: 0, bonus: 0, currency: 'USD',
+      isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: false, spendBonus: false,
+      status: 'Active', deposited: 0, withdrawn: 0, tradesCount: 0, bonusSpent: 0,
+    });
+    toast.success(`Счёт ${num} создан (USD)`);
+  };
+
+  const saveField = () => {
+    if (!editField) return;
+    updateClient(client.id, { [editField.field]: editField.value });
+    toast.success(`${editField.label} обновлено`);
+    setEditField(null);
+  };
+
+  const startEdit = (field: string, label: string) => {
+    setEditField({ field, value: (client as any)[field] || '', label });
+  };
+
   return (
     <div className="p-4 md:p-6">
       {/* Header */}
@@ -62,8 +94,11 @@ export default function AdminClientCard() {
           <span className="px-2.5 py-0.5 rounded border text-xs font-medium text-muted-foreground bg-muted">ID {client.id.slice(0, 5)}</span>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" onClick={handleImpersonate} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            <ExternalLink size={14} className="mr-1" /> Зарегистрировать
+          <Button size="sm" onClick={handleRegisterAccount} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+            <ExternalLink size={14} className="mr-1" /> Зарегистрировать счёт
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleImpersonate}>
+            <LogIn size={14} className="mr-1" /> Войти в кабинет
           </Button>
           <Button variant="outline" size="sm" onClick={() => navigate('/admin/clients')}>Закрыть</Button>
         </div>
@@ -71,49 +106,46 @@ export default function AdminClientCard() {
 
       {/* 3-column info blocks */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {/* General */}
         <div className="border rounded-lg p-5">
           <h3 className="text-sm font-semibold mb-3">Общая информация</h3>
-          <InfoRow label="Обращение" value={client.salutation} />
-          <InfoRow label="Фамилия" value={client.lastName} />
-          <InfoRow label="Имя" value={client.firstName} />
-          <InfoRow label="Отчество" value={client.middleName} />
+          <InfoRow label="Обращение" value={client.salutation} onEdit={() => startEdit('salutation', 'Обращение')} />
+          <InfoRow label="Фамилия" value={client.lastName} onEdit={() => startEdit('lastName', 'Фамилия')} />
+          <InfoRow label="Имя" value={client.firstName} onEdit={() => startEdit('firstName', 'Имя')} />
+          <InfoRow label="Отчество" value={client.middleName} onEdit={() => startEdit('middleName', 'Отчество')} />
           <InfoRow label="Деск" value={desk?.name} />
           <InfoRow label="Ответственный" value={resp ? `${resp.firstName} ${resp.lastName}` : undefined} />
           <InfoRow label="Тип" value={client.type} />
           <InfoRow label="Статус" value={client.status} />
-          <InfoRow label="Affiliate id" value={client.affiliateId} />
+          <InfoRow label="Affiliate id" value={client.affiliateId} onEdit={() => startEdit('affiliateId', 'Affiliate ID')} />
           <InfoRow label="Создан" value={new Date(client.createdAt).toLocaleString()} />
         </div>
 
-        {/* Contacts */}
         <div className="border rounded-lg p-5">
           <h3 className="text-sm font-semibold mb-3">Контактная информация</h3>
-          <InfoRow label="Страна" value={client.country || 'Default'} />
-          <InfoRow label="Регион" value={client.region} />
-          <InfoRow label="Город" value={client.city} />
-          <InfoRow label="Индекс" value={client.zip} />
-          <InfoRow label="Адрес" value={client.address} />
-          <InfoRow label="Email" value={client.email} isLink />
-          <InfoRow label="Телефон" value={client.phone} />
-          <InfoRow label="Дополнительный контакт" value={client.additionalContact} />
+          <InfoRow label="Страна" value={client.country || 'Default'} onEdit={() => startEdit('country', 'Страна')} />
+          <InfoRow label="Регион" value={client.region} onEdit={() => startEdit('region', 'Регион')} />
+          <InfoRow label="Город" value={client.city} onEdit={() => startEdit('city', 'Город')} />
+          <InfoRow label="Индекс" value={client.zip} onEdit={() => startEdit('zip', 'Индекс')} />
+          <InfoRow label="Адрес" value={client.address} onEdit={() => startEdit('address', 'Адрес')} />
+          <InfoRow label="Email" value={client.email} isLink onEdit={() => startEdit('email', 'Email')} />
+          <InfoRow label="Телефон" value={client.phone} onEdit={() => startEdit('phone', 'Телефон')} />
+          <InfoRow label="Дополнительный контакт" value={client.additionalContact} onEdit={() => startEdit('additionalContact', 'Доп. контакт')} />
           <InfoRow label="Был в кабинете" value={client.lastCabinetVisit ? new Date(client.lastCabinetVisit).toLocaleString() : ''} />
           <InfoRow label="Был в терминале" value={client.lastTerminalVisit ? new Date(client.lastTerminalVisit).toLocaleString() : ''} />
         </div>
 
-        {/* Additional */}
         <div className="border rounded-lg p-5">
           <h3 className="text-sm font-semibold mb-3">Дополнительная информация</h3>
           <InfoRow label="Origin" value={client.origin || 'None'} />
           <InfoRow label="Верификация" value={client.verificationStatus === 'Unverified' ? 'Не верифицирован' : client.verificationStatus} />
-          <InfoRow label="Гражданство" value={client.citizenship} />
-          <InfoRow label="Campaign id" value={client.campaignId} />
-          <InfoRow label="Tag 1" value={client.tag1} />
-          <InfoRow label="Tag 2" value={client.tag2} />
-          <InfoRow label="Паспорт" value={client.passport} />
-          <InfoRow label="Дата рождения" value={client.birthday} />
-          <InfoRow label="Цель" value={client.purpose} />
-          <InfoRow label="Источник" value={client.source || 'Default source'} />
+          <InfoRow label="Гражданство" value={client.citizenship} onEdit={() => startEdit('citizenship', 'Гражданство')} />
+          <InfoRow label="Campaign id" value={client.campaignId} onEdit={() => startEdit('campaignId', 'Campaign ID')} />
+          <InfoRow label="Tag 1" value={client.tag1} onEdit={() => startEdit('tag1', 'Tag 1')} />
+          <InfoRow label="Tag 2" value={client.tag2} onEdit={() => startEdit('tag2', 'Tag 2')} />
+          <InfoRow label="Паспорт" value={client.passport} onEdit={() => startEdit('passport', 'Паспорт')} />
+          <InfoRow label="Дата рождения" value={client.birthday} onEdit={() => startEdit('birthday', 'Дата рождения')} />
+          <InfoRow label="Цель" value={client.purpose} onEdit={() => startEdit('purpose', 'Цель')} />
+          <InfoRow label="Источник" value={client.source || 'Default source'} onEdit={() => startEdit('source', 'Источник')} />
         </div>
       </div>
 
@@ -121,9 +153,7 @@ export default function AdminClientCard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <div className="border rounded-lg p-5">
           <h3 className="text-sm font-semibold mb-3">Описание</h3>
-          {client.description ? (
-            <p className="text-sm text-muted-foreground mb-3">{client.description}</p>
-          ) : null}
+          {client.description ? <p className="text-sm text-muted-foreground mb-3">{client.description}</p> : null}
           {showAddDesc ? (
             <div className="space-y-2">
               <Textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Введите текст" rows={2} className="text-sm" />
@@ -133,9 +163,7 @@ export default function AdminClientCard() {
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowAddDesc(true)} className="flex items-center gap-1.5 text-sm text-primary hover:underline">
-              <Plus size={14} /> Добавить
-            </button>
+            <button onClick={() => setShowAddDesc(true)} className="flex items-center gap-1.5 text-sm text-primary hover:underline"><Plus size={14} /> Добавить</button>
           )}
         </div>
 
@@ -162,9 +190,7 @@ export default function AdminClientCard() {
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowAddNote(true)} className="flex items-center gap-1.5 text-sm text-primary hover:underline mt-2">
-              <Plus size={14} /> Добавить
-            </button>
+            <button onClick={() => setShowAddNote(true)} className="flex items-center gap-1.5 text-sm text-primary hover:underline mt-2"><Plus size={14} /> Добавить</button>
           )}
         </div>
       </div>
@@ -179,55 +205,52 @@ export default function AdminClientCard() {
           <table className="data-table">
             <thead>
               <tr className="bg-muted/30">
-                <th>Дата действ...</th>
-                <th>Закрыто</th>
+                <th>Дата действия</th>
                 <th>Тип</th>
                 <th>Создатель</th>
                 <th>Описание</th>
                 <th>Ответственный</th>
                 <th>Статус</th>
-                <th className="w-16"></th>
               </tr>
             </thead>
             <tbody>
               {clientHistory.length === 0 ? (
-                <tr><td colSpan={8} className="text-center text-muted-foreground py-4">Нет действий</td></tr>
-              ) : clientHistory.map(h => {
-                const author = employees.find(e => e.id === h.authorId);
-                return (
-                  <tr key={h.id}>
-                    <td className="text-xs whitespace-nowrap">{new Date(h.timestamp).toLocaleString()}</td>
-                    <td className="text-xs"></td>
-                    <td className="text-sm">{h.section}</td>
-                    <td className="text-sm">{h.authorName}</td>
-                    <td className="text-sm">{h.description}</td>
-                    <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName}` : '—'}</td>
-                    <td><span className="flex items-center gap-1.5 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> New</span></td>
-                    <td>
-                      <div className="flex gap-1">
-                        <button className="p-1 text-muted-foreground hover:text-foreground"><Pencil size={12} /></button>
-                        <button className="p-1 text-muted-foreground hover:text-destructive"><X size={12} /></button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                <tr><td colSpan={6} className="text-center text-muted-foreground py-4">Нет действий</td></tr>
+              ) : clientHistory.map(h => (
+                <tr key={h.id}>
+                  <td className="text-xs whitespace-nowrap">{new Date(h.timestamp).toLocaleString()}</td>
+                  <td className="text-sm">{h.section}</td>
+                  <td className="text-sm">{h.authorName}</td>
+                  <td className="text-sm max-w-[300px] truncate">{h.description}</td>
+                  <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName}` : '—'}</td>
+                  <td><span className="flex items-center gap-1.5 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> New</span></td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            Показать
-            <Select defaultValue="20">
-              <SelectTrigger className="h-7 w-16 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem></SelectContent>
-            </Select>
-          </div>
           <span>Всего: {clientHistory.length}</span>
         </div>
       </div>
 
-      {/* Add Action Dialog — matching screenshot layout */}
+      {/* Inline edit dialog */}
+      <Dialog open={!!editField} onOpenChange={() => setEditField(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Редактировать: {editField?.label}</DialogTitle></DialogHeader>
+          {editField && (
+            <div className="space-y-3">
+              <Input value={editField.value} onChange={e => setEditField({ ...editField, value: e.target.value })} autoFocus />
+              <div className="flex gap-2">
+                <Button onClick={saveField}>Сохранить</Button>
+                <Button variant="outline" onClick={() => setEditField(null)}>Отмена</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Action Dialog */}
       <Dialog open={showAction} onOpenChange={setShowAction}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Новое действие</DialogTitle></DialogHeader>
@@ -278,7 +301,6 @@ export default function AdminClientCard() {
               <Button variant="outline" onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
                 if (auth.employeeId) {
-                  const respEmp = employees.find(e => e.id === (actionData.responsibleId || auth.employeeId));
                   addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
                   toast.success('Действие сохранено');
                   setShowAction(false);
@@ -288,7 +310,6 @@ export default function AdminClientCard() {
               <Button onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
                 if (auth.employeeId) {
-                  const respEmp = employees.find(e => e.id === (actionData.responsibleId || auth.employeeId));
                   addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
                   toast.success('Действие сохранено');
                   setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });

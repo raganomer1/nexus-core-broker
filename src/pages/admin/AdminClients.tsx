@@ -381,9 +381,17 @@ export default function AdminClients() {
               <SelectTrigger className="w-36 h-8 text-xs"><Tag size={12} className="mr-1" /><SelectValue placeholder="Сменить статус" /></SelectTrigger>
               <SelectContent>{['New','Hot','Warm','Cold','Lead','Live','Demo','Call Back','No potential','Not interesting','No answer','Spam'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
-            <Select onValueChange={v => { selected.forEach(id => updateClient(id, { responsibleId: v })); const emp = employees.find(e => e.id === v); toast.success(`Ответственный: ${emp?.firstName} ${emp?.lastName}`); setSelected(new Set()); }}>
+          <Select onValueChange={v => { selected.forEach(id => updateClient(id, { responsibleId: v })); const emp = employees.find(e => e.id === v); toast.success(`Ответственный: ${emp?.firstName} ${emp?.lastName}`); setSelected(new Set()); }}>
               <SelectTrigger className="w-44 h-8 text-xs"><UserCheck size={12} className="mr-1" /><SelectValue placeholder="Назначить отв." /></SelectTrigger>
               <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select onValueChange={v => { selected.forEach(id => updateClient(id, { deskId: v })); const d = desks.find(dk => dk.id === v); toast.success(`Деск: ${d?.name}`); setSelected(new Set()); }}>
+              <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="Сменить деск" /></SelectTrigger>
+              <SelectContent>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select onValueChange={v => { selected.forEach(id => updateClient(id, { type: v as any })); toast.success(`Тип изменён`); setSelected(new Set()); }}>
+              <SelectTrigger className="w-32 h-8 text-xs"><SelectValue placeholder="Сменить тип" /></SelectTrigger>
+              <SelectContent><SelectItem value="Lead">Lead</SelectItem><SelectItem value="Live">Live</SelectItem><SelectItem value="Demo">Demo</SelectItem></SelectContent>
             </Select>
             <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={() => confirmDelete('Удаление клиентов', `Удалить ${selected.size} выбранных клиентов? Это действие нельзя отменить.`, () => { selected.forEach(id => deleteClient(id)); toast.success(`Удалено ${selected.size}`); setSelected(new Set()); })}>
               <Trash2 size={12} className="mr-1" /> Удалить

@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Search, Plus, Edit2, Filter, Trash2, DollarSign, FileText, CreditCard, Copy, X } from 'lucide-react';
+import { Search, Plus, Edit2, Filter, Trash2, DollarSign, FileText, CreditCard, Copy, X, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +17,7 @@ import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
 
 export default function AdminAccounts() {
+  const navigate = useNavigate();
   const { tradingAccounts, clients, employees, positions, payments, addTradingAccount, updateTradingAccount, deleteTradingAccount, addPayment, addHistoryEvent, auth } = useStore();
   const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();
@@ -278,7 +280,7 @@ export default function AdminAccounts() {
                     <td className="font-medium">{a.accountNumber}</td>
                     <td className="whitespace-nowrap">
                       {client ? (
-                        <span className="text-primary cursor-pointer hover:underline">{client.lastName} {client.firstName}</span>
+                        <span className="text-primary cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/admin/clients/${client.id}`); }}>{client.lastName} {client.firstName}</span>
                       ) : '—'}
                     </td>
                     <td className="text-sm text-muted-foreground">{client?.email || '—'}</td>

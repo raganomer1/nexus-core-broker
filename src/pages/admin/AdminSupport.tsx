@@ -13,13 +13,14 @@ import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDelet
 type SortKey = 'date' | 'subject' | 'client';
 
 export default function AdminSupport() {
-  const { tickets, messages, clients, employees, addMessage, updateTicket, updateTicketStatus, deleteTicket, auth } = useStore();
+  const { tickets, messages, clients, employees, desks, addMessage, updateTicket, updateTicketStatus, deleteTicket, auth } = useStore();
   const { lang } = useSettingsStore();
   const [tab, setTab] = useState<'Open' | 'Closed'>('Open');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState('');
   const [search, setSearch] = useState('');
   const [assignedFilter, setAssignedFilter] = useState('All');
+  const [deskFilter, setDeskFilter] = useState('All');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [editSubject, setEditSubject] = useState<{ id: string; subject: string } | null>(null);
@@ -40,6 +41,10 @@ export default function AdminSupport() {
       });
     }
     if (assignedFilter !== 'All') result = result.filter(tk => tk.assignedTo === assignedFilter);
+    if (deskFilter !== 'All') result = result.filter(tk => {
+      const c = clients.find(cl => cl.id === tk.clientId);
+      return c?.deskId === deskFilter;
+    });
 
     result.sort((a, b) => {
       if (sortKey === 'date') {
@@ -91,6 +96,10 @@ export default function AdminSupport() {
         <Select value={assignedFilter} onValueChange={setAssignedFilter}>
           <SelectTrigger className="w-40 h-8 text-xs"><SelectValue placeholder="Ответственный" /></SelectTrigger>
           <SelectContent><SelectItem value="All">Все</SelectItem>{assignees.map(a => <SelectItem key={a.id} value={a.id}>{a.lastName} {a.firstName}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={deskFilter} onValueChange={setDeskFilter}>
+          <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="Деск" /></SelectTrigger>
+          <SelectContent><SelectItem value="All">Все дески</SelectItem>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
         </Select>
       </div>
 
