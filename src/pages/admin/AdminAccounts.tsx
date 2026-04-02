@@ -178,6 +178,13 @@ export default function AdminAccounts() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'accounts')}</h1>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            const rows = filtered.map(a => {
+              const client = clients.find(c => c.id === a.clientId);
+              return { 'Счёт': a.accountNumber, 'ФИО': client ? `${client.lastName} ${client.firstName}` : '', 'Email': client?.email || '', 'Тип': a.isDemo ? 'Demo' : 'Real', 'Группа': a.group, 'Плечо': `1:${a.leverage}`, 'Баланс': a.balance, 'Бонус': a.bonus || 0, 'Депозиты': a.deposited, 'Выводы': a.withdrawn, 'Прибыль': a.profit, 'Статус': a.status, 'Создан': new Date(a.createdAt).toLocaleDateString('ru') };
+            });
+            import('@/lib/xlsxUtils').then(m => { const XLSX = require('xlsx'); const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Счета'); XLSX.writeFile(wb, `accounts_${new Date().toISOString().slice(0,10)}.xlsx`); });
+          }}><Download size={14} className="mr-1" />Экспорт</Button>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}><Filter size={14} className="mr-1" />Фильтры</Button>
           <Button size="sm" onClick={() => setShowCreate(true)}><Plus size={14} className="mr-1" /> {t(lang, 'newAccount')}</Button>
         </div>

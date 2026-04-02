@@ -104,9 +104,18 @@ export default function AdminTrading() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'trading')}</h1>
-        <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
-          <Filter size={14} className="mr-1" />Фильтры
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            const rows = filtered.map(a => {
+              const client = clients.find(c => c.id === a.clientId);
+              return { 'Группа': a.group, 'Номер': a.accountNumber, 'ФИО': client ? `${client.lastName} ${client.firstName}` : '', 'Демо': a.isDemo ? 'Да' : 'Нет', 'Депозиты': a.deposited, 'Выводы': a.withdrawn, 'Сделки': a.tradesCount, 'Прибыль': a.profit, 'Средства': a.equity };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Торговля'); XLSX.writeFile(wb, `trading_${new Date().toISOString().slice(0,10)}.xlsx`);
+          }}><Download size={14} className="mr-1" />Экспорт</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+            <Filter size={14} className="mr-1" />Фильтры
+          </Button>
+        </div>
       </div>
 
       {/* Filter bar */}
