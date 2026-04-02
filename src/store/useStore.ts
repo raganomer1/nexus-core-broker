@@ -345,9 +345,14 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ==================== ASSETS ====================
   assets: [...mock.assetSymbols],
+  addAsset: (data) => {
+    const asset: AssetSymbol = { ...data, id: genId(), lastUpdated: new Date().toISOString() };
+    set(s => ({ assets: [...s.assets, asset] }));
+  },
   updateAsset: (id, updates) => {
     set(s => ({ assets: s.assets.map(a => a.id === id ? { ...a, ...updates, lastUpdated: new Date().toISOString() } : a) }));
   },
+  deleteAsset: (id) => set(s => ({ assets: s.assets.filter(a => a.id !== id) })),
 
   // ==================== MANUAL PRICE OVERRIDE ====================
   manualOverrides: [],
