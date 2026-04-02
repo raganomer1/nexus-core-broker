@@ -72,7 +72,9 @@ interface AppStore {
 
   // Assets
   assets: AssetSymbol[];
+  addAsset: (asset: Omit<AssetSymbol, 'id' | 'lastUpdated'>) => void;
   updateAsset: (id: string, updates: Partial<AssetSymbol>) => void;
+  deleteAsset: (id: string) => void;
 
   // Manual Price Override
   manualOverrides: ManualPriceOverride[];
@@ -343,9 +345,14 @@ export const useStore = create<AppStore>((set, get) => ({
 
   // ==================== ASSETS ====================
   assets: [...mock.assetSymbols],
+  addAsset: (data) => {
+    const asset: AssetSymbol = { ...data, id: genId(), lastUpdated: new Date().toISOString() };
+    set(s => ({ assets: [...s.assets, asset] }));
+  },
   updateAsset: (id, updates) => {
     set(s => ({ assets: s.assets.map(a => a.id === id ? { ...a, ...updates, lastUpdated: new Date().toISOString() } : a) }));
   },
+  deleteAsset: (id) => set(s => ({ assets: s.assets.filter(a => a.id !== id) })),
 
   // ==================== MANUAL PRICE OVERRIDE ====================
   manualOverrides: [],
@@ -530,6 +537,7 @@ export const useStore = create<AppStore>((set, get) => ({
       if (!r.isActive) return false;
       if (r.targetType === 'clients') return r.targetIds.includes(clientId);
       if (r.targetType === 'desks') return client.deskId ? r.targetIds.includes(client.deskId) : false;
+      if (r.targetType === 'manager') return client.responsibleId ? r.targetIds.includes(client.responsibleId) : false;
       return false;
     });
   },
