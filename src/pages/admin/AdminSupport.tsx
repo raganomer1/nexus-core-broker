@@ -13,7 +13,7 @@ import { useConfirmDelete, ConfirmDeleteDialog } from '@/components/ConfirmDelet
 type SortKey = 'date' | 'subject' | 'client';
 
 export default function AdminSupport() {
-  const { tickets, messages, clients, employees, addMessage, updateTicket, updateTicketStatus, deleteTicket, auth } = useStore();
+  const { tickets, messages, clients, employees, desks, addMessage, updateTicket, updateTicketStatus, deleteTicket, auth } = useStore();
   const { lang } = useSettingsStore();
   const [tab, setTab] = useState<'Open' | 'Closed'>('Open');
   const [selectedId, setSelectedId] = useState<string | null>(null);
