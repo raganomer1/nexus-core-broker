@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
 import { Search, Plus, Edit2, Filter, Trash2, DollarSign, FileText, CreditCard, Copy, X, Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
