@@ -14,8 +14,24 @@ import TablePagination from '@/components/TablePagination';
 import { ResizableTh } from '@/components/ResizableTableHeader';
 
 export default function AdminTrading() {
-  const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice } = useStore();
+  const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice, simulatePriceMovement } = useStore();
   const { lang } = useSettingsStore();
+
+  // Auto-refresh
+  useEffect(() => {
+    const interval = setInterval(() => { simulatePriceMovement(); }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sorting
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
+  };
+  const sortIcon = (field: string) => sortField === field ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
 
   // Filters
   const [search, setSearch] = useState('');
