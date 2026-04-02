@@ -79,8 +79,24 @@ export default function AdminTrading() {
         return a.accountNumber.includes(s) || (client && (client.lastName.toLowerCase().includes(s) || client.firstName.toLowerCase().includes(s)));
       });
     }
+    // Apply sorting
+    if (sortField) {
+      result.sort((a, b) => {
+        let va: any, vb: any;
+        if (sortField === 'name') {
+          const ca = clients.find(c => c.id === a.clientId);
+          const cb = clients.find(c => c.id === b.clientId);
+          va = ca ? `${ca.lastName} ${ca.firstName}` : '';
+          vb = cb ? `${cb.lastName} ${cb.firstName}` : '';
+        } else {
+          va = (a as any)[sortField]; vb = (b as any)[sortField];
+        }
+        if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        return sortDir === 'asc' ? (va - vb) : (vb - va);
+      });
+    }
     return result;
-  }, [tradingAccounts, groupFilter, demoFilter, balanceFilter, withdrawnFilter, profitFilter, search, clients]);
+  }, [tradingAccounts, groupFilter, demoFilter, balanceFilter, withdrawnFilter, profitFilter, search, clients, sortField, sortDir]);
 
   const { paginated, page, setPage, perPage, setPerPage, totalPages } = useTableControls(filtered);
 
