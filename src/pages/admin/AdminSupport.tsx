@@ -92,6 +92,10 @@ export default function AdminSupport() {
           <SelectTrigger className="w-40 h-8 text-xs"><SelectValue placeholder="Ответственный" /></SelectTrigger>
           <SelectContent><SelectItem value="All">Все</SelectItem>{assignees.map(a => <SelectItem key={a.id} value={a.id}>{a.lastName} {a.firstName}</SelectItem>)}</SelectContent>
         </Select>
+        <Select value={deskFilter} onValueChange={setDeskFilter}>
+          <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="Деск" /></SelectTrigger>
+          <SelectContent><SelectItem value="All">Все дески</SelectItem>{desks.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+        </Select>
       </div>
 
       {/* Sort buttons */}
