@@ -20,10 +20,11 @@ export default function AdminSettings() {
     securitySettings, updateSecuritySettings,
     apiIntegrations, addApiIntegration, updateApiIntegration, deleteApiIntegration,
     clientRestrictions, addClientRestriction, updateClientRestriction, deleteClientRestriction,
-    clients, desks,
+    clients, desks, employees,
+    roles, addRole, updateRole, deleteRole,
   } = useStore();
   const { lang } = useSettingsStore();
-  const [tab, setTab] = useState<'statuses' | 'actions' | 'reminders' | 'security' | 'api' | 'restrictions' | 'misc'>('statuses');
+  const [tab, setTab] = useState<'statuses' | 'actions' | 'reminders' | 'security' | 'api' | 'restrictions' | 'roles' | 'emailTemplates' | 'misc'>('statuses');
   const { state: delState, confirmDelete, close: closeDelete } = useConfirmDelete();
 
   const [editStatus, setEditStatus] = useState<{ id?: string; name: string; color: string; isDefault: boolean } | null>(null);
