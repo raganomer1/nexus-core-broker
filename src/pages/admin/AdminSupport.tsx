@@ -20,6 +20,7 @@ export default function AdminSupport() {
   const [reply, setReply] = useState('');
   const [search, setSearch] = useState('');
   const [assignedFilter, setAssignedFilter] = useState('All');
+  const [deskFilter, setDeskFilter] = useState('All');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [editSubject, setEditSubject] = useState<{ id: string; subject: string } | null>(null);
