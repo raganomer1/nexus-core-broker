@@ -43,6 +43,45 @@ export default function AdminSettings() {
     targetType: 'clients' | 'desks' | 'filters'; targetIds: string[]; isActive: boolean;
   } | null>(null);
 
+  // Roles
+  const [roleForm, setRoleForm] = useState({ name: '', employeeType: 'Admin' as any, permissions: {} as Record<string, boolean> });
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [showRoleForm, setShowRoleForm] = useState(false);
+
+  // Email templates
+  const [emailTemplates, setEmailTemplates] = useState([
+    { id: '1', name: 'Регистрация', subject: 'Добро пожаловать!', body: 'Здравствуйте, {{name}}! Ваш аккаунт создан.', isActive: true },
+    { id: '2', name: 'Смена пароля', subject: 'Пароль изменён', body: 'Ваш пароль был изменён. Если это не вы — обратитесь в поддержку.', isActive: true },
+    { id: '3', name: 'Восстановление пароля', subject: 'Восстановление доступа', body: 'Для восстановления пароля перейдите по ссылке: {{link}}', isActive: true },
+    { id: '4', name: 'Блокировка счета', subject: 'Ваш аккаунт заблокирован', body: 'Ваш аккаунт был заблокирован. Обратитесь в поддержку.', isActive: false },
+    { id: '5', name: 'Рассылка', subject: 'Новости платформы', body: 'Уважаемый клиент, рады сообщить вам...', isActive: false },
+  ]);
+  const [editTemplate, setEditTemplate] = useState<any>(null);
+
+  // Restriction search
+  const [restrictionSearch, setRestrictionSearch] = useState('');
+
+  const permissionGroups = [
+    { key: 'Основное', perms: [{ k: 'main.view', l: 'Просмотр' }] },
+    { key: 'Сотрудники', perms: [{ k: 'employees.view', l: 'Смотреть' }, { k: 'employees.create', l: 'Создать/Изменить' }, { k: 'employees.delete', l: 'Удалить' }] },
+    { key: 'Клиенты', perms: [{ k: 'clients.view', l: 'Смотреть' }, { k: 'clients.create', l: 'Создать' }, { k: 'clients.edit', l: 'Редактировать' }] },
+    { key: 'Торговые счета', perms: [{ k: 'accounts.view', l: 'Смотреть' }, { k: 'accounts.edit', l: 'Создать/Изменить' }, { k: 'accounts.deposit', l: 'Пополнить/Вывести' }] },
+    { key: 'Платежи', perms: [{ k: 'payments.view', l: 'Смотреть' }, { k: 'payments.edit', l: 'Редактировать' }, { k: 'payments.delete', l: 'Удалить' }] },
+    { key: 'Обращения', perms: [{ k: 'support.view', l: 'Смотреть' }, { k: 'support.reply', l: 'Ответить' }, { k: 'support.delete', l: 'Удалить' }] },
+    { key: 'Верификация', perms: [{ k: 'verification.view', l: 'Смотреть' }, { k: 'verification.changeStatus', l: 'Изменить статус' }] },
+    { key: 'Настройки', perms: [{ k: 'settings.view', l: 'Смотреть' }, { k: 'settings.edit', l: 'Создать/Изменить' }] },
+  ];
+
+  const togglePerm = (perm: string) => setRoleForm(f => ({ ...f, permissions: { ...f.permissions, [perm]: !f.permissions[perm] } }));
+  const startEditRole = (id: string) => {
+    const r = roles.find(ro => ro.id === id);
+    if (r) { setRoleForm({ name: r.name, employeeType: r.employeeType, permissions: { ...r.permissions } }); setEditingRoleId(id); setShowRoleForm(true); }
+  };
+  const saveRole = () => {
+    if (editingRoleId) { updateRole(editingRoleId, roleForm); } else if (roleForm.name) { addRole(roleForm); }
+    setEditingRoleId(null); setShowRoleForm(false); setRoleForm({ name: '', employeeType: 'Admin', permissions: {} });
+  };
+
   const tabs = [
     { id: 'statuses', label: 'Статусы клиентов' },
     { id: 'actions', label: 'Статусы действий' },
@@ -50,6 +89,8 @@ export default function AdminSettings() {
     { id: 'security', label: 'Безопасность' },
     { id: 'api', label: 'API интеграции' },
     { id: 'restrictions', label: 'Ограничения' },
+    { id: 'roles', label: 'Роли и права' },
+    { id: 'emailTemplates', label: 'Шаблоны писем' },
     { id: 'misc', label: 'Дополнительно' },
   ];
 
