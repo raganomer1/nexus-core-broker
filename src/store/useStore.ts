@@ -537,6 +537,7 @@ export const useStore = create<AppStore>((set, get) => ({
       if (!r.isActive) return false;
       if (r.targetType === 'clients') return r.targetIds.includes(clientId);
       if (r.targetType === 'desks') return client.deskId ? r.targetIds.includes(client.deskId) : false;
+      if (r.targetType === 'manager') return client.responsibleId ? r.targetIds.includes(client.responsibleId) : false;
       return false;
     });
   },

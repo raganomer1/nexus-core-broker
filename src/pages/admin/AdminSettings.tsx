@@ -348,7 +348,7 @@ export default function AdminSettings() {
                     {r.restrictFullAccess && <span className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full">Полный доступ</span>}
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Цель: {r.targetType === 'clients' ? `Клиенты (${r.targetIds.length})` : r.targetType === 'desks' ? `Дески (${r.targetIds.length})` : 'По фильтрам'}
+                    Цель: {r.targetType === 'clients' ? `Клиенты (${r.targetIds.length})` : r.targetType === 'desks' ? `Дески (${r.targetIds.length})` : r.targetType === 'manager' ? `Менеджеры (${r.targetIds.length})` : 'По фильтрам'}
                   </div>
                 </div>
               ))}
