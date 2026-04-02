@@ -40,7 +40,7 @@ export default function AdminSettings() {
   const [editRestriction, setEditRestriction] = useState<{
     id?: string; name: string; message: string;
     restrictTrading: boolean; restrictWithdrawal: boolean; restrictFullAccess: boolean;
-    targetType: 'clients' | 'desks' | 'filters'; targetIds: string[]; isActive: boolean;
+    targetType: 'clients' | 'desks' | 'manager' | 'filters'; targetIds: string[]; isActive: boolean;
   } | null>(null);
 
   // Roles
