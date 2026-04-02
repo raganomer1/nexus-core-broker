@@ -278,7 +278,7 @@ export default function AdminAccounts() {
                     <td className="font-medium">{a.accountNumber}</td>
                     <td className="whitespace-nowrap">
                       {client ? (
-                        <span className="text-primary cursor-pointer hover:underline">{client.lastName} {client.firstName}</span>
+                        <span className="text-primary cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/admin/clients/${client.id}`); }}>{client.lastName} {client.firstName}</span>
                       ) : '—'}
                     </td>
                     <td className="text-sm text-muted-foreground">{client?.email || '—'}</td>
