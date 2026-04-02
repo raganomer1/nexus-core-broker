@@ -402,7 +402,7 @@ export interface ClientRestriction {
   restrictTrading: boolean;
   restrictWithdrawal: boolean;
   restrictFullAccess: boolean;
-  targetType: 'clients' | 'desks' | 'filters';
+  targetType: 'clients' | 'desks' | 'manager' | 'filters';
   targetIds: string[];
   filterConditions?: FilterCondition[];
   isActive: boolean;
