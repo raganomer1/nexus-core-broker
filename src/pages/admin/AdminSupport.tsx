@@ -41,6 +41,10 @@ export default function AdminSupport() {
       });
     }
     if (assignedFilter !== 'All') result = result.filter(tk => tk.assignedTo === assignedFilter);
+    if (deskFilter !== 'All') result = result.filter(tk => {
+      const c = clients.find(cl => cl.id === tk.clientId);
+      return c?.deskId === deskFilter;
+    });
 
     result.sort((a, b) => {
       if (sortKey === 'date') {

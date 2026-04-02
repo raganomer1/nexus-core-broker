@@ -155,13 +155,14 @@ export default function AdminVerification() {
                 ))}</div>
               )}
             </div>
-            {activeTab === 'Pending' && (
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" onClick={() => updateVerificationStatus(selected.id, 'Verified', auth.employeeId)}><Check size={14} className="mr-1" /> Верифицировать</Button>
-                <Button variant="outline" size="sm" onClick={() => updateVerificationStatus(selected.id, 'Rejected', auth.employeeId)}><X size={14} className="mr-1" /> Отклонить</Button>
-                <Button variant="destructive" size="sm" onClick={() => updateVerificationStatus(selected.id, 'Banned', auth.employeeId)}><Ban size={14} className="mr-1" /> Заблокировать</Button>
-              </div>
-            )}
+            {/* Show actions for any tab - allow changing status back */}
+            <div className="flex flex-wrap gap-2">
+              {activeTab !== 'Verified' && <Button size="sm" onClick={() => { updateVerificationStatus(selected.id, 'Verified', auth.employeeId); toast.success('Верифицирован'); }}><Check size={14} className="mr-1" /> Верифицировать</Button>}
+              {activeTab !== 'Pending' && <Button variant="outline" size="sm" onClick={() => { updateVerificationStatus(selected.id, 'Pending', auth.employeeId); toast.success('Возвращено на рассмотрение'); }}>На рассмотрение</Button>}
+              {activeTab !== 'Unverified' && <Button variant="outline" size="sm" onClick={() => { updateVerificationStatus(selected.id, 'Unverified', auth.employeeId); toast.success('Не верифицирован'); }}>Снять верификацию</Button>}
+              {activeTab !== 'Rejected' && <Button variant="outline" size="sm" onClick={() => { updateVerificationStatus(selected.id, 'Rejected', auth.employeeId); toast.success('Отклонён'); }}><X size={14} className="mr-1" /> Отклонить</Button>}
+              {activeTab !== 'Banned' && <Button variant="destructive" size="sm" onClick={() => { updateVerificationStatus(selected.id, 'Banned', auth.employeeId); toast.success('Заблокирован'); }}><Ban size={14} className="mr-1" /> Заблокировать</Button>}
+            </div>
           </div>
         )}
       </div>
