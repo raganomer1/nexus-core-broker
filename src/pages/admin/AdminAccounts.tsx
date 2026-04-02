@@ -17,6 +17,7 @@ import { useTableControls } from '@/hooks/useTableControls';
 import TablePagination from '@/components/TablePagination';
 
 export default function AdminAccounts() {
+  const navigate = useNavigate();
   const { tradingAccounts, clients, employees, positions, payments, addTradingAccount, updateTradingAccount, deleteTradingAccount, addPayment, addHistoryEvent, auth } = useStore();
   const { state: confirmState, confirmDelete, close: closeConfirm } = useConfirmDelete();
   const { lang } = useSettingsStore();

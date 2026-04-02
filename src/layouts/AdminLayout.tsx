@@ -23,7 +23,6 @@ const navItems: { to: string; labelKey: TranslationKey; icon: React.ElementType;
   { to: '/admin/prices', labelKey: 'prices', icon: BarChart3 },
   { to: '/admin/history', labelKey: 'history', icon: Clock },
   { to: '/admin/employees', labelKey: 'employees', icon: UserCog },
-  { to: '/admin/roles', labelKey: 'roles', icon: ShieldCheck },
   { to: '/admin/desks', labelKey: 'desks', icon: Building2 },
   { to: '/admin/verification', labelKey: 'verification', icon: ShieldCheck },
   { to: '/admin/support', labelKey: 'support', icon: MessageSquare },
