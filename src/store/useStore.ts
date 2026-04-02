@@ -72,7 +72,9 @@ interface AppStore {
 
   // Assets
   assets: AssetSymbol[];
+  addAsset: (asset: Omit<AssetSymbol, 'id' | 'lastUpdated'>) => void;
   updateAsset: (id: string, updates: Partial<AssetSymbol>) => void;
+  deleteAsset: (id: string) => void;
 
   // Manual Price Override
   manualOverrides: ManualPriceOverride[];
