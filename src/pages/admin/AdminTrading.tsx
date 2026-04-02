@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
@@ -14,8 +14,24 @@ import TablePagination from '@/components/TablePagination';
 import { ResizableTh } from '@/components/ResizableTableHeader';
 
 export default function AdminTrading() {
-  const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice } = useStore();
+  const { tradingAccounts, positions, clients, payments, updatePosition, closePosition, deletePosition, updateTradingAccount, getEffectivePrice, simulatePriceMovement } = useStore();
   const { lang } = useSettingsStore();
+
+  // Auto-refresh
+  useEffect(() => {
+    const interval = setInterval(() => { simulatePriceMovement(); }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sorting
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
+  };
+  const sortIcon = (field: string) => sortField === field ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
 
   // Filters
   const [search, setSearch] = useState('');
@@ -63,8 +79,24 @@ export default function AdminTrading() {
         return a.accountNumber.includes(s) || (client && (client.lastName.toLowerCase().includes(s) || client.firstName.toLowerCase().includes(s)));
       });
     }
+    // Apply sorting
+    if (sortField) {
+      result.sort((a, b) => {
+        let va: any, vb: any;
+        if (sortField === 'name') {
+          const ca = clients.find(c => c.id === a.clientId);
+          const cb = clients.find(c => c.id === b.clientId);
+          va = ca ? `${ca.lastName} ${ca.firstName}` : '';
+          vb = cb ? `${cb.lastName} ${cb.firstName}` : '';
+        } else {
+          va = (a as any)[sortField]; vb = (b as any)[sortField];
+        }
+        if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        return sortDir === 'asc' ? (va - vb) : (vb - va);
+      });
+    }
     return result;
-  }, [tradingAccounts, groupFilter, demoFilter, balanceFilter, withdrawnFilter, profitFilter, search, clients]);
+  }, [tradingAccounts, groupFilter, demoFilter, balanceFilter, withdrawnFilter, profitFilter, search, clients, sortField, sortDir]);
 
   const { paginated, page, setPage, perPage, setPerPage, totalPages } = useTableControls(filtered);
 
@@ -192,18 +224,18 @@ export default function AdminTrading() {
           <table className="data-table text-xs" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead>
               <tr className="bg-muted/30">
-                <ResizableTh className="whitespace-nowrap" initialWidth={120}>Группа</ResizableTh>
-                <ResizableTh className="whitespace-nowrap" initialWidth={80}>Номер</ResizableTh>
-                <ResizableTh className="whitespace-nowrap" initialWidth={140}>Ф.И.О</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Введено</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={80}>Снято</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={120} onClick={() => toggleSort('group')}>Группа{sortIcon('group')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={80} onClick={() => toggleSort('accountNumber')}>Номер{sortIcon('accountNumber')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={140} onClick={() => toggleSort('name')}>Ф.И.О{sortIcon('name')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={100} onClick={() => toggleSort('deposited')}>Введено{sortIcon('deposited')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={80} onClick={() => toggleSort('withdrawn')}>Снято{sortIcon('withdrawn')}</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={130}>Введено/выведено</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Ввод-вывод</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={70}>Сделки</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={70} onClick={() => toggleSort('tradesCount')}>Сделки{sortIcon('tradesCount')}</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={110}>Уровень средств</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={120}>Потрачено бонусов</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Прибыль</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Средства</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={90} onClick={() => toggleSort('profit')}>Прибыль{sortIcon('profit')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={90} onClick={() => toggleSort('equity')}>Средства{sortIcon('equity')}</ResizableTh>
                 <th className="w-8"></th>
               </tr>
             </thead>

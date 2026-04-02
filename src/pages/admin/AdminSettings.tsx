@@ -639,6 +639,81 @@ export default function AdminSettings() {
         </DialogContent>
       </Dialog>
 
+      {/* ===== Role Form Dialog ===== */}
+      <Dialog open={showRoleForm} onOpenChange={setShowRoleForm}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto mx-4">
+          <DialogHeader><DialogTitle>{editingRoleId ? 'Редактировать роль' : 'Новая роль'}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Название роли</label>
+                <Input value={roleForm.name} onChange={e => setRoleForm({ ...roleForm, name: e.target.value })} placeholder="Менеджер, Старший менеджер..." />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Тип сотрудника</label>
+                <Select value={roleForm.employeeType} onValueChange={v => setRoleForm({ ...roleForm, employeeType: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admin">Администратор</SelectItem>
+                    <SelectItem value="Manager">Менеджер</SelectItem>
+                    <SelectItem value="Support">Поддержка</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground font-medium">Права доступа</label>
+              <div className="mt-2 space-y-3">
+                {permissionGroups.map(g => (
+                  <div key={g.key} className="border rounded p-3">
+                    <div className="text-xs font-semibold mb-2">{g.key}</div>
+                    <div className="flex flex-wrap gap-3">
+                      {g.perms.map(p => (
+                        <label key={p.k} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                          <Checkbox checked={!!roleForm.permissions[p.k]} onCheckedChange={() => togglePerm(p.k)} />
+                          {p.l}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <Button onClick={saveRole}>{editingRoleId ? 'Сохранить' : 'Создать'}</Button>
+              <Button variant="outline" onClick={() => setShowRoleForm(false)}>Отмена</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== Edit Email Template Dialog ===== */}
+      <Dialog open={!!editTemplate} onOpenChange={() => setEditTemplate(null)}>
+        <DialogContent className="mx-4 max-w-md">
+          <DialogHeader><DialogTitle>{editTemplate?.id ? 'Редактировать шаблон' : 'Новый шаблон'}</DialogTitle></DialogHeader>
+          {editTemplate && (
+            <div className="space-y-3">
+              <div><label className="text-xs text-muted-foreground">Название</label><Input value={editTemplate.name} onChange={e => setEditTemplate({ ...editTemplate, name: e.target.value })} /></div>
+              <div><label className="text-xs text-muted-foreground">Тема письма</label><Input value={editTemplate.subject} onChange={e => setEditTemplate({ ...editTemplate, subject: e.target.value })} /></div>
+              <div><label className="text-xs text-muted-foreground">Текст (переменные: {'{{name}}, {{link}}, {{email}}'})</label><Textarea value={editTemplate.body} onChange={e => setEditTemplate({ ...editTemplate, body: e.target.value })} rows={5} /></div>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={editTemplate.isActive} onCheckedChange={v => setEditTemplate({ ...editTemplate, isActive: !!v })} /> Активен</label>
+              <div className="flex gap-2">
+                <Button onClick={() => {
+                  if (!editTemplate.name) return;
+                  if (editTemplate.id) {
+                    setEmailTemplates(prev => prev.map(t => t.id === editTemplate.id ? { ...editTemplate } : t));
+                  } else {
+                    setEmailTemplates(prev => [...prev, { ...editTemplate, id: Date.now().toString() }]);
+                  }
+                  setEditTemplate(null);
+                }}>Сохранить</Button>
+                <Button variant="outline" onClick={() => setEditTemplate(null)}>Отмена</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <ConfirmDeleteDialog state={delState} onClose={closeDelete} />
     </div>
   );
