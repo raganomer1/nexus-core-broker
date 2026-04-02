@@ -224,18 +224,18 @@ export default function AdminTrading() {
           <table className="data-table text-xs" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead>
               <tr className="bg-muted/30">
-                <ResizableTh className="whitespace-nowrap" initialWidth={120}>Группа</ResizableTh>
-                <ResizableTh className="whitespace-nowrap" initialWidth={80}>Номер</ResizableTh>
-                <ResizableTh className="whitespace-nowrap" initialWidth={140}>Ф.И.О</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Введено</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={80}>Снято</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={120} onClick={() => toggleSort('group')}>Группа{sortIcon('group')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={80} onClick={() => toggleSort('accountNumber')}>Номер{sortIcon('accountNumber')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap cursor-pointer" initialWidth={140} onClick={() => toggleSort('name')}>Ф.И.О{sortIcon('name')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={100} onClick={() => toggleSort('deposited')}>Введено{sortIcon('deposited')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={80} onClick={() => toggleSort('withdrawn')}>Снято{sortIcon('withdrawn')}</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={130}>Введено/выведено</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={100}>Ввод-вывод</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={70}>Сделки</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={70} onClick={() => toggleSort('tradesCount')}>Сделки{sortIcon('tradesCount')}</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={110}>Уровень средств</ResizableTh>
                 <ResizableTh className="whitespace-nowrap text-right" initialWidth={120}>Потрачено бонусов</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Прибыль</ResizableTh>
-                <ResizableTh className="whitespace-nowrap text-right" initialWidth={90}>Средства</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={90} onClick={() => toggleSort('profit')}>Прибыль{sortIcon('profit')}</ResizableTh>
+                <ResizableTh className="whitespace-nowrap text-right cursor-pointer" initialWidth={90} onClick={() => toggleSort('equity')}>Средства{sortIcon('equity')}</ResizableTh>
                 <th className="w-8"></th>
               </tr>
             </thead>
