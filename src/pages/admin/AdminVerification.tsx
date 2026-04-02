@@ -3,6 +3,7 @@ import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
 import { Check, X, Ban, FileText, ArrowLeft, Search, Filter, Trash2, Edit2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

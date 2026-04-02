@@ -357,6 +357,59 @@ export default function AdminSettings() {
         </div>
       )}
 
+      {/* ============ ROLES ============ */}
+      {tab === 'roles' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-card rounded-lg border p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">Роли и права доступа</h3>
+              <Button size="sm" variant="outline" onClick={() => { setRoleForm({ name: '', employeeType: 'Admin', permissions: {} }); setEditingRoleId(null); setShowRoleForm(true); }}><Plus size={14} className="mr-1" />Новая роль</Button>
+            </div>
+            <div className="space-y-2">
+              {roles.map(r => (
+                <div key={r.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded">
+                  <span className="text-sm font-medium flex-1">{r.name}</span>
+                  <span className="text-xs text-muted-foreground">{r.employeeType}</span>
+                  <Button variant="ghost" size="sm" onClick={() => startEditRole(r.id)}><Edit2 size={12} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDelete('Удалить роль', `Удалить роль "${r.name}"?`, () => deleteRole(r.id))}><Trash2 size={12} className="text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ EMAIL TEMPLATES ============ */}
+      {tab === 'emailTemplates' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-card rounded-lg border p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-semibold">Шаблоны писем</h3>
+                <p className="text-xs text-muted-foreground mt-1">Автоматические письма клиентам</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setEditTemplate({ name: '', subject: '', body: '', isActive: true })}>
+                <Plus size={14} className="mr-1" />Новый шаблон
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {emailTemplates.map(tpl => (
+                <div key={tpl.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded">
+                  <div className={`w-2 h-2 rounded-full ${tpl.isActive ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">{tpl.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">— {tpl.subject}</span>
+                  </div>
+                  <Switch checked={tpl.isActive} onCheckedChange={v => setEmailTemplates(prev => prev.map(t => t.id === tpl.id ? { ...t, isActive: v } : t))} />
+                  <Button variant="ghost" size="sm" onClick={() => setEditTemplate({ ...tpl })}><Edit2 size={12} /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDelete('Удалить шаблон', `Удалить "${tpl.name}"?`, () => setEmailTemplates(prev => prev.filter(t => t.id !== tpl.id)))}><Trash2 size={12} className="text-destructive" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============ MISC ============ */}
       {tab === 'misc' && (
         <div className="bg-card rounded-lg border p-4 md:p-5 max-w-lg">
