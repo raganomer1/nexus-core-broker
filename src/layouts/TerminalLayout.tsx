@@ -7,7 +7,7 @@ import {
 
 export default function TerminalLayout() {
   const navigate = useNavigate();
-  const { assets, auth, clients, tradingAccounts, positions, simulatePriceMovement, checkOverrideExpiry, stopImpersonation } = useStore();
+  const { assets, auth, clients, tradingAccounts, positions, checkOverrideExpiry, stopImpersonation } = useStore();
   const client = clients.find(c => c.id === auth.clientId);
   const clientAccounts = tradingAccounts.filter(a => a.clientId === auth.clientId);
   const [selectedAccountId, setSelectedAccountId] = useState(clientAccounts[0]?.id || '');
@@ -19,12 +19,11 @@ export default function TerminalLayout() {
   const selectedAccount = tradingAccounts.find(a => a.id === selectedAccountId);
   const openPositions = positions.filter(p => p.accountId === selectedAccountId && p.status === 'Open');
 
-  // Price simulation
+  // Override expiry check (price updates handled by TradingContext)
   useEffect(() => {
     const interval = setInterval(() => {
-      simulatePriceMovement();
       checkOverrideExpiry();
-    }, 2000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
