@@ -78,7 +78,7 @@ export default function AdminPrices() {
                   <td className="text-sm">{(a.ask - a.bid).toFixed(a.precision)}</td>
                   <td className="text-sm">{a.swapLong}</td><td className="text-sm">{a.swapShort}</td>
                   <td className="text-xs">{a.calcType}</td><td className="text-xs">{a.precision}</td>
-                  <td>{override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span><Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => resetManualPrice(a.id)} title={t(lang, 'reset')}><RotateCcw size={12} /></Button></div>)}</td>
+                  <td>{override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span><Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => resetManualPrice(a.id)} title="Сбросить"><RotateCcw size={12} /></Button></div>)}</td>
                   <td><Button variant="ghost" size="sm" onClick={() => { setEditSymbol(a); setNewBid(a.bid.toString()); setNewAsk(a.ask.toString()); }}><Edit2 size={14} /></Button></td>
                 </tr>
               );
