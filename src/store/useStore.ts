@@ -83,6 +83,7 @@ interface AppStore {
   // Manual Price Override
   manualOverrides: ManualPriceOverride[];
   setManualPrice: (symbolId: string, newBid: number, newAsk: number, employeeId: string) => void;
+  resetManualPrice: (symbolId: string) => void;
   checkOverrideExpiry: () => void;
 
   // Payments
@@ -391,6 +392,15 @@ export const useStore = create<AppStore>((set, get) => ({
       source: 'Employee',
       description: `Ручное изменение цены ${asset.symbol}: Bid ${asset.bid}→${newBid}, Ask ${asset.ask}→${newAsk}`,
     });
+  },
+
+  resetManualPrice: (symbolId) => {
+    const override = get().manualOverrides.find(o => o.symbolId === symbolId && o.isActive);
+    if (!override) return;
+    set(s => ({
+      manualOverrides: s.manualOverrides.map(o => o.id === override.id ? { ...o, isActive: false } : o),
+      assets: s.assets.map(a => a.id === symbolId ? { ...a, bid: override.oldBid, ask: override.oldAsk, lastUpdated: new Date().toISOString() } : a),
+    }));
   },
 
   checkOverrideExpiry: () => {

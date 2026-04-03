@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
-import { Edit2, Clock, AlertTriangle } from 'lucide-react';
+import { Edit2, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function AdminPrices() {
-  const { assets, manualOverrides, setManualPrice, checkOverrideExpiry, simulatePriceMovement, auth } = useStore();
+  const { assets, manualOverrides, setManualPrice, resetManualPrice, checkOverrideExpiry, simulatePriceMovement, auth } = useStore();
   const { lang } = useSettingsStore();
   const [editSymbol, setEditSymbol] = useState<any>(null);
   const [newBid, setNewBid] = useState('');
@@ -48,7 +48,7 @@ export default function AdminPrices() {
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">{a.symbol}</span>
                 <div className="flex items-center gap-2">
-                  {override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span></div>)}
+                   {override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span><Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => resetManualPrice(a.id)} title="Сбросить"><RotateCcw size={12} /></Button></div>)}
                   <Button variant="ghost" size="sm" onClick={() => { setEditSymbol(a); setNewBid(a.bid.toString()); setNewAsk(a.ask.toString()); }}><Edit2 size={14} /></Button>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export default function AdminPrices() {
                   <td className="text-sm">{(a.ask - a.bid).toFixed(a.precision)}</td>
                   <td className="text-sm">{a.swapLong}</td><td className="text-sm">{a.swapShort}</td>
                   <td className="text-xs">{a.calcType}</td><td className="text-xs">{a.precision}</td>
-                  <td>{override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span></div>)}</td>
+                  <td>{override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span><Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => resetManualPrice(a.id)} title="Сбросить"><RotateCcw size={12} /></Button></div>)}</td>
                   <td><Button variant="ghost" size="sm" onClick={() => { setEditSymbol(a); setNewBid(a.bid.toString()); setNewAsk(a.ask.toString()); }}><Edit2 size={14} /></Button></td>
                 </tr>
               );
