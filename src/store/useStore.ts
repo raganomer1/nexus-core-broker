@@ -106,6 +106,8 @@ interface AppStore {
   // History
   history: HistoryEvent[];
   addHistoryEvent: (event: Omit<HistoryEvent, 'id' | 'timestamp'>) => void;
+  updateHistoryEvent: (id: string, updates: Partial<HistoryEvent>) => void;
+  deleteHistoryEvent: (id: string) => void;
 
   // Sessions
   sessions: ClientSession[];
