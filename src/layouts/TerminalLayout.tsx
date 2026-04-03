@@ -19,12 +19,11 @@ export default function TerminalLayout() {
   const selectedAccount = tradingAccounts.find(a => a.id === selectedAccountId);
   const openPositions = positions.filter(p => p.accountId === selectedAccountId && p.status === 'Open');
 
-  // Price simulation
+  // Override expiry check (price updates handled by TradingContext)
   useEffect(() => {
     const interval = setInterval(() => {
-      simulatePriceMovement();
       checkOverrideExpiry();
-    }, 2000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
