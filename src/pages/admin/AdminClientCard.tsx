@@ -42,8 +42,8 @@ export default function AdminClientCard() {
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
-  const [editStatusId, setEditStatusId] = useState<string | null>(null);
-  const [editStatusValue, setEditStatusValue] = useState('');
+  const [editActionId, setEditActionId] = useState<string | null>(null);
+  const [editActionData, setEditActionData] = useState({ type: '', description: '', responsibleId: '', status: '', actionDate: '' });
 
   // Inline edit
   const [editField, setEditField] = useState<{ field: string; value: string; label: string } | null>(null);
@@ -227,30 +227,17 @@ export default function AdminClientCard() {
                   <td className="text-sm">{(() => { const r = h.responsibleId ? employees.find(e => e.id === h.responsibleId) : resp; return r ? `${r.firstName} ${r.lastName}` : '—'; })()}</td>
                   <td>
                     <div className="flex items-center gap-1">
-                      {editStatusId === h.id ? (
-                        <Select value={editStatusValue} onValueChange={v => { setEditStatusValue(v); updateHistoryEvent(h.id, { actionStatus: v }); setEditStatusId(null); toast.success('Статус обновлён'); }}>
-                          <SelectTrigger className="h-6 text-xs w-24"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="New">New</SelectItem>
-                            <SelectItem value="In progress">In progress</SelectItem>
-                            <SelectItem value="Done">Done</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <>
-                          <span className="flex items-center gap-1.5 text-xs">
-                            <span className={`w-1.5 h-1.5 rounded-full ${h.actionStatus === 'Done' ? 'bg-blue-500' : h.actionStatus === 'In progress' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                            {h.actionStatus || 'New'}
-                          </span>
-                          <button onClick={() => { setEditStatusId(h.id); setEditStatusValue(h.actionStatus || 'New'); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground">
-                            <Pencil size={10} />
-                          </button>
-                          {auth.role?.name === 'Admin' && (
-                            <button onClick={() => { deleteHistoryEvent(h.id); toast.success('Действие удалено'); }} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
-                              <X size={10} />
-                            </button>
-                          )}
-                        </>
+                      <span className="flex items-center gap-1.5 text-xs">
+                        <span className={`w-1.5 h-1.5 rounded-full ${h.actionStatus === 'Done' ? 'bg-blue-500' : h.actionStatus === 'In progress' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                        {h.actionStatus || 'New'}
+                      </span>
+                      <button onClick={() => { setEditActionId(h.id); setEditActionData({ type: h.actionType || h.section, description: h.description, responsibleId: h.responsibleId || '', status: h.actionStatus || 'New', actionDate: h.actionDate || h.timestamp.slice(0, 16) }); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground">
+                        <Pencil size={10} />
+                      </button>
+                      {auth.role?.name === 'Admin' && (
+                        <button onClick={() => { deleteHistoryEvent(h.id); toast.success('Действие удалено'); }} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                          <X size={10} />
+                        </button>
                       )}
                     </div>
                   </td>
@@ -358,6 +345,69 @@ export default function AdminClientCard() {
                 setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
               }}>Сохранить и создать</Button>
               <Button variant="outline" onClick={() => setShowAction(false)}>Отмена</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Action Dialog */}
+      <Dialog open={!!editActionId} onOpenChange={() => setEditActionId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Редактировать действие</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Тип</label>
+              <Select value={editActionData.type} onValueChange={v => setEditActionData({ ...editActionData, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Phone call">Phone call</SelectItem>
+                  <SelectItem value="Email">Email</SelectItem>
+                  <SelectItem value="Meeting">Meeting</SelectItem>
+                  <SelectItem value="Task">Task</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Статус</label>
+              <Select value={editActionData.status} onValueChange={v => setEditActionData({ ...editActionData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="In progress">In progress</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Ответственный</label>
+              <Select value={editActionData.responsibleId} onValueChange={v => setEditActionData({ ...editActionData, responsibleId: v })}>
+                <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+                <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Дата действия</label>
+              <Input type="datetime-local" value={editActionData.actionDate} onChange={e => setEditActionData({ ...editActionData, actionDate: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">Описание</label>
+              <Textarea value={editActionData.description} onChange={e => setEditActionData({ ...editActionData, description: e.target.value })} rows={4} />
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button onClick={() => {
+                if (editActionId) {
+                  updateHistoryEvent(editActionId, {
+                    actionType: editActionData.type,
+                    actionStatus: editActionData.status,
+                    description: editActionData.description,
+                    responsibleId: editActionData.responsibleId,
+                    actionDate: editActionData.actionDate,
+                  });
+                  toast.success('Действие обновлено');
+                  setEditActionId(null);
+                }
+              }}>Сохранить</Button>
+              <Button variant="outline" onClick={() => setEditActionId(null)}>Отмена</Button>
             </div>
           </div>
         </DialogContent>
