@@ -60,7 +60,8 @@ export const employees: Employee[] = [
   { id: 'e5', lastName: 'Морозов', firstName: 'Игорь', type: 'Sales', position: 'Sales Manager', department: 'Sales', email: 'morozov@broker.com', canViewContacts: false, canEdit: true, desks: ['d2'], roleId: 'r5', lastLogin: '2026-03-31T08:45:00', isActive: true, createdAt: '2024-05-01' },
   { id: 'e6', lastName: 'Волков', firstName: 'Сергей', type: 'Sales', position: 'Sales Manager', department: 'Sales', email: 'volkov@broker.com', canViewContacts: false, canEdit: true, desks: ['d3'], roleId: 'r5', isActive: true, createdAt: '2024-06-01' },
   { id: 'e7', lastName: 'Новиков', firstName: 'Павел', type: 'Sales', position: 'Retention Manager', department: 'Sales', email: 'novikov@broker.com', canViewContacts: true, canEdit: true, desks: ['d2'], roleId: 'r4', lastLogin: '2026-03-29T14:00:00', isActive: true, createdAt: '2024-07-01' },
-  { id: 'e8', lastName: 'Тестов', firstName: 'Продажник', type: 'Sales', position: 'Sales Manager', department: 'Sales', email: 'test.sale@broker.com', phone: '+7 900 000 0001', canViewContacts: true, canEdit: true, desks: ['d1'], roleId: 'r5', lastLogin: '2026-04-03T09:00:00', isActive: true, createdAt: '2026-04-03' },
+  { id: 'e8', lastName: 'Тестов', firstName: 'Продажник', type: 'Sales', position: 'Sales Manager', department: 'Sales', email: 'test.sale@broker.com', phone: '+7 900 000 0001', canViewContacts: false, canEdit: true, desks: ['d1'], roleId: 'r5', lastLogin: '2026-04-03T09:00:00', isActive: true, createdAt: '2026-04-03' },
+  { id: 'e9', lastName: 'Тестов', firstName: 'Ретеншн', type: 'Sales', position: 'Retention Manager', department: 'Sales', email: 'test.retention@broker.com', phone: '+7 900 000 0002', canViewContacts: true, canEdit: true, desks: ['d1'], roleId: 'r4', lastLogin: '2026-04-03T09:00:00', isActive: true, createdAt: '2026-04-03' },
 ];
 
 // ==================== DESKS ====================
