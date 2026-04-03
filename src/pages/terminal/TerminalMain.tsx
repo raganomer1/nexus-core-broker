@@ -4,11 +4,8 @@ import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, X, Download, AlertTriangle, Info } from 'lucide-react';
+import { Search, Plus, X, AlertTriangle } from 'lucide-react';
 import { createChart, CandlestickSeries, HistogramSeries, type IChartApi } from 'lightweight-charts';
-import { exportClientsToXlsx } from '@/lib/xlsxUtils';
-import * as XLSX from 'xlsx';
 
 type TerminalContext = {
   selectedSymbol: string;
@@ -52,6 +49,8 @@ export default function TerminalMain() {
   const [orderVolume, setOrderVolume] = useState('0.1');
   const [orderTP, setOrderTP] = useState('');
   const [orderSL, setOrderSL] = useState('');
+  const [tpMode, setTpMode] = useState<'price' | 'points'>('price');
+  const [slMode, setSlMode] = useState<'price' | 'points'>('price');
   const [orderError, setOrderError] = useState('');
   const [reportTab, setReportTab] = useState<'trades' | 'deposits' | 'executed'>('trades');
   const [reportPeriod, setReportPeriod] = useState<'week' | 'month' | 'all'>('month');
@@ -71,7 +70,6 @@ export default function TerminalMain() {
     return a.isActive;
   });
 
-  // Margin calculation
   const requiredMargin = useMemo(() => {
     if (!asset || !account) return 0;
     const price = orderType === 'Buy' ? asset.ask : asset.bid;
@@ -91,32 +89,44 @@ export default function TerminalMain() {
     return '';
   }, [account, requiredMargin, commission]);
 
-  // Report data with period filter
+  // Convert points to price for TP/SL
+  const getTPPrice = (): number | undefined => {
+    if (!orderTP || !asset) return undefined;
+    const val = Number(orderTP);
+    if (isNaN(val)) return undefined;
+    if (tpMode === 'price') return val;
+    const pointSize = Math.pow(10, -asset.precision);
+    const price = orderType === 'Buy' ? asset.ask : asset.bid;
+    return orderType === 'Buy' ? price + val * pointSize : price - val * pointSize;
+  };
+
+  const getSLPrice = (): number | undefined => {
+    if (!orderSL || !asset) return undefined;
+    const val = Number(orderSL);
+    if (isNaN(val)) return undefined;
+    if (slMode === 'price') return val;
+    const pointSize = Math.pow(10, -asset.precision);
+    const price = orderType === 'Buy' ? asset.ask : asset.bid;
+    return orderType === 'Buy' ? price - val * pointSize : price + val * pointSize;
+  };
+
+  // Report data
   const periodMs = reportPeriod === 'week' ? 7 * 86400000 : reportPeriod === 'month' ? 30 * 86400000 : 0;
   const reportPositions = useMemo(() => {
     let list = [...openPos, ...closedPos];
-    if (periodMs > 0) {
-      const cutoff = Date.now() - periodMs;
-      list = list.filter(p => new Date(p.openDate).getTime() >= cutoff);
-    }
+    if (periodMs > 0) { const cutoff = Date.now() - periodMs; list = list.filter(p => new Date(p.openDate).getTime() >= cutoff); }
     return list.sort((a, b) => new Date(b.openDate).getTime() - new Date(a.openDate).getTime());
   }, [openPos, closedPos, periodMs]);
 
   const reportDeposits = useMemo(() => {
     let list = payments.filter(p => p.accountId === ctx.selectedAccountId && (p.type === 'Deposit' || p.type === 'Withdrawal') && p.status === 'Approved');
-    if (periodMs > 0) {
-      const cutoff = Date.now() - periodMs;
-      list = list.filter(p => new Date(p.createdAt).getTime() >= cutoff);
-    }
+    if (periodMs > 0) { const cutoff = Date.now() - periodMs; list = list.filter(p => new Date(p.createdAt).getTime() >= cutoff); }
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [payments, ctx.selectedAccountId, periodMs]);
 
   const executedOrders = useMemo(() => {
     let list = closedPos;
-    if (periodMs > 0) {
-      const cutoff = Date.now() - periodMs;
-      list = list.filter(p => p.closeDate && new Date(p.closeDate).getTime() >= cutoff);
-    }
+    if (periodMs > 0) { const cutoff = Date.now() - periodMs; list = list.filter(p => p.closeDate && new Date(p.closeDate).getTime() >= cutoff); }
     return list.sort((a, b) => new Date(b.closeDate || b.openDate).getTime() - new Date(a.closeDate || a.openDate).getTime());
   }, [closedPos, periodMs]);
 
@@ -167,43 +177,31 @@ export default function TerminalMain() {
     const vol = Number(orderVolume);
     if (vol <= 0) { setOrderError('Некорректный объем'); return; }
 
+    const tpPrice = getTPPrice();
+    const slPrice = getSLPrice();
+
     // Stop level validation
-    if (orderTP) {
-      const tp = Number(orderTP);
+    if (tpPrice !== undefined) {
       const price = orderType === 'Buy' ? asset.ask : asset.bid;
       const minDist = asset.stopLevel * Math.pow(10, -asset.precision);
-      if (orderType === 'Buy' && tp <= price + minDist) { setOrderError(`Take Profit должен быть выше ${(price + minDist).toFixed(asset.precision)}`); return; }
-      if (orderType === 'Sell' && tp >= price - minDist) { setOrderError(`Take Profit должен быть ниже ${(price - minDist).toFixed(asset.precision)}`); return; }
+      if (orderType === 'Buy' && tpPrice <= price + minDist) { setOrderError(`Take Profit должен быть выше ${(price + minDist).toFixed(asset.precision)}`); return; }
+      if (orderType === 'Sell' && tpPrice >= price - minDist) { setOrderError(`Take Profit должен быть ниже ${(price - minDist).toFixed(asset.precision)}`); return; }
     }
-    if (orderSL) {
-      const sl = Number(orderSL);
+    if (slPrice !== undefined) {
       const price = orderType === 'Buy' ? asset.ask : asset.bid;
       const minDist = asset.stopLevel * Math.pow(10, -asset.precision);
-      if (orderType === 'Buy' && sl >= price - minDist) { setOrderError(`Stop Loss должен быть ниже ${(price - minDist).toFixed(asset.precision)}`); return; }
-      if (orderType === 'Sell' && sl <= price + minDist) { setOrderError(`Stop Loss должен быть выше ${(price + minDist).toFixed(asset.precision)}`); return; }
+      if (orderType === 'Buy' && slPrice >= price - minDist) { setOrderError(`Stop Loss должен быть ниже ${(price - minDist).toFixed(asset.precision)}`); return; }
+      if (orderType === 'Sell' && slPrice <= price + minDist) { setOrderError(`Stop Loss должен быть выше ${(price + minDist).toFixed(asset.precision)}`); return; }
     }
 
     const result = openPosition({
       accountId: ctx.selectedAccountId, symbol: asset.symbol, type: orderType, volume: vol,
       openPrice: orderType === 'Buy' ? asset.ask : asset.bid, openDate: new Date().toISOString(),
       swap: 0, commission: asset.commission * vol, margin: 0,
-      takeProfit: orderTP ? Number(orderTP) : undefined, stopLoss: orderSL ? Number(orderSL) : undefined,
+      takeProfit: tpPrice, stopLoss: slPrice,
     });
     if (!result.success) setOrderError(result.error || 'Ошибка');
     else { setShowOrder(false); setOrderTP(''); setOrderSL(''); setOrderVolume('0.1'); }
-  };
-
-  const exportReport = () => {
-    const data = reportTab === 'trades'
-      ? reportPositions.map(p => ({ 'ID': p.id, 'Дата откр.': new Date(p.openDate).toLocaleString(), 'Тип': p.type, 'Символ': p.symbol, 'Объем': p.volume, 'Цена откр.': p.openPrice, 'Дата закр.': p.closeDate ? new Date(p.closeDate).toLocaleString() : '—', 'Цена закр.': p.closePrice || p.currentPrice, 'TP': p.takeProfit || '—', 'SL': p.stopLoss || '—', 'Своп': p.swap, 'Прибыль': p.profit }))
-      : reportTab === 'deposits'
-      ? reportDeposits.map(p => ({ 'ID': p.id, 'Дата': new Date(p.createdAt).toLocaleString(), 'Тип': p.type === 'Deposit' ? 'Пополнение' : 'Снятие', 'Сумма': p.amount, 'Метод': p.paymentMethod, 'Статус': p.status }))
-      : executedOrders.map(p => ({ 'ID': p.id, 'Дата откр.': new Date(p.openDate).toLocaleString(), 'Тип': p.type, 'Символ': p.symbol, 'Объем': p.volume, 'Цена откр.': p.openPrice, 'Цена закр.': p.closePrice, 'Прибыль': p.profit, 'Закрытие': p.closeType || '—' }));
-    
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, reportTab);
-    XLSX.writeFile(wb, `report_${reportTab}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (
@@ -219,26 +217,37 @@ export default function TerminalMain() {
             {t}
           </button>
         ))}
-        <div className="ml-auto flex gap-1 md:gap-2 flex-shrink-0">
-          <button onClick={() => { setOrderType('Buy'); setShowOrder(true); }} className="buy-btn text-xs px-2 md:px-3">Купить</button>
-          <button onClick={() => { setOrderType('Sell'); setShowOrder(true); }} className="sell-btn text-xs px-2 md:px-3">Продать</button>
-        </div>
       </div>
 
       {/* Chart */}
       <div className="flex-1 relative min-h-[200px]" ref={chartRef} />
 
+      {/* Buy / Sell buttons below chart */}
+      <div className="flex items-center gap-2 px-2 md:px-3 py-2 border-t border-b flex-shrink-0" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: 'hsl(220, 14%, 60%)' }}>
+          <span className="font-medium" style={{ color: 'hsl(220, 14%, 90%)' }}>{asset?.symbol}</span>
+          <span>Bid: <b style={{ color: 'hsl(142, 71%, 45%)' }}>{asset?.bid.toFixed(asset?.precision)}</b></span>
+          <span>Ask: <b style={{ color: 'hsl(0, 84%, 60%)' }}>{asset?.ask.toFixed(asset?.precision)}</b></span>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button onClick={() => { setOrderType('Buy'); setShowOrder(true); }} className="buy-btn text-xs px-4 md:px-6 py-1.5 font-semibold rounded">
+            Купить {asset?.ask.toFixed(asset?.precision)}
+          </button>
+          <button onClick={() => { setOrderType('Sell'); setShowOrder(true); }} className="sell-btn text-xs px-4 md:px-6 py-1.5 font-semibold rounded">
+            Продать {asset?.bid.toFixed(asset?.precision)}
+          </button>
+        </div>
+      </div>
+
       {/* Bottom panel: positions */}
-      <div className="border-t flex-shrink-0" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)', maxHeight: '35%', overflow: 'auto' }}>
+      <div className="flex-shrink-0" style={{ background: 'hsl(220, 25%, 10%)', maxHeight: '35%', overflow: 'auto' }}>
         <div className="flex items-center justify-between px-2 md:px-3 py-2 border-b" style={{ borderColor: 'hsl(220, 20%, 20%)' }}>
           <button onClick={() => setShowPositions(!showPositions)} className="flex gap-2 items-center">
             <span className="text-xs font-medium" style={{ color: 'hsl(220, 14%, 80%)' }}>Портфель ({openPos.length})</span>
           </button>
-          <div className="flex gap-2">
-            <button onClick={() => setShowReport(true)} className="text-xs px-2 py-1 rounded" style={{ color: 'hsl(217, 91%, 55%)', background: 'hsl(217, 91%, 55%, 0.1)' }}>
-              <Download size={12} className="inline mr-1" />Отчёт
-            </button>
-          </div>
+          <button onClick={() => setShowReport(true)} className="text-xs px-2 py-1 rounded" style={{ color: 'hsl(217, 91%, 55%)', background: 'hsl(217, 91%, 55%, 0.1)' }}>
+            Отчёт
+          </button>
         </div>
         {showPositions && (
           <>
@@ -304,7 +313,7 @@ export default function TerminalMain() {
         )}
       </div>
 
-      {/* New Order Dialog — improved */}
+      {/* New Order Dialog */}
       <Dialog open={showOrder} onOpenChange={setShowOrder}>
         <DialogContent className="max-w-sm mx-4">
           <DialogHeader><DialogTitle>Новый ордер — {asset?.symbol}</DialogTitle></DialogHeader>
@@ -315,7 +324,6 @@ export default function TerminalMain() {
                 <span className="font-mono">Спред: {(asset.ask - asset.bid).toFixed(asset.precision)}</span>
               </div>
 
-              {/* Buy/Sell toggle */}
               <div className="flex gap-2">
                 <button onClick={() => setOrderType('Buy')} className={`flex-1 py-2.5 rounded font-semibold text-sm transition-all ${orderType === 'Buy' ? 'buy-btn' : 'bg-muted text-muted-foreground'}`}>
                   Buy {asset.ask.toFixed(asset.precision)}
@@ -325,7 +333,6 @@ export default function TerminalMain() {
                 </button>
               </div>
 
-              {/* Volume */}
               <div>
                 <label className="text-xs text-muted-foreground">Объем (лот)</label>
                 <div className="flex gap-1 mt-1">
@@ -339,13 +346,36 @@ export default function TerminalMain() {
                 </div>
               </div>
 
-              {/* TP / SL */}
+              {/* TP / SL with price/points toggle */}
               <div className="grid grid-cols-2 gap-2">
-                <div><label className="text-xs text-muted-foreground">Take Profit</label><Input type="number" step="any" value={orderTP} onChange={e => setOrderTP(e.target.value)} placeholder="—" className="h-8" /></div>
-                <div><label className="text-xs text-muted-foreground">Stop Loss</label><Input type="number" step="any" value={orderSL} onChange={e => setOrderSL(e.target.value)} placeholder="—" className="h-8" /></div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-muted-foreground">Take Profit</label>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => setTpMode('price')} className={`px-1.5 py-0.5 rounded text-[10px] ${tpMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
+                      <button onClick={() => setTpMode('points')} className={`px-1.5 py-0.5 rounded text-[10px] ${tpMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
+                    </div>
+                  </div>
+                  <Input type="number" step="any" value={orderTP} onChange={e => setOrderTP(e.target.value)} placeholder={tpMode === 'price' ? 'Цена' : 'Пункты'} className="h-8" />
+                  {orderTP && tpMode === 'points' && asset && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">≈ {getTPPrice()?.toFixed(asset.precision)}</div>
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-muted-foreground">Stop Loss</label>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => setSlMode('price')} className={`px-1.5 py-0.5 rounded text-[10px] ${slMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
+                      <button onClick={() => setSlMode('points')} className={`px-1.5 py-0.5 rounded text-[10px] ${slMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
+                    </div>
+                  </div>
+                  <Input type="number" step="any" value={orderSL} onChange={e => setOrderSL(e.target.value)} placeholder={slMode === 'price' ? 'Цена' : 'Пункты'} className="h-8" />
+                  {orderSL && slMode === 'points' && asset && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">≈ {getSLPrice()?.toFixed(asset.precision)}</div>
+                  )}
+                </div>
               </div>
 
-              {/* Info block */}
               <div className="rounded-lg p-3 space-y-1.5" style={{ background: 'hsl(var(--muted))' }}>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Свободные средства</span><b>${account.freeMargin.toFixed(2)}</b></div>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Требуемая маржа</span><b>${requiredMargin.toFixed(2)}</b></div>
@@ -354,7 +384,6 @@ export default function TerminalMain() {
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Своп (Long/Short)</span><b>{asset.swapLong}/{asset.swapShort}</b></div>
               </div>
 
-              {/* Margin warning */}
               {marginWarning && (
                 <div className={`flex items-start gap-2 rounded-lg p-2.5 text-xs ${requiredMargin + commission > account.freeMargin ? 'bg-destructive/10 text-destructive' : 'bg-yellow-500/10 text-yellow-600'}`}>
                   <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
@@ -421,17 +450,13 @@ export default function TerminalMain() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Dialog — improved with tabs, period, summary, export */}
+      {/* Report Dialog — no XLSX export for clients */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto mx-4">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Торговый отчёт</DialogTitle>
-              <Button variant="outline" size="sm" onClick={exportReport}><Download size={14} className="mr-1" />XLSX</Button>
-            </div>
+            <DialogTitle>Торговый отчёт</DialogTitle>
           </DialogHeader>
 
-          {/* Tabs */}
           <div className="flex gap-1 overflow-x-auto">
             {([['trades', 'Торговля'], ['deposits', 'Депозиты'], ['executed', 'Исполненные']] as const).map(([key, label]) => (
               <button key={key} onClick={() => setReportTab(key)}
@@ -441,7 +466,6 @@ export default function TerminalMain() {
             ))}
           </div>
 
-          {/* Period filter */}
           <div className="flex gap-1">
             {([['week', 'Неделя'], ['month', 'Месяц'], ['all', 'Всё время']] as const).map(([key, label]) => (
               <button key={key} onClick={() => setReportPeriod(key)}
@@ -451,17 +475,15 @@ export default function TerminalMain() {
             ))}
           </div>
 
-          {/* Trading tab */}
           {reportTab === 'trades' && (
             <div className="overflow-x-auto">
               <table className="data-table text-xs">
                 <thead><tr className="bg-muted/30">
-                  <th>ID</th><th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Дата закр.</th><th>Цена закр.</th><th>TP</th><th>SL</th><th>Своп</th><th>Прибыль</th>
+                  <th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Дата закр.</th><th>Цена закр.</th><th>TP</th><th>SL</th><th>Своп</th><th>Прибыль</th>
                 </tr></thead>
                 <tbody>
                   {reportPositions.map(p => (
                     <tr key={p.id}>
-                      <td className="text-muted-foreground">{p.id}</td>
                       <td className="text-muted-foreground whitespace-nowrap">{new Date(p.openDate).toLocaleDateString()}</td>
                       <td><span style={{ color: p.type === 'Buy' ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>{p.type}</span></td>
                       <td className="font-medium">{p.symbol}</td>
@@ -475,21 +497,19 @@ export default function TerminalMain() {
                       <td className={p.profit >= 0 ? 'text-green-600' : 'text-destructive'}>{p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</td>
                     </tr>
                   ))}
-                  {reportPositions.length === 0 && <tr><td colSpan={12} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
+                  {reportPositions.length === 0 && <tr><td colSpan={11} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Deposits tab */}
           {reportTab === 'deposits' && (
             <div className="overflow-x-auto">
               <table className="data-table text-xs">
-                <thead><tr className="bg-muted/30"><th>ID</th><th>Дата</th><th>Тип</th><th>Сумма</th><th>Метод</th><th>Статус</th></tr></thead>
+                <thead><tr className="bg-muted/30"><th>Дата</th><th>Тип</th><th>Сумма</th><th>Метод</th><th>Статус</th></tr></thead>
                 <tbody>
                   {reportDeposits.map(p => (
                     <tr key={p.id}>
-                      <td className="text-muted-foreground">{p.id}</td>
                       <td className="text-muted-foreground whitespace-nowrap">{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td><span className={p.type === 'Deposit' ? 'text-green-600' : 'text-destructive'}>{p.type === 'Deposit' ? 'Пополнение' : 'Снятие'}</span></td>
                       <td className="font-semibold">${p.amount.toLocaleString()}</td>
@@ -497,21 +517,19 @@ export default function TerminalMain() {
                       <td>{p.status}</td>
                     </tr>
                   ))}
-                  {reportDeposits.length === 0 && <tr><td colSpan={6} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
+                  {reportDeposits.length === 0 && <tr><td colSpan={5} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Executed tab */}
           {reportTab === 'executed' && (
             <div className="overflow-x-auto">
               <table className="data-table text-xs">
-                <thead><tr className="bg-muted/30"><th>ID</th><th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Цена закр.</th><th>Прибыль</th><th>Закрытие</th></tr></thead>
+                <thead><tr className="bg-muted/30"><th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Цена закр.</th><th>Прибыль</th><th>Закрытие</th></tr></thead>
                 <tbody>
                   {executedOrders.map(p => (
                     <tr key={p.id}>
-                      <td className="text-muted-foreground">{p.id}</td>
                       <td className="text-muted-foreground whitespace-nowrap">{new Date(p.openDate).toLocaleDateString()}</td>
                       <td><span style={{ color: p.type === 'Buy' ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>{p.type}</span></td>
                       <td className="font-medium">{p.symbol}</td>
@@ -522,13 +540,12 @@ export default function TerminalMain() {
                       <td className="text-muted-foreground">{p.closeType || '—'}</td>
                     </tr>
                   ))}
-                  {executedOrders.length === 0 && <tr><td colSpan={9} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
+                  {executedOrders.length === 0 && <tr><td colSpan={8} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Summary */}
           {account && (
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2 pt-2 border-t">
               <div className="bg-muted/30 rounded p-2.5 text-center"><div className="text-xs text-muted-foreground">Баланс</div><div className="font-semibold text-sm">${reportSummary.balance.toFixed(2)}</div></div>
