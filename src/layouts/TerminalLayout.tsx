@@ -141,7 +141,7 @@ export default function TerminalLayout() {
             <span>Средства: <b style={{ color: 'hsl(220, 14%, 90%)' }}>${selectedAccount.equity.toFixed(2)}</b></span>
             <span>Прибыль: <b style={{ color: selectedAccount.profit >= 0 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>{selectedAccount.profit >= 0 ? '+' : ''}${selectedAccount.profit.toFixed(2)}</b></span>
             <span className="hidden sm:inline">Свободно: <b style={{ color: 'hsl(220, 14%, 90%)' }}>${selectedAccount.freeMargin.toFixed(2)}</b></span>
-            <span className="hidden sm:inline">Маржа: <b>${selectedAccount.margin.toFixed(2)}</b></span>
+            <span className="hidden sm:inline">Маржа: <b>{selectedAccount.balance > 0 ? ((selectedAccount.margin / selectedAccount.equity * 100).toFixed(1)) : '0.0'}%</b></span>
           </div>
           <div className="flex items-center gap-3">
             <span>Открыто: {openPositions.length}</span>
