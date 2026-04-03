@@ -42,6 +42,8 @@ export default function AdminClientCard() {
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
+  const [editStatusId, setEditStatusId] = useState<string | null>(null);
+  const [editStatusValue, setEditStatusValue] = useState('');
 
   // Inline edit
   const [editField, setEditField] = useState<{ field: string; value: string; label: string } | null>(null);
