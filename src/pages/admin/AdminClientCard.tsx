@@ -330,20 +330,32 @@ export default function AdminClientCard() {
             <div className="flex justify-center gap-3 pt-2 border-t">
               <Button variant="outline" onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
-                if (auth.employeeId) {
-                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
-                  toast.success('Действие сохранено');
-                  setShowAction(false);
-                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
-                }
+                const respId = actionData.responsibleId || auth.employeeId || '';
+                const authorName = (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })();
+                addHistoryEvent({
+                  clientId: client.id, clientName: `${client.lastName} ${client.firstName}`,
+                  section: 'Clients' as const, authorId: auth.employeeId || '', authorName,
+                  source: 'Employee', description: actionData.description,
+                  actionType: actionData.type, actionStatus: actionData.status,
+                  responsibleId: respId, actionDate: actionData.actionDate,
+                });
+                toast.success('Действие сохранено');
+                setShowAction(false);
+                setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
               }}>Сохранить</Button>
-              <Button onClick={() => {
+              <Button className="bg-primary text-primary-foreground" onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
-                if (auth.employeeId) {
-                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
-                  toast.success('Действие сохранено');
-                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
-                }
+                const respId = actionData.responsibleId || auth.employeeId || '';
+                const authorName = (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })();
+                addHistoryEvent({
+                  clientId: client.id, clientName: `${client.lastName} ${client.firstName}`,
+                  section: 'Clients' as const, authorId: auth.employeeId || '', authorName,
+                  source: 'Employee', description: actionData.description,
+                  actionType: actionData.type, actionStatus: actionData.status,
+                  responsibleId: respId, actionDate: actionData.actionDate,
+                });
+                toast.success('Действие сохранено');
+                setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
               }}>Сохранить и создать</Button>
               <Button variant="outline" onClick={() => setShowAction(false)}>Отмена</Button>
             </div>
