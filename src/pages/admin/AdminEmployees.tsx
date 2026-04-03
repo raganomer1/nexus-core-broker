@@ -354,7 +354,8 @@ export default function AdminEmployees() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
