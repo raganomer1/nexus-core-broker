@@ -83,6 +83,7 @@ interface AppStore {
   // Manual Price Override
   manualOverrides: ManualPriceOverride[];
   setManualPrice: (symbolId: string, newBid: number, newAsk: number, employeeId: string) => void;
+  resetManualPrice: (symbolId: string) => void;
   checkOverrideExpiry: () => void;
 
   // Payments
