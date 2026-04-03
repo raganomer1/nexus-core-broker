@@ -58,7 +58,7 @@ export default function ClientLayout() {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <span className="font-bold text-lg">TraderRoom</span>
-          <NavLink to="/terminal" className="hidden sm:flex items-center gap-1.5 text-sm opacity-80 hover:opacity-100"><TrendingUp size={16} /> {t(lang, 'terminal')}</NavLink>
+          <NavLink to="/terminal" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold bg-primary/20 px-3 py-1 rounded-full hover:bg-primary/30 transition-colors"><TrendingUp size={16} /> {t(lang, 'terminal')}</NavLink>
           <NavLink to="/client" className="hidden sm:flex items-center gap-1.5 text-sm opacity-80 hover:opacity-100"><Home size={16} /> {t(lang, 'cabinet')}</NavLink>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
