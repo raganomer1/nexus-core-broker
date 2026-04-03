@@ -9,6 +9,8 @@ import {
 } from '@/types';
 import * as mock from '@/data/mockData';
 import { useNotificationStore } from './useNotificationStore';
+import { toast } from 'sonner';
+import { adminNavItems } from '@/lib/rbac';
 
 // Generate unique IDs
 let idCounter = 1000;
@@ -157,6 +159,8 @@ interface AppStore {
   getAssetBySymbol: (symbol: string) => AssetSymbol | undefined;
   getEffectivePrice: (symbolId: string) => { bid: number; ask: number };
   hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (permissions: readonly string[]) => boolean;
+  getFirstAccessibleAdminPath: () => string;
 
   // Price simulation
   simulatePriceMovement: () => void;
@@ -167,7 +171,7 @@ export const useStore = create<AppStore>((set, get) => ({
   auth: { isAuthenticated: false, userType: null, userId: null },
 
   login: (type, id) => {
-    const role = type === 'admin' ? mock.roles.find(r => r.id === get().employees.find(e => e.id === id)?.roleId) : undefined;
+    const role = type === 'admin' ? get().roles.find(r => r.id === get().employees.find(e => e.id === id)?.roleId) : undefined;
     set({ auth: { isAuthenticated: true, userType: type, userId: id, employeeId: type === 'admin' ? id : undefined, clientId: type === 'client' ? id : undefined, role } });
   },
 
@@ -190,26 +194,51 @@ export const useStore = create<AppStore>((set, get) => ({
 
   stopImpersonation: () => {
     const empId = get().auth.impersonatedBy;
-    const role = empId ? mock.roles.find(r => r.id === get().employees.find(e => e.id === empId)?.roleId) : undefined;
+    const role = empId ? get().roles.find(r => r.id === get().employees.find(e => e.id === empId)?.roleId) : undefined;
     set({ auth: { isAuthenticated: true, userType: 'admin', userId: empId || 'e1', employeeId: empId || 'e1', role } });
   },
 
   // ==================== CLIENTS ====================
   clients: [...mock.clients],
   addClient: (data) => {
+    const { auth, hasPermission } = get();
+    if (auth.userType !== 'admin' || !hasPermission('clients.create')) {
+      toast.error('Access denied');
+      return {} as Client;
+    }
     const client: Client = { ...data, id: genClientId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     set(s => ({ clients: [...s.clients, client] }));
     get().addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients', authorId: get().auth.userId || '', authorName: '', source: 'Employee', description: `Создание клиента: ${client.lastName} ${client.firstName}` });
     return client;
   },
   updateClient: (id, updates) => {
+    const { auth, hasPermission } = get();
+    if (auth.userType === 'client') {
+      if (auth.clientId !== id) {
+        toast.error('Access denied');
+        return;
+      }
+    } else if (auth.userType !== 'admin' || !hasPermission('clients.edit')) {
+      toast.error('Access denied');
+      return;
+    }
     set(s => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c) }));
   },
-  deleteClient: (id) => set(s => ({ clients: s.clients.filter(c => c.id !== id) })),
+  deleteClient: (id) => {
+    if (!get().hasPermission('clients.delete')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ clients: s.clients.filter(c => c.id !== id) }));
+  },
 
   // ==================== NOTES ====================
   clientNotes: [...mock.clientNotes],
   addClientNote: (clientId, text) => {
+    if (get().auth.userType === 'admin' && !get().hasPermission('notes.create')) {
+      toast.error('Access denied');
+      return;
+    }
     const note: ClientNote = { id: genId(), clientId, authorId: get().auth.userId || '', text, createdAt: new Date().toISOString() };
     set(s => ({ clientNotes: [...s.clientNotes, note] }));
   },
@@ -217,12 +246,32 @@ export const useStore = create<AppStore>((set, get) => ({
   // ==================== LEADS ====================
   leads: [...mock.leads],
   addLead: (data) => {
+    if (!get().hasAnyPermission(['crm.edit', 'clients.create'])) {
+      toast.error('Access denied');
+      return;
+    }
     const lead = { ...data, id: genId(), createdAt: new Date().toISOString() };
     set(s => ({ leads: [...s.leads, lead as Lead] }));
   },
-  updateLead: (id, updates) => set(s => ({ leads: s.leads.map(l => l.id === id ? { ...l, ...updates } : l) })),
-  deleteLead: (id) => set(s => ({ leads: s.leads.filter(l => l.id !== id) })),
+  updateLead: (id, updates) => {
+    if (!get().hasAnyPermission(['crm.edit', 'clients.edit'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ leads: s.leads.map(l => l.id === id ? { ...l, ...updates } : l) }));
+  },
+  deleteLead: (id) => {
+    if (!get().hasAnyPermission(['crm.edit', 'clients.delete'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ leads: s.leads.filter(l => l.id !== id) }));
+  },
   convertLeadToClient: (leadId) => {
+    if (!get().hasPermission('clients.create')) {
+      toast.error('Access denied');
+      return;
+    }
     const lead = get().leads.find(l => l.id === leadId);
     if (!lead) return;
     const client = get().addClient({ lastName: lead.lastName, firstName: lead.firstName, email: lead.email, phone: lead.phone, country: lead.country, type: 'Lead', status: 'Lead', verificationStatus: 'Unverified', responsibleId: lead.responsibleId, source: lead.source });
@@ -232,40 +281,118 @@ export const useStore = create<AppStore>((set, get) => ({
   // ==================== EMPLOYEES ====================
   employees: [...mock.employees],
   addEmployee: (data) => {
+    if (!get().hasPermission('employees.create')) {
+      toast.error('Access denied');
+      return;
+    }
     const emp = { ...data, id: genId(), createdAt: new Date().toISOString() } as Employee;
     set(s => ({ employees: [...s.employees, emp] }));
   },
-  updateEmployee: (id, updates) => set(s => ({ employees: s.employees.map(e => e.id === id ? { ...e, ...updates } : e) })),
-  deleteEmployee: (id) => set(s => ({ employees: s.employees.filter(e => e.id !== id) })),
+  updateEmployee: (id, updates) => {
+    if (!get().hasPermission('employees.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => {
+      const employees = s.employees.map(e => e.id === id ? { ...e, ...updates } : e);
+      const current = employees.find(e => e.id === s.auth.employeeId);
+      const role = current ? s.roles.find(r => r.id === current.roleId) : s.auth.role;
+      return { employees, auth: { ...s.auth, role } };
+    });
+  },
+  deleteEmployee: (id) => {
+    if (!get().hasPermission('employees.delete')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ employees: s.employees.filter(e => e.id !== id) }));
+  },
 
   // ==================== ROLES ====================
   roles: [...mock.roles],
   addRole: (data) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
     const role = { ...data, id: genId() } as Role;
     set(s => ({ roles: [...s.roles, role] }));
   },
-  updateRole: (id, updates) => set(s => ({ roles: s.roles.map(r => r.id === id ? { ...r, ...updates } : r) })),
-  deleteRole: (id) => set(s => ({ roles: s.roles.filter(r => r.id !== id) })),
+  updateRole: (id, updates) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => {
+      const roles = s.roles.map(r => r.id === id ? { ...r, ...updates } : r);
+      const current = s.auth.employeeId ? s.employees.find(e => e.id === s.auth.employeeId) : undefined;
+      const role = current ? roles.find(r => r.id === current.roleId) : s.auth.role;
+      return { roles, auth: { ...s.auth, role } };
+    });
+  },
+  deleteRole: (id) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => {
+      const roles = s.roles.filter(r => r.id !== id);
+      const employees = s.employees.map(e => e.roleId === id ? { ...e, roleId: '' } : e);
+      const current = s.auth.employeeId ? employees.find(e => e.id === s.auth.employeeId) : undefined;
+      const role = current ? roles.find(r => r.id === current.roleId) : undefined;
+      return { roles, employees, auth: { ...s.auth, role } };
+    });
+  },
 
   // ==================== DESKS ====================
   desks: [...mock.desks],
   addDesk: (data) => {
+    if (!get().hasPermission('desks.edit')) {
+      toast.error('Access denied');
+      return;
+    }
     const desk = { ...data, id: genId(), createdAt: new Date().toISOString() } as Desk;
     set(s => ({ desks: [...s.desks, desk] }));
   },
-  updateDesk: (id, updates) => set(s => ({ desks: s.desks.map(d => d.id === id ? { ...d, ...updates } : d) })),
-  deleteDesk: (id) => set(s => ({ desks: s.desks.filter(d => d.id !== id) })),
+  updateDesk: (id, updates) => {
+    if (!get().hasPermission('desks.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ desks: s.desks.map(d => d.id === id ? { ...d, ...updates } : d) }));
+  },
+  deleteDesk: (id) => {
+    if (!get().hasPermission('desks.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ desks: s.desks.filter(d => d.id !== id) }));
+  },
 
   // ==================== TRADING ACCOUNTS ====================
   tradingAccounts: [...mock.tradingAccounts],
   addTradingAccount: (data) => {
+    if (!get().hasPermission('accounts.create')) {
+      toast.error('Access denied');
+      return;
+    }
     const account = { ...data, id: genId(), createdAt: new Date().toISOString() } as TradingAccount;
     set(s => ({ tradingAccounts: [...s.tradingAccounts, account] }));
   },
-  updateTradingAccount: (id, updates) => set(s => ({
-    tradingAccounts: s.tradingAccounts.map(a => a.id === id ? { ...a, ...updates } : a)
-  })),
-  deleteTradingAccount: (id) => set(s => ({ tradingAccounts: s.tradingAccounts.filter(a => a.id !== id) })),
+  updateTradingAccount: (id, updates) => {
+    if (!get().hasPermission('accounts.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ tradingAccounts: s.tradingAccounts.map(a => a.id === id ? { ...a, ...updates } : a) }));
+  },
+  deleteTradingAccount: (id) => {
+    if (!get().hasPermission('accounts.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ tradingAccounts: s.tradingAccounts.filter(a => a.id !== id) }));
+  },
 
   // ==================== POSITIONS ====================
   positions: [...mock.tradingPositions],
@@ -323,6 +450,10 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   closePosition: (id) => {
+    if (get().auth.userType === 'admin' && !get().hasPermission('trading.close')) {
+      toast.error('Access denied');
+      return;
+    }
     const store = get();
     const pos = store.positions.find(p => p.id === id);
     if (!pos || pos.status !== 'Open') return;
@@ -347,23 +478,53 @@ export const useStore = create<AppStore>((set, get) => ({
     }));
   },
 
-  updatePosition: (id, updates) => set(s => ({ positions: s.positions.map(p => p.id === id ? { ...p, ...updates } : p) })),
-  deletePosition: (id) => set(s => ({ positions: s.positions.filter(p => p.id !== id) })),
+  updatePosition: (id, updates) => {
+    if (get().auth.userType === 'admin' && !get().hasPermission('trading.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ positions: s.positions.map(p => p.id === id ? { ...p, ...updates } : p) }));
+  },
+  deletePosition: (id) => {
+    if (!get().hasPermission('trading.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ positions: s.positions.filter(p => p.id !== id) }));
+  },
 
   // ==================== ASSETS ====================
   assets: [...mock.assetSymbols],
   addAsset: (data) => {
+    if (!get().hasPermission('assets.edit')) {
+      toast.error('Access denied');
+      return;
+    }
     const asset: AssetSymbol = { ...data, id: genId(), lastUpdated: new Date().toISOString() };
     set(s => ({ assets: [...s.assets, asset] }));
   },
   updateAsset: (id, updates) => {
+    if (!get().hasPermission('assets.edit')) {
+      toast.error('Access denied');
+      return;
+    }
     set(s => ({ assets: s.assets.map(a => a.id === id ? { ...a, ...updates, lastUpdated: new Date().toISOString() } : a) }));
   },
-  deleteAsset: (id) => set(s => ({ assets: s.assets.filter(a => a.id !== id) })),
+  deleteAsset: (id) => {
+    if (!get().hasPermission('assets.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ assets: s.assets.filter(a => a.id !== id) }));
+  },
 
   // ==================== MANUAL PRICE OVERRIDE ====================
   manualOverrides: [],
   setManualPrice: (symbolId, newBid, newAsk, employeeId) => {
+    if (!get().hasPermission('assets.priceOverride')) {
+      toast.error('Access denied');
+      return;
+    }
     const asset = get().assets.find(a => a.id === symbolId);
     if (!asset) return;
 
@@ -395,6 +556,10 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   resetManualPrice: (symbolId) => {
+    if (!get().hasPermission('assets.priceOverride')) {
+      toast.error('Access denied');
+      return;
+    }
     const override = get().manualOverrides.find(o => o.symbolId === symbolId && o.isActive);
     if (!override) return;
     set(s => ({
@@ -423,6 +588,15 @@ export const useStore = create<AppStore>((set, get) => ({
   payments: [...mock.paymentRequests],
   paymentMethods: [...mock.paymentMethods],
   addPayment: (data) => {
+    const { auth, hasAnyPermission } = get();
+    if (auth.userType === 'client' && auth.clientId !== data.clientId) {
+      toast.error('Access denied');
+      return;
+    }
+    if (auth.userType === 'admin' && !hasAnyPermission(['accounts.deposit', 'payments.approve'])) {
+      toast.error('Access denied');
+      return;
+    }
     const payment: PaymentRequest = { ...data, id: genId(), status: 'New', createdAt: new Date().toISOString() };
     set(s => ({ payments: [...s.payments, payment] }));
     const client = get().clients.find(c => c.id === data.clientId);
@@ -433,9 +607,25 @@ export const useStore = create<AppStore>((set, get) => ({
       link: '/admin/payments',
     });
   },
-  updatePayment: (id, updates) => set(s => ({ payments: s.payments.map(p => p.id === id ? { ...p, ...updates } : p) })),
-  deletePayment: (id) => set(s => ({ payments: s.payments.filter(p => p.id !== id) })),
+  updatePayment: (id, updates) => {
+    if (!get().hasAnyPermission(['payments.approve', 'payments.reject'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ payments: s.payments.map(p => p.id === id ? { ...p, ...updates } : p) }));
+  },
+  deletePayment: (id) => {
+    if (!get().hasAnyPermission(['payments.approve', 'payments.reject'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ payments: s.payments.filter(p => p.id !== id) }));
+  },
   updatePaymentStatus: (id, status, processedBy) => {
+    if ((status === 'Approved' && !get().hasPermission('payments.approve')) || (status !== 'Approved' && !get().hasPermission('payments.reject'))) {
+      toast.error('Access denied');
+      return;
+    }
     set(s => ({
       payments: s.payments.map(p => p.id === id ? { ...p, status, processedAt: new Date().toISOString(), processedBy } : p),
     }));
@@ -464,6 +654,11 @@ export const useStore = create<AppStore>((set, get) => ({
   tickets: [...mock.supportTickets],
   messages: [...mock.supportMessages],
   addTicket: (data) => {
+    const { auth } = get();
+    if (auth.userType === 'client' && auth.clientId !== data.clientId) {
+      toast.error('Access denied');
+      return undefined as any;
+    }
     const ticket: SupportTicket = { ...data, id: genId(), status: 'Open', createdAt: new Date().toISOString(), lastMessageAt: new Date().toISOString() };
     set(s => ({ tickets: [...s.tickets, ticket] }));
     const client = get().clients.find(c => c.id === data.clientId);
@@ -476,19 +671,51 @@ export const useStore = create<AppStore>((set, get) => ({
     return ticket as any;
   },
   addMessage: (data) => {
+    const { auth } = get();
+    if (auth.userType === 'admin' && !get().hasPermission('support.respond')) {
+      toast.error('Access denied');
+      return;
+    }
+    if (auth.userType === 'client' && auth.clientId !== data.authorId) {
+      toast.error('Access denied');
+      return;
+    }
     const msg: SupportMessage = { ...data, id: genId(), createdAt: new Date().toISOString() };
     set(s => ({
       messages: [...s.messages, msg],
       tickets: s.tickets.map(t => t.id === data.ticketId ? { ...t, lastMessageAt: new Date().toISOString() } : t),
     }));
   },
-  updateTicketStatus: (id, status) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, status } : t) })),
-  updateTicket: (id, updates) => set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, ...updates } : t) })),
-  deleteTicket: (id) => set(s => ({ tickets: s.tickets.filter(t => t.id !== id), messages: s.messages.filter(m => m.ticketId !== id) })),
+  updateTicketStatus: (id, status) => {
+    if (!get().hasPermission('support.respond')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, status } : t) }));
+  },
+  updateTicket: (id, updates) => {
+    if (!get().hasPermission('support.respond')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ tickets: s.tickets.map(t => t.id === id ? { ...t, ...updates } : t) }));
+  },
+  deleteTicket: (id) => {
+    if (!get().hasPermission('support.respond')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ tickets: s.tickets.filter(t => t.id !== id), messages: s.messages.filter(m => m.ticketId !== id) }));
+  },
 
   // ==================== VERIFICATION ====================
   verificationRequests: [...mock.verificationRequests],
   updateVerificationStatus: (id, status, processedBy) => {
+    const allowed = status === 'Rejected' ? get().hasPermission('verification.reject') : status === 'Banned' ? get().hasPermission('verification.ban') : get().hasPermission('verification.approve');
+    if (!allowed) {
+      toast.error('Access denied');
+      return;
+    }
     const req = get().verificationRequests.find(r => r.id === id);
     if (!req) return;
     set(s => ({
@@ -496,7 +723,13 @@ export const useStore = create<AppStore>((set, get) => ({
       clients: s.clients.map(c => c.id === req.clientId ? { ...c, verificationStatus: status } : c),
     }));
   },
-  deleteVerificationRequest: (id) => set(s => ({ verificationRequests: s.verificationRequests.filter(r => r.id !== id) })),
+  deleteVerificationRequest: (id) => {
+    if (!get().hasAnyPermission(['verification.reject', 'verification.ban'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ verificationRequests: s.verificationRequests.filter(r => r.id !== id) }));
+  },
 
   // ==================== HISTORY ====================
   history: [...mock.historyEvents],
@@ -516,37 +749,95 @@ export const useStore = create<AppStore>((set, get) => ({
   updateClientStatusConfig: (id, updates) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
   deleteClientStatusConfig: (id) => set(s => ({ clientStatusConfigs: s.clientStatusConfigs.filter(c => c.id !== id) })),
   actionStatusConfigs: [...mock.actionStatusConfigs],
-  addActionStatusConfig: (config) => set(s => ({ actionStatusConfigs: [...s.actionStatusConfigs, { ...config, id: genId() }] })),
-  updateActionStatusConfig: (id, updates) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) })),
-  deleteActionStatusConfig: (id) => set(s => ({ actionStatusConfigs: s.actionStatusConfigs.filter(c => c.id !== id) })),
+  addActionStatusConfig: (config) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ actionStatusConfigs: [...s.actionStatusConfigs, { ...config, id: genId() }] }));
+  },
+  updateActionStatusConfig: (id, updates) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ actionStatusConfigs: s.actionStatusConfigs.map(c => c.id === id ? { ...c, ...updates } : c) }));
+  },
+  deleteActionStatusConfig: (id) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ actionStatusConfigs: s.actionStatusConfigs.filter(c => c.id !== id) }));
+  },
   reminderIntervals: [...mock.reminderIntervals],
   addReminderInterval: (interval) => set(s => ({ reminderIntervals: [...s.reminderIntervals, { ...interval, id: genId() }] })),
   updateReminderInterval: (id, updates) => set(s => ({ reminderIntervals: s.reminderIntervals.map(r => r.id === id ? { ...r, ...updates } : r) })),
   deleteReminderInterval: (id) => set(s => ({ reminderIntervals: s.reminderIntervals.filter(r => r.id !== id) })),
   securitySettings: { ...mock.defaultSecuritySettings },
-  updateSecuritySettings: (settings) => set(s => ({ securitySettings: { ...s.securitySettings, ...settings } })),
+  updateSecuritySettings: (settings) => {
+    if (!get().hasAnyPermission(['settings.edit', 'security.edit'])) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ securitySettings: { ...s.securitySettings, ...settings } }));
+  },
   savedViews: [...mock.savedViews],
   addSavedView: (view) => set(s => ({ savedViews: [...s.savedViews, { ...view, id: genId() }] })),
   deleteSavedView: (id) => set(s => ({ savedViews: s.savedViews.filter(v => v.id !== id) })),
 
   // ==================== API INTEGRATIONS ====================
   apiIntegrations: [],
-  addApiIntegration: (data) => set(s => ({
-    apiIntegrations: [...s.apiIntegrations, {
-      ...data, id: genId(), createdAt: new Date().toISOString(),
-      apiKey: 'ak_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-    }],
-  })),
-  updateApiIntegration: (id, updates) => set(s => ({ apiIntegrations: s.apiIntegrations.map(i => i.id === id ? { ...i, ...updates } : i) })),
-  deleteApiIntegration: (id) => set(s => ({ apiIntegrations: s.apiIntegrations.filter(i => i.id !== id) })),
+  addApiIntegration: (data) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({
+      apiIntegrations: [...s.apiIntegrations, {
+        ...data, id: genId(), createdAt: new Date().toISOString(),
+        apiKey: 'ak_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+      }],
+    }));
+  },
+  updateApiIntegration: (id, updates) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ apiIntegrations: s.apiIntegrations.map(i => i.id === id ? { ...i, ...updates } : i) }));
+  },
+  deleteApiIntegration: (id) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ apiIntegrations: s.apiIntegrations.filter(i => i.id !== id) }));
+  },
 
   // ==================== CLIENT RESTRICTIONS ====================
   clientRestrictions: [],
-  addClientRestriction: (data) => set(s => ({
-    clientRestrictions: [...s.clientRestrictions, { ...data, id: genId(), createdAt: new Date().toISOString() }],
-  })),
-  updateClientRestriction: (id, updates) => set(s => ({ clientRestrictions: s.clientRestrictions.map(r => r.id === id ? { ...r, ...updates } : r) })),
-  deleteClientRestriction: (id) => set(s => ({ clientRestrictions: s.clientRestrictions.filter(r => r.id !== id) })),
+  addClientRestriction: (data) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ clientRestrictions: [...s.clientRestrictions, { ...data, id: genId(), createdAt: new Date().toISOString() }] }));
+  },
+  updateClientRestriction: (id, updates) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ clientRestrictions: s.clientRestrictions.map(r => r.id === id ? { ...r, ...updates } : r) }));
+  },
+  deleteClientRestriction: (id) => {
+    if (!get().hasPermission('settings.edit')) {
+      toast.error('Access denied');
+      return;
+    }
+    set(s => ({ clientRestrictions: s.clientRestrictions.filter(r => r.id !== id) }));
+  },
   getActiveRestriction: (clientId) => {
     const store = get();
     const client = store.clients.find(c => c.id === clientId);
@@ -577,8 +868,21 @@ export const useStore = create<AppStore>((set, get) => ({
 
   hasPermission: (permission) => {
     const { auth } = get();
-    if (!auth.role) return false;
-    return auth.role.permissions[permission] === true;
+    if (auth.userType !== 'admin' || auth.impersonating || !auth.employeeId) return false;
+    const employee = get().employees.find(e => e.id === auth.employeeId);
+    const role = employee ? get().roles.find(r => r.id === employee.roleId) : auth.role;
+    if (!role) return false;
+    if (permission === 'clients.viewContacts' && !employee?.canViewContacts) return false;
+    const writeLike = ['.create', '.edit', '.delete', '.approve', '.reject', '.ban', '.respond', '.close', '.priceOverride'];
+    if (writeLike.some(part => permission.includes(part)) && employee?.canEdit === false) return false;
+    return role.permissions[permission] === true;
+  },
+
+  hasAnyPermission: (permissions) => permissions.some(permission => get().hasPermission(permission)),
+
+  getFirstAccessibleAdminPath: () => {
+    const firstAllowed = adminNavItems.find(item => get().hasAnyPermission(item.permissions));
+    return firstAllowed?.to || '/admin/access-denied';
   },
 
   // ==================== PRICE SIMULATION ====================
