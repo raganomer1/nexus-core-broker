@@ -48,7 +48,7 @@ export default function AdminPrices() {
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">{a.symbol}</span>
                 <div className="flex items-center gap-2">
-                  {override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span></div>)}
+                   {override && (<div className="flex items-center gap-1"><AlertTriangle size={12} className="text-warning" /><span className="text-xs font-mono text-warning">{getTimeRemaining(override.expiresAt)}</span><Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => resetManualPrice(a.id)} title={t(lang, 'reset')}><RotateCcw size={12} /></Button></div>)}
                   <Button variant="ghost" size="sm" onClick={() => { setEditSymbol(a); setNewBid(a.bid.toString()); setNewAsk(a.ask.toString()); }}><Edit2 size={14} /></Button>
                 </div>
               </div>
