@@ -80,7 +80,7 @@ export default function ClientLayout() {
         `}>
           <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
             <div className="sm:hidden space-y-1 mb-2 pb-2 border-b">
-              <NavLink to="/terminal" onClick={handleNavClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm hover:bg-muted text-foreground">
+              <NavLink to="/terminal" onClick={handleNavClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20">
                 <TrendingUp size={18} /> {t(lang, 'terminal')}
               </NavLink>
             </div>

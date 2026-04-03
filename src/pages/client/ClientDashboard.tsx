@@ -24,7 +24,7 @@ export default function ClientDashboard() {
           <CreditCard size={48} className="mx-auto text-muted-foreground mb-3" />
           <h3 className="font-semibold mb-1">{t(lang, 'noActiveAccounts')}</h3>
           <p className="text-sm text-muted-foreground mb-4">{t(lang, 'openAccountToStart')}</p>
-          <Button>{t(lang, 'openAccount')}</Button>
+          {/* open account button removed */}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
