@@ -349,6 +349,69 @@ export default function AdminClientCard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Action Dialog */}
+      <Dialog open={!!editActionId} onOpenChange={() => setEditActionId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Редактировать действие</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Тип</label>
+              <Select value={editActionData.type} onValueChange={v => setEditActionData({ ...editActionData, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Phone call">Phone call</SelectItem>
+                  <SelectItem value="Email">Email</SelectItem>
+                  <SelectItem value="Meeting">Meeting</SelectItem>
+                  <SelectItem value="Task">Task</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Статус</label>
+              <Select value={editActionData.status} onValueChange={v => setEditActionData({ ...editActionData, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="In progress">In progress</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Ответственный</label>
+              <Select value={editActionData.responsibleId} onValueChange={v => setEditActionData({ ...editActionData, responsibleId: v })}>
+                <SelectTrigger><SelectValue placeholder="Выберите" /></SelectTrigger>
+                <SelectContent>{employees.filter(e => e.isActive).map(e => <SelectItem key={e.id} value={e.id}>{e.firstName} {e.lastName}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="text-sm text-muted-foreground w-36 shrink-0">Дата действия</label>
+              <Input type="datetime-local" value={editActionData.actionDate} onChange={e => setEditActionData({ ...editActionData, actionDate: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">Описание</label>
+              <Textarea value={editActionData.description} onChange={e => setEditActionData({ ...editActionData, description: e.target.value })} rows={4} />
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button onClick={() => {
+                if (editActionId) {
+                  updateHistoryEvent(editActionId, {
+                    actionType: editActionData.type,
+                    actionStatus: editActionData.status,
+                    description: editActionData.description,
+                    responsibleId: editActionData.responsibleId,
+                    actionDate: editActionData.actionDate,
+                  });
+                  toast.success('Действие обновлено');
+                  setEditActionId(null);
+                }
+              }}>Сохранить</Button>
+              <Button variant="outline" onClick={() => setEditActionId(null)}>Отмена</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
