@@ -34,7 +34,7 @@ export default function AdminClientCard() {
   const navigate = useNavigate();
   const store = useStore();
   const { lang } = useSettingsStore();
-  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, addTradingAccount, impersonateClient, auth, addHistoryEvent, history } = store;
+  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, addTradingAccount, impersonateClient, auth, addHistoryEvent, updateHistoryEvent, deleteHistoryEvent, history } = store;
 
   const [newNote, setNewNote] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -42,6 +42,8 @@ export default function AdminClientCard() {
   const [showAddDesc, setShowAddDesc] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [actionData, setActionData] = useState({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
+  const [editStatusId, setEditStatusId] = useState<string | null>(null);
+  const [editStatusValue, setEditStatusValue] = useState('');
 
   // Inline edit
   const [editField, setEditField] = useState<{ field: string; value: string; label: string } | null>(null);
@@ -91,7 +93,7 @@ export default function AdminClientCard() {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <h1 className="text-lg md:text-xl font-semibold">{client.lastName} {client.firstName}</h1>
-          <span className="px-2.5 py-0.5 rounded border text-xs font-medium text-muted-foreground bg-muted">ID {client.id.slice(0, 5)}</span>
+          <span className="px-2.5 py-0.5 rounded border text-xs font-medium text-muted-foreground bg-muted">ID {client.id}</span>
         </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={handleRegisterAccount} className="bg-emerald-500 hover:bg-emerald-600 text-white">
@@ -219,11 +221,39 @@ export default function AdminClientCard() {
               ) : clientHistory.map(h => (
                 <tr key={h.id}>
                   <td className="text-xs whitespace-nowrap">{new Date(h.timestamp).toLocaleString()}</td>
-                  <td className="text-sm">{h.section}</td>
+                  <td className="text-sm">{h.actionType || h.section}</td>
                   <td className="text-sm">{h.authorName}</td>
                   <td className="text-sm max-w-[300px] truncate">{h.description}</td>
-                  <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName}` : '—'}</td>
-                  <td><span className="flex items-center gap-1.5 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> New</span></td>
+                  <td className="text-sm">{(() => { const r = h.responsibleId ? employees.find(e => e.id === h.responsibleId) : resp; return r ? `${r.firstName} ${r.lastName}` : '—'; })()}</td>
+                  <td>
+                    <div className="flex items-center gap-1">
+                      {editStatusId === h.id ? (
+                        <Select value={editStatusValue} onValueChange={v => { setEditStatusValue(v); updateHistoryEvent(h.id, { actionStatus: v }); setEditStatusId(null); toast.success('Статус обновлён'); }}>
+                          <SelectTrigger className="h-6 text-xs w-24"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">New</SelectItem>
+                            <SelectItem value="In progress">In progress</SelectItem>
+                            <SelectItem value="Done">Done</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <span className="flex items-center gap-1.5 text-xs">
+                            <span className={`w-1.5 h-1.5 rounded-full ${h.actionStatus === 'Done' ? 'bg-blue-500' : h.actionStatus === 'In progress' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                            {h.actionStatus || 'New'}
+                          </span>
+                          <button onClick={() => { setEditStatusId(h.id); setEditStatusValue(h.actionStatus || 'New'); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground">
+                            <Pencil size={10} />
+                          </button>
+                          {auth.role?.name === 'Admin' && (
+                            <button onClick={() => { deleteHistoryEvent(h.id); toast.success('Действие удалено'); }} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                              <X size={10} />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -300,20 +330,32 @@ export default function AdminClientCard() {
             <div className="flex justify-center gap-3 pt-2 border-t">
               <Button variant="outline" onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
-                if (auth.employeeId) {
-                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
-                  toast.success('Действие сохранено');
-                  setShowAction(false);
-                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
-                }
+                const respId = actionData.responsibleId || auth.employeeId || '';
+                const authorName = (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })();
+                addHistoryEvent({
+                  clientId: client.id, clientName: `${client.lastName} ${client.firstName}`,
+                  section: 'Clients' as const, authorId: auth.employeeId || '', authorName,
+                  source: 'Employee', description: actionData.description,
+                  actionType: actionData.type, actionStatus: actionData.status,
+                  responsibleId: respId, actionDate: actionData.actionDate,
+                });
+                toast.success('Действие сохранено');
+                setShowAction(false);
+                setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
               }}>Сохранить</Button>
-              <Button onClick={() => {
+              <Button className="bg-primary text-primary-foreground" onClick={() => {
                 if (!actionData.description.trim()) { toast.error('Заполните описание'); return; }
-                if (auth.employeeId) {
-                  addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients' as const, authorId: auth.employeeId, authorName: (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })(), source: 'Employee', description: `${actionData.type}: ${actionData.description}` });
-                  toast.success('Действие сохранено');
-                  setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
-                }
+                const respId = actionData.responsibleId || auth.employeeId || '';
+                const authorName = (() => { const e = employees.find(emp => emp.id === auth.employeeId); return e ? `${e.lastName} ${e.firstName}` : ''; })();
+                addHistoryEvent({
+                  clientId: client.id, clientName: `${client.lastName} ${client.firstName}`,
+                  section: 'Clients' as const, authorId: auth.employeeId || '', authorName,
+                  source: 'Employee', description: actionData.description,
+                  actionType: actionData.type, actionStatus: actionData.status,
+                  responsibleId: respId, actionDate: actionData.actionDate,
+                });
+                toast.success('Действие сохранено');
+                setActionData({ type: 'Phone call', description: '', responsibleId: '', status: 'New', actionDate: new Date().toISOString().slice(0, 16) });
               }}>Сохранить и создать</Button>
               <Button variant="outline" onClick={() => setShowAction(false)}>Отмена</Button>
             </div>

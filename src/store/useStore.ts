@@ -14,6 +14,10 @@ import { useNotificationStore } from './useNotificationStore';
 let idCounter = 1000;
 const genId = () => `gen_${++idCounter}`;
 
+// Numeric client IDs starting from 100
+let clientIdCounter = 112;
+const genClientId = () => String(++clientIdCounter);
+
 interface AppStore {
   // Auth
   auth: AuthState;
@@ -106,6 +110,8 @@ interface AppStore {
   // History
   history: HistoryEvent[];
   addHistoryEvent: (event: Omit<HistoryEvent, 'id' | 'timestamp'>) => void;
+  updateHistoryEvent: (id: string, updates: Partial<HistoryEvent>) => void;
+  deleteHistoryEvent: (id: string) => void;
 
   // Sessions
   sessions: ClientSession[];
@@ -190,7 +196,7 @@ export const useStore = create<AppStore>((set, get) => ({
   // ==================== CLIENTS ====================
   clients: [...mock.clients],
   addClient: (data) => {
-    const client: Client = { ...data, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const client: Client = { ...data, id: genClientId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     set(s => ({ clients: [...s.clients, client] }));
     get().addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients', authorId: get().auth.userId || '', authorName: '', source: 'Employee', description: `Создание клиента: ${client.lastName} ${client.firstName}` });
     return client;
@@ -488,6 +494,8 @@ export const useStore = create<AppStore>((set, get) => ({
     const e: HistoryEvent = { ...event, id: genId(), timestamp: new Date().toISOString() };
     set(s => ({ history: [e, ...s.history] }));
   },
+  updateHistoryEvent: (id, updates) => set(s => ({ history: s.history.map(h => h.id === id ? { ...h, ...updates } : h) })),
+  deleteHistoryEvent: (id) => set(s => ({ history: s.history.filter(h => h.id !== id) })),
 
   // ==================== SESSIONS ====================
   sessions: [...mock.clientSessions],

@@ -71,26 +71,26 @@ export const desks: Desk[] = [
 
 // ==================== CLIENTS ====================
 export const clients: Client[] = [
-  { id: 'c1', lastName: 'Смирнов', firstName: 'Андрей', middleName: 'Викторович', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Live', email: 'smirnov@mail.com', phone: '+7 916 111 2233', country: 'Russia', city: 'Москва', verificationStatus: 'Verified', createdAt: '2025-06-15', updatedAt: '2026-03-30', lastCabinetVisit: '2026-03-31T09:00:00', lastTerminalVisit: '2026-03-31T08:30:00', source: 'Google Ads', birthday: '1985-03-12' },
-  { id: 'c2', lastName: 'Кузнецов', firstName: 'Максим', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Hot', email: 'kuznetsov@gmail.com', phone: '+7 926 333 4455', country: 'Russia', city: 'Санкт-Петербург', verificationStatus: 'Verified', createdAt: '2025-08-20', updatedAt: '2026-03-28', source: 'Referral' },
-  { id: 'c3', lastName: 'Попов', firstName: 'Денис', deskId: 'd2', responsibleId: 'e5', type: 'Demo', status: 'Demo', email: 'popov@yahoo.com', phone: '+7 903 555 6677', country: 'Russia', city: 'Казань', verificationStatus: 'Unverified', createdAt: '2026-01-10', updatedAt: '2026-03-25' },
-  { id: 'c4', lastName: 'Соколова', firstName: 'Елена', deskId: 'd2', responsibleId: 'e7', type: 'Live', status: 'Live', email: 'sokolova@mail.ru', phone: '+380 50 123 4567', country: 'Ukraine', city: 'Киев', verificationStatus: 'Verified', createdAt: '2025-11-05', updatedAt: '2026-03-31', source: 'Facebook', birthday: '1990-07-22' },
-  { id: 'c5', lastName: 'Волков', firstName: 'Артем', deskId: 'd1', responsibleId: 'e4', type: 'Lead', status: 'Lead', email: 'volkov.a@outlook.com', phone: '+7 977 888 9900', country: 'Russia', city: 'Новосибирск', verificationStatus: 'Unverified', createdAt: '2026-03-01', updatedAt: '2026-03-29', source: 'Cold call' },
-  { id: 'c6', lastName: 'Новикова', firstName: 'Ирина', deskId: 'd3', responsibleId: 'e6', type: 'Live', status: 'Hot', email: 'novikova@proton.me', phone: '+7 915 222 3344', country: 'Russia', city: 'Екатеринбург', verificationStatus: 'Pending', createdAt: '2025-12-20', updatedAt: '2026-03-30', source: 'Telegram' },
-  { id: 'c7', lastName: 'Федоров', firstName: 'Олег', type: 'Lead', status: 'New', email: 'fedorov@test.com', phone: '+7 999 000 1122', country: 'Russia', verificationStatus: 'Unverified', createdAt: '2026-03-28', updatedAt: '2026-03-28' },
-  { id: 'c8', lastName: 'Михайлова', firstName: 'Наталья', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Live', email: 'mikhaylova@gmail.com', phone: '+7 916 444 5566', country: 'Russia', city: 'Москва', verificationStatus: 'Verified', createdAt: '2025-09-10', updatedAt: '2026-03-31', birthday: '1988-11-15' },
-  { id: 'c9', lastName: 'Brown', firstName: 'James', deskId: 'd2', responsibleId: 'e7', type: 'Live', status: 'Live', email: 'jbrown@email.com', phone: '+1 555 123 4567', country: 'USA', city: 'New York', verificationStatus: 'Verified', createdAt: '2025-07-01', updatedAt: '2026-03-30' },
-  { id: 'c10', lastName: 'Müller', firstName: 'Hans', deskId: 'd2', responsibleId: 'e5', type: 'Demo', status: 'Demo', email: 'hmuller@web.de', phone: '+49 170 1234567', country: 'Germany', city: 'Berlin', verificationStatus: 'Unverified', createdAt: '2026-02-15', updatedAt: '2026-03-20' },
-  { id: 'c11', lastName: 'Лебедев', firstName: 'Роман', type: 'Lead', status: 'Spam', email: 'spam@test.com', country: 'Russia', verificationStatus: 'Unverified', createdAt: '2026-03-25', updatedAt: '2026-03-25' },
-  { id: 'c12', lastName: 'Козлов', firstName: 'Виталий', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Cold', email: 'kozlov.v@mail.ru', phone: '+7 926 777 8899', country: 'Russia', city: 'Ростов-на-Дону', verificationStatus: 'Verified', createdAt: '2025-04-20', updatedAt: '2026-02-15', source: 'SEO' },
+  { id: '100', lastName: 'Смирнов', firstName: 'Андрей', middleName: 'Викторович', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Live', email: 'smirnov@mail.com', phone: '+7 916 111 2233', country: 'Russia', city: 'Москва', verificationStatus: 'Verified', createdAt: '2025-06-15', updatedAt: '2026-03-30', lastCabinetVisit: '2026-03-31T09:00:00', lastTerminalVisit: '2026-03-31T08:30:00', source: 'Google Ads', birthday: '1985-03-12' },
+  { id: '101', lastName: 'Кузнецов', firstName: 'Максим', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Hot', email: 'kuznetsov@gmail.com', phone: '+7 926 333 4455', country: 'Russia', city: 'Санкт-Петербург', verificationStatus: 'Verified', createdAt: '2025-08-20', updatedAt: '2026-03-28', source: 'Referral' },
+  { id: '102', lastName: 'Попов', firstName: 'Денис', deskId: 'd2', responsibleId: 'e5', type: 'Demo', status: 'Demo', email: 'popov@yahoo.com', phone: '+7 903 555 6677', country: 'Russia', city: 'Казань', verificationStatus: 'Unverified', createdAt: '2026-01-10', updatedAt: '2026-03-25' },
+  { id: '103', lastName: 'Соколова', firstName: 'Елена', deskId: 'd2', responsibleId: 'e7', type: 'Live', status: 'Live', email: 'sokolova@mail.ru', phone: '+380 50 123 4567', country: 'Ukraine', city: 'Киев', verificationStatus: 'Verified', createdAt: '2025-11-05', updatedAt: '2026-03-31', source: 'Facebook', birthday: '1990-07-22' },
+  { id: '104', lastName: 'Волков', firstName: 'Артем', deskId: 'd1', responsibleId: 'e4', type: 'Lead', status: 'Lead', email: 'volkov.a@outlook.com', phone: '+7 977 888 9900', country: 'Russia', city: 'Новосибирск', verificationStatus: 'Unverified', createdAt: '2026-03-01', updatedAt: '2026-03-29', source: 'Cold call' },
+  { id: '105', lastName: 'Новикова', firstName: 'Ирина', deskId: 'd3', responsibleId: 'e6', type: 'Live', status: 'Hot', email: 'novikova@proton.me', phone: '+7 915 222 3344', country: 'Russia', city: 'Екатеринбург', verificationStatus: 'Pending', createdAt: '2025-12-20', updatedAt: '2026-03-30', source: 'Telegram' },
+  { id: '106', lastName: 'Федоров', firstName: 'Олег', type: 'Lead', status: 'New', email: 'fedorov@test.com', phone: '+7 999 000 1122', country: 'Russia', verificationStatus: 'Unverified', createdAt: '2026-03-28', updatedAt: '2026-03-28' },
+  { id: '107', lastName: 'Михайлова', firstName: 'Наталья', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Live', email: 'mikhaylova@gmail.com', phone: '+7 916 444 5566', country: 'Russia', city: 'Москва', verificationStatus: 'Verified', createdAt: '2025-09-10', updatedAt: '2026-03-31', birthday: '1988-11-15' },
+  { id: '108', lastName: 'Brown', firstName: 'James', deskId: 'd2', responsibleId: 'e7', type: 'Live', status: 'Live', email: 'jbrown@email.com', phone: '+1 555 123 4567', country: 'USA', city: 'New York', verificationStatus: 'Verified', createdAt: '2025-07-01', updatedAt: '2026-03-30' },
+  { id: '109', lastName: 'Müller', firstName: 'Hans', deskId: 'd2', responsibleId: 'e5', type: 'Demo', status: 'Demo', email: 'hmuller@web.de', phone: '+49 170 1234567', country: 'Germany', city: 'Berlin', verificationStatus: 'Unverified', createdAt: '2026-02-15', updatedAt: '2026-03-20' },
+  { id: '110', lastName: 'Лебедев', firstName: 'Роман', type: 'Lead', status: 'Spam', email: 'spam@test.com', country: 'Russia', verificationStatus: 'Unverified', createdAt: '2026-03-25', updatedAt: '2026-03-25' },
+  { id: '111', lastName: 'Козлов', firstName: 'Виталий', deskId: 'd1', responsibleId: 'e4', type: 'Live', status: 'Cold', email: 'kozlov.v@mail.ru', phone: '+7 926 777 8899', country: 'Russia', city: 'Ростов-на-Дону', verificationStatus: 'Verified', createdAt: '2025-04-20', updatedAt: '2026-02-15', source: 'SEO' },
 ];
 
 // ==================== CLIENT NOTES ====================
 export const clientNotes: ClientNote[] = [
-  { id: 'cn1', clientId: 'c1', authorId: 'e4', text: 'Клиент заинтересован в торговле криптовалютой', createdAt: '2026-03-20T10:00:00' },
-  { id: 'cn2', clientId: 'c1', authorId: 'e4', text: 'Запросил информацию о VIP-условиях', createdAt: '2026-03-25T14:30:00' },
-  { id: 'cn3', clientId: 'c2', authorId: 'e4', text: 'Активно торгует, планирует увеличить депозит', createdAt: '2026-03-28T09:15:00' },
-  { id: 'cn4', clientId: 'c4', authorId: 'e7', text: 'Верифицирована, начала торговлю на реальном счете', createdAt: '2026-03-15T11:00:00' },
+  { id: 'cn1', clientId: '100', authorId: 'e4', text: 'Клиент заинтересован в торговле криптовалютой', createdAt: '2026-03-20T10:00:00' },
+  { id: 'cn2', clientId: '100', authorId: 'e4', text: 'Запросил информацию о VIP-условиях', createdAt: '2026-03-25T14:30:00' },
+  { id: 'cn3', clientId: '101', authorId: 'e4', text: 'Активно торгует, планирует увеличить депозит', createdAt: '2026-03-28T09:15:00' },
+  { id: 'cn4', clientId: '103', authorId: 'e7', text: 'Верифицирована, начала торговлю на реальном счете', createdAt: '2026-03-15T11:00:00' },
 ];
 
 // ==================== LEADS ====================
@@ -103,13 +103,13 @@ export const leads: Lead[] = [
 
 // ==================== TRADING ACCOUNTS ====================
 export const tradingAccounts: TradingAccount[] = [
-  { id: 'ta1', accountNumber: '100001', clientId: 'c1', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 15420.50, equity: 15890.30, margin: 2500, freeMargin: 13390.30, profit: 469.80, bonus: 500, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: true, spendBonus: false, status: 'Active', deposited: 20000, withdrawn: 5000, tradesCount: 156, bonusSpent: 0, createdAt: '2025-06-15' },
-  { id: 'ta2', accountNumber: '100002', clientId: 'c1', group: 'ECN', leverage: 200, stopOut: 30, maxOrders: 500, minDeposit: 1000, balance: 52340.00, equity: 53120.75, margin: 12000, freeMargin: 41120.75, profit: 780.75, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 50000, withdrawn: 0, tradesCount: 89, bonusSpent: 0, createdAt: '2025-09-01' },
-  { id: 'ta3', accountNumber: '200001', clientId: 'c2', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 8750.25, equity: 9100.00, margin: 1800, freeMargin: 7300.00, profit: 349.75, bonus: 250, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: true, spendBonus: true, status: 'Active', deposited: 10000, withdrawn: 1500, tradesCount: 67, bonusSpent: 100, createdAt: '2025-08-20' },
-  { id: 'ta4', accountNumber: 'D300001', clientId: 'c3', group: 'Demo', leverage: 500, stopOut: 20, maxOrders: 1000, minDeposit: 0, balance: 100000.00, equity: 99500.00, margin: 5000, freeMargin: 94500.00, profit: -500.00, bonus: 0, currency: 'USD', isDemo: true, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 100000, withdrawn: 0, tradesCount: 34, bonusSpent: 0, createdAt: '2026-01-10' },
-  { id: 'ta5', accountNumber: '400001', clientId: 'c4', group: 'VIP', leverage: 300, stopOut: 30, maxOrders: 500, minDeposit: 5000, balance: 125000.00, equity: 128500.00, margin: 35000, freeMargin: 93500.00, profit: 3500.00, bonus: 1000, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: true, spendBonus: true, status: 'Active', deposited: 130000, withdrawn: 10000, tradesCount: 234, bonusSpent: 500, createdAt: '2025-11-05' },
-  { id: 'ta6', accountNumber: '500001', clientId: 'c8', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 3200.00, equity: 3150.00, margin: 800, freeMargin: 2350.00, profit: -50.00, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: false, spendBonus: false, status: 'Active', deposited: 5000, withdrawn: 2000, tradesCount: 45, bonusSpent: 0, createdAt: '2025-09-10' },
-  { id: 'ta7', accountNumber: '600001', clientId: 'c9', group: 'ECN', leverage: 200, stopOut: 30, maxOrders: 500, minDeposit: 1000, balance: 78900.00, equity: 81200.00, margin: 22000, freeMargin: 59200.00, profit: 2300.00, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 80000, withdrawn: 5000, tradesCount: 178, bonusSpent: 0, createdAt: '2025-07-01' },
+  { id: 'ta1', accountNumber: '100001', clientId: '100', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 15420.50, equity: 15890.30, margin: 2500, freeMargin: 13390.30, profit: 469.80, bonus: 500, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: true, spendBonus: false, status: 'Active', deposited: 20000, withdrawn: 5000, tradesCount: 156, bonusSpent: 0, createdAt: '2025-06-15' },
+  { id: 'ta2', accountNumber: '100002', clientId: '100', group: 'ECN', leverage: 200, stopOut: 30, maxOrders: 500, minDeposit: 1000, balance: 52340.00, equity: 53120.75, margin: 12000, freeMargin: 41120.75, profit: 780.75, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 50000, withdrawn: 0, tradesCount: 89, bonusSpent: 0, createdAt: '2025-09-01' },
+  { id: 'ta3', accountNumber: '200001', clientId: '101', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 8750.25, equity: 9100.00, margin: 1800, freeMargin: 7300.00, profit: 349.75, bonus: 250, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: true, spendBonus: true, status: 'Active', deposited: 10000, withdrawn: 1500, tradesCount: 67, bonusSpent: 100, createdAt: '2025-08-20' },
+  { id: 'ta4', accountNumber: 'D300001', clientId: '102', group: 'Demo', leverage: 500, stopOut: 20, maxOrders: 1000, minDeposit: 0, balance: 100000.00, equity: 99500.00, margin: 5000, freeMargin: 94500.00, profit: -500.00, bonus: 0, currency: 'USD', isDemo: true, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 100000, withdrawn: 0, tradesCount: 34, bonusSpent: 0, createdAt: '2026-01-10' },
+  { id: 'ta5', accountNumber: '400001', clientId: '103', group: 'VIP', leverage: 300, stopOut: 30, maxOrders: 500, minDeposit: 5000, balance: 125000.00, equity: 128500.00, margin: 35000, freeMargin: 93500.00, profit: 3500.00, bonus: 1000, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: true, spendBonus: true, status: 'Active', deposited: 130000, withdrawn: 10000, tradesCount: 234, bonusSpent: 500, createdAt: '2025-11-05' },
+  { id: 'ta6', accountNumber: '500001', clientId: '107', group: 'Standard', leverage: 100, stopOut: 50, maxOrders: 200, minDeposit: 100, balance: 3200.00, equity: 3150.00, margin: 800, freeMargin: 2350.00, profit: -50.00, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: false, showBonus: false, spendBonus: false, status: 'Active', deposited: 5000, withdrawn: 2000, tradesCount: 45, bonusSpent: 0, createdAt: '2025-09-10' },
+  { id: 'ta7', accountNumber: '600001', clientId: '108', group: 'ECN', leverage: 200, stopOut: 30, maxOrders: 500, minDeposit: 1000, balance: 78900.00, equity: 81200.00, margin: 22000, freeMargin: 59200.00, profit: 2300.00, bonus: 0, currency: 'USD', isDemo: false, tradingAllowed: true, robotsAllowed: true, showBonus: false, spendBonus: false, status: 'Active', deposited: 80000, withdrawn: 5000, tradesCount: 178, bonusSpent: 0, createdAt: '2025-07-01' },
 ];
 
 // ==================== ASSETS ====================
@@ -143,64 +143,64 @@ export const paymentMethods: PaymentMethod[] = [
 ];
 
 export const paymentRequests: PaymentRequest[] = [
-  { id: 'p1', clientId: 'c1', accountId: 'ta1', type: 'Deposit', amount: 5000, currency: 'USD', paymentMethod: 'Bank Transfer', status: 'Approved', createdAt: '2026-03-20T10:00:00', processedAt: '2026-03-20T14:00:00', processedBy: 'e2' },
-  { id: 'p2', clientId: 'c2', accountId: 'ta3', type: 'Deposit', amount: 2000, currency: 'USD', paymentMethod: 'VISA/Mastercard', status: 'Approved', createdAt: '2026-03-22T09:00:00', processedAt: '2026-03-22T09:05:00', processedBy: 'e2' },
-  { id: 'p3', clientId: 'c1', accountId: 'ta1', type: 'Withdrawal', amount: 1500, currency: 'USD', paymentMethod: 'Bank Transfer', status: 'New', wallet: 'RU12345678901234567890', createdAt: '2026-03-30T15:00:00' },
-  { id: 'p4', clientId: 'c4', accountId: 'ta5', type: 'Deposit', amount: 25000, currency: 'USD', paymentMethod: 'Bitcoin (BTC)', status: 'Pending', createdAt: '2026-03-31T08:00:00' },
-  { id: 'p5', clientId: 'c9', accountId: 'ta7', type: 'Withdrawal', amount: 5000, currency: 'USD', paymentMethod: 'USDT (TRC-20)', status: 'New', wallet: 'TRx1234567890abcdef', createdAt: '2026-03-31T10:00:00' },
-  { id: 'p6', clientId: 'c8', accountId: 'ta6', type: 'Deposit', amount: 1000, currency: 'USD', paymentMethod: 'Skrill', status: 'Rejected', createdAt: '2026-03-29T12:00:00', processedAt: '2026-03-29T16:00:00', processedBy: 'e2', comment: 'Insufficient documentation' },
-  { id: 'p7', clientId: 'c6', accountId: 'ta5', type: 'Deposit', amount: 10000, currency: 'USD', paymentMethod: 'Ethereum (ETH)', status: 'Approved', createdAt: '2026-03-25T11:00:00', processedAt: '2026-03-25T11:30:00', processedBy: 'e1' },
+  { id: 'p1', clientId: '100', accountId: 'ta1', type: 'Deposit', amount: 5000, currency: 'USD', paymentMethod: 'Bank Transfer', status: 'Approved', createdAt: '2026-03-20T10:00:00', processedAt: '2026-03-20T14:00:00', processedBy: 'e2' },
+  { id: 'p2', clientId: '101', accountId: 'ta3', type: 'Deposit', amount: 2000, currency: 'USD', paymentMethod: 'VISA/Mastercard', status: 'Approved', createdAt: '2026-03-22T09:00:00', processedAt: '2026-03-22T09:05:00', processedBy: 'e2' },
+  { id: 'p3', clientId: '100', accountId: 'ta1', type: 'Withdrawal', amount: 1500, currency: 'USD', paymentMethod: 'Bank Transfer', status: 'New', wallet: 'RU12345678901234567890', createdAt: '2026-03-30T15:00:00' },
+  { id: 'p4', clientId: '103', accountId: 'ta5', type: 'Deposit', amount: 25000, currency: 'USD', paymentMethod: 'Bitcoin (BTC)', status: 'Pending', createdAt: '2026-03-31T08:00:00' },
+  { id: 'p5', clientId: '108', accountId: 'ta7', type: 'Withdrawal', amount: 5000, currency: 'USD', paymentMethod: 'USDT (TRC-20)', status: 'New', wallet: 'TRx1234567890abcdef', createdAt: '2026-03-31T10:00:00' },
+  { id: 'p6', clientId: '107', accountId: 'ta6', type: 'Deposit', amount: 1000, currency: 'USD', paymentMethod: 'Skrill', status: 'Rejected', createdAt: '2026-03-29T12:00:00', processedAt: '2026-03-29T16:00:00', processedBy: 'e2', comment: 'Insufficient documentation' },
+  { id: 'p7', clientId: '105', accountId: 'ta5', type: 'Deposit', amount: 10000, currency: 'USD', paymentMethod: 'Ethereum (ETH)', status: 'Approved', createdAt: '2026-03-25T11:00:00', processedAt: '2026-03-25T11:30:00', processedBy: 'e1' },
 ];
 
 // ==================== SUPPORT TICKETS ====================
 export const supportTickets: SupportTicket[] = [
-  { id: 'st1', clientId: 'c1', subject: 'Проблема с выводом средств', status: 'Open', assignedTo: 'e4', createdAt: '2026-03-29T10:00:00', lastMessageAt: '2026-03-31T09:00:00', deskId: 'd1' },
-  { id: 'st2', clientId: 'c3', subject: 'Как открыть реальный счет?', status: 'Open', assignedTo: 'e5', createdAt: '2026-03-30T14:00:00', lastMessageAt: '2026-03-30T16:30:00', deskId: 'd2' },
-  { id: 'st3', clientId: 'c4', subject: 'Ошибка при входе в терминал', status: 'Closed', assignedTo: 'e7', createdAt: '2026-03-25T08:00:00', lastMessageAt: '2026-03-26T10:00:00', deskId: 'd2' },
-  { id: 'st4', clientId: 'c8', subject: 'Запрос на изменение плеча', status: 'Open', assignedTo: 'e4', createdAt: '2026-03-31T07:00:00', lastMessageAt: '2026-03-31T07:30:00', deskId: 'd1' },
+  { id: 'st1', clientId: '100', subject: 'Проблема с выводом средств', status: 'Open', assignedTo: 'e4', createdAt: '2026-03-29T10:00:00', lastMessageAt: '2026-03-31T09:00:00', deskId: 'd1' },
+  { id: 'st2', clientId: '102', subject: 'Как открыть реальный счет?', status: 'Open', assignedTo: 'e5', createdAt: '2026-03-30T14:00:00', lastMessageAt: '2026-03-30T16:30:00', deskId: 'd2' },
+  { id: 'st3', clientId: '103', subject: 'Ошибка при входе в терминал', status: 'Closed', assignedTo: 'e7', createdAt: '2026-03-25T08:00:00', lastMessageAt: '2026-03-26T10:00:00', deskId: 'd2' },
+  { id: 'st4', clientId: '107', subject: 'Запрос на изменение плеча', status: 'Open', assignedTo: 'e4', createdAt: '2026-03-31T07:00:00', lastMessageAt: '2026-03-31T07:30:00', deskId: 'd1' },
 ];
 
 export const supportMessages: SupportMessage[] = [
-  { id: 'sm1', ticketId: 'st1', authorId: 'c1', authorType: 'Client', text: 'Здравствуйте, я подал заявку на вывод 3 дня назад, но средства до сих пор не поступили.', createdAt: '2026-03-29T10:00:00' },
+  { id: 'sm1', ticketId: 'st1', authorId: '100', authorType: 'Client', text: 'Здравствуйте, я подал заявку на вывод 3 дня назад, но средства до сих пор не поступили.', createdAt: '2026-03-29T10:00:00' },
   { id: 'sm2', ticketId: 'st1', authorId: 'e4', authorType: 'Employee', text: 'Добрый день! Ваша заявка на вывод находится в обработке. Обычно это занимает 3-5 рабочих дней.', createdAt: '2026-03-29T10:30:00' },
-  { id: 'sm3', ticketId: 'st1', authorId: 'c1', authorType: 'Client', text: 'Спасибо, буду ждать.', createdAt: '2026-03-31T09:00:00' },
-  { id: 'sm4', ticketId: 'st2', authorId: 'c3', authorType: 'Client', text: 'Хочу перейти с демо на реальный счет. Какие документы нужны?', createdAt: '2026-03-30T14:00:00' },
+  { id: 'sm3', ticketId: 'st1', authorId: '100', authorType: 'Client', text: 'Спасибо, буду ждать.', createdAt: '2026-03-31T09:00:00' },
+  { id: 'sm4', ticketId: 'st2', authorId: '102', authorType: 'Client', text: 'Хочу перейти с демо на реальный счет. Какие документы нужны?', createdAt: '2026-03-30T14:00:00' },
   { id: 'sm5', ticketId: 'st2', authorId: 'e5', authorType: 'Employee', text: 'Для открытия реального счета необходимо пройти верификацию. Загрузите паспорт и подтверждение адреса в разделе "Верификация".', createdAt: '2026-03-30T16:30:00' },
 ];
 
 // ==================== VERIFICATION ====================
 export const verificationRequests: VerificationRequest[] = [
-  { id: 'vr1', clientId: 'c6', status: 'Pending', documents: [
-    { id: 'vd1', requestId: 'vr1', fileName: 'passport_front.jpg', fileType: 'image/jpeg', uploadedBy: 'c6', uploadedAt: '2026-03-28T10:00:00' },
-    { id: 'vd2', requestId: 'vr1', fileName: 'utility_bill.pdf', fileType: 'application/pdf', uploadedBy: 'c6', uploadedAt: '2026-03-28T10:05:00' },
+  { id: 'vr1', clientId: '105', status: 'Pending', documents: [
+    { id: 'vd1', requestId: 'vr1', fileName: 'passport_front.jpg', fileType: 'image/jpeg', uploadedBy: '105', uploadedAt: '2026-03-28T10:00:00' },
+    { id: 'vd2', requestId: 'vr1', fileName: 'utility_bill.pdf', fileType: 'application/pdf', uploadedBy: '105', uploadedAt: '2026-03-28T10:05:00' },
   ], createdAt: '2026-03-28T10:00:00' },
-  { id: 'vr2', clientId: 'c3', status: 'Unverified', documents: [], createdAt: '2026-01-10' },
-  { id: 'vr3', clientId: 'c1', status: 'Verified', documents: [
-    { id: 'vd3', requestId: 'vr3', fileName: 'id_card.jpg', fileType: 'image/jpeg', uploadedBy: 'c1', uploadedAt: '2025-06-20T09:00:00' },
+  { id: 'vr2', clientId: '102', status: 'Unverified', documents: [], createdAt: '2026-01-10' },
+  { id: 'vr3', clientId: '100', status: 'Verified', documents: [
+    { id: 'vd3', requestId: 'vr3', fileName: 'id_card.jpg', fileType: 'image/jpeg', uploadedBy: '100', uploadedAt: '2025-06-20T09:00:00' },
   ], createdAt: '2025-06-20', processedAt: '2025-06-21', processedBy: 'e2' },
 ];
 
 // ==================== HISTORY ====================
 export const historyEvents: HistoryEvent[] = [
-  { id: 'h1', timestamp: '2026-03-31T10:30:00', clientId: 'c1', clientName: 'Смирнов Андрей', deskId: 'd1', deskName: 'Default', section: 'Clients', authorId: 'e4', authorName: 'Козлова Анна', source: 'Employee', description: 'Просмотр карточки клиента' },
-  { id: 'h2', timestamp: '2026-03-31T10:15:00', clientId: 'c2', clientName: 'Кузнецов Максим', deskId: 'd1', deskName: 'Default', section: 'Trading', authorId: 'e1', authorName: 'Иванов Алексей', source: 'Employee', description: 'Изменение позиции #tp4: volume 0.3 → 0.5' },
-  { id: 'h3', timestamp: '2026-03-31T09:00:00', clientId: 'c1', clientName: 'Смирнов Андрей', section: 'Payments', authorId: 'c1', authorName: 'Смирнов Андрей', source: 'Client', description: 'Создание заявки на вывод $1500' },
+  { id: 'h1', timestamp: '2026-03-31T10:30:00', clientId: '100', clientName: 'Смирнов Андрей', deskId: 'd1', deskName: 'Default', section: 'Clients', authorId: 'e4', authorName: 'Козлова Анна', source: 'Employee', description: 'Просмотр карточки клиента' },
+  { id: 'h2', timestamp: '2026-03-31T10:15:00', clientId: '101', clientName: 'Кузнецов Максим', deskId: 'd1', deskName: 'Default', section: 'Trading', authorId: 'e1', authorName: 'Иванов Алексей', source: 'Employee', description: 'Изменение позиции #tp4: volume 0.3 → 0.5' },
+  { id: 'h3', timestamp: '2026-03-31T09:00:00', clientId: '100', clientName: 'Смирнов Андрей', section: 'Payments', authorId: '100', authorName: 'Смирнов Андрей', source: 'Client', description: 'Создание заявки на вывод $1500' },
   { id: 'h4', timestamp: '2026-03-30T18:00:00', section: 'Assets', authorId: 'e1', authorName: 'Иванов Алексей', source: 'Employee', description: 'Ручное изменение цены BTCUSD: Bid 87000→87250, Ask 87100→87350' },
-  { id: 'h5', timestamp: '2026-03-30T16:00:00', clientId: 'c4', clientName: 'Соколова Елена', deskId: 'd2', deskName: 'VIP', section: 'Auth', authorId: 'e7', authorName: 'Новиков Павел', source: 'Employee', description: 'Вход в кабинет клиента', ip: '192.168.1.100' },
-  { id: 'h6', timestamp: '2026-03-30T14:00:00', clientId: 'c6', clientName: 'Новикова Ирина', deskId: 'd3', deskName: 'Crypto', section: 'Verification', authorId: 'c6', authorName: 'Новикова Ирина', source: 'Client', description: 'Загрузка документов для верификации' },
+  { id: 'h5', timestamp: '2026-03-30T16:00:00', clientId: '103', clientName: 'Соколова Елена', deskId: 'd2', deskName: 'VIP', section: 'Auth', authorId: 'e7', authorName: 'Новиков Павел', source: 'Employee', description: 'Вход в кабинет клиента', ip: '192.168.1.100' },
+  { id: 'h6', timestamp: '2026-03-30T14:00:00', clientId: '105', clientName: 'Новикова Ирина', deskId: 'd3', deskName: 'Crypto', section: 'Verification', authorId: '105', authorName: 'Новикова Ирина', source: 'Client', description: 'Загрузка документов для верификации' },
   { id: 'h7', timestamp: '2026-03-30T10:00:00', section: 'Assets', authorId: 'e1', authorName: 'Иванов Алексей', source: 'Employee', description: 'Изменение комиссии XAUUSD: 3 → 5 USD' },
-  { id: 'h8', timestamp: '2026-03-29T16:00:00', clientId: 'c8', clientName: 'Михайлова Наталья', section: 'Payments', authorId: 'e2', authorName: 'Петрова Мария', source: 'Employee', description: 'Отклонение платежа #p6: Insufficient documentation' },
+  { id: 'h8', timestamp: '2026-03-29T16:00:00', clientId: '107', clientName: 'Михайлова Наталья', section: 'Payments', authorId: 'e2', authorName: 'Петрова Мария', source: 'Employee', description: 'Отклонение платежа #p6: Insufficient documentation' },
   { id: 'h9', timestamp: '2026-03-29T12:00:00', section: 'Employees', authorId: 'e1', authorName: 'Иванов Алексей', source: 'Employee', description: 'Создание сотрудника: Новиков Павел' },
-  { id: 'h10', timestamp: '2026-03-28T10:00:00', clientId: 'c5', clientName: 'Волков Артем', section: 'Clients', authorId: 'e4', authorName: 'Козлова Анна', source: 'Employee', description: 'Изменение статуса клиента: New → Lead' },
+  { id: 'h10', timestamp: '2026-03-28T10:00:00', clientId: '104', clientName: 'Волков Артем', section: 'Clients', authorId: 'e4', authorName: 'Козлова Анна', source: 'Employee', description: 'Изменение статуса клиента: New → Lead' },
 ];
 
 // ==================== SESSIONS ====================
 export const clientSessions: ClientSession[] = [
-  { id: 'cs1', clientId: 'c1', accountId: 'ta1', group: 'Standard', accountNumber: '100001', fullName: 'Смирнов Андрей', email: 'smirnov@mail.com', registrationIp: '95.24.100.50', currentIp: '95.24.100.55', isOnline: true, lastLogin: '2026-03-31T09:00:00', isDemo: false },
-  { id: 'cs2', clientId: 'c4', accountId: 'ta5', group: 'VIP', accountNumber: '400001', fullName: 'Соколова Елена', email: 'sokolova@mail.ru', registrationIp: '178.150.20.10', currentIp: '178.150.20.15', isOnline: true, lastLogin: '2026-03-31T08:30:00', isDemo: false },
-  { id: 'cs3', clientId: 'c9', accountId: 'ta7', group: 'ECN', accountNumber: '600001', fullName: 'James Brown', email: 'jbrown@email.com', registrationIp: '72.14.200.100', currentIp: '72.14.200.105', isOnline: true, lastLogin: '2026-03-31T10:00:00', isDemo: false },
-  { id: 'cs4', clientId: 'c3', accountId: 'ta4', group: 'Demo', accountNumber: 'D300001', fullName: 'Попов Денис', email: 'popov@yahoo.com', registrationIp: '188.32.50.20', currentIp: '188.32.50.25', isOnline: false, lastLogin: '2026-03-30T18:00:00', lastDisconnect: '2026-03-30T20:30:00', isDemo: true },
-  { id: 'cs5', clientId: 'c2', accountId: 'ta3', group: 'Standard', accountNumber: '200001', fullName: 'Кузнецов Максим', email: 'kuznetsov@gmail.com', registrationIp: '78.46.120.30', currentIp: '78.46.120.35', isOnline: false, lastLogin: '2026-03-31T07:00:00', lastDisconnect: '2026-03-31T08:00:00', isDemo: false },
+  { id: 'cs1', clientId: '100', accountId: 'ta1', group: 'Standard', accountNumber: '100001', fullName: 'Смирнов Андрей', email: 'smirnov@mail.com', registrationIp: '95.24.100.50', currentIp: '95.24.100.55', isOnline: true, lastLogin: '2026-03-31T09:00:00', isDemo: false },
+  { id: 'cs2', clientId: '103', accountId: 'ta5', group: 'VIP', accountNumber: '400001', fullName: 'Соколова Елена', email: 'sokolova@mail.ru', registrationIp: '178.150.20.10', currentIp: '178.150.20.15', isOnline: true, lastLogin: '2026-03-31T08:30:00', isDemo: false },
+  { id: 'cs3', clientId: '108', accountId: 'ta7', group: 'ECN', accountNumber: '600001', fullName: 'James Brown', email: 'jbrown@email.com', registrationIp: '72.14.200.100', currentIp: '72.14.200.105', isOnline: true, lastLogin: '2026-03-31T10:00:00', isDemo: false },
+  { id: 'cs4', clientId: '102', accountId: 'ta4', group: 'Demo', accountNumber: 'D300001', fullName: 'Попов Денис', email: 'popov@yahoo.com', registrationIp: '188.32.50.20', currentIp: '188.32.50.25', isOnline: false, lastLogin: '2026-03-30T18:00:00', lastDisconnect: '2026-03-30T20:30:00', isDemo: true },
+  { id: 'cs5', clientId: '101', accountId: 'ta3', group: 'Standard', accountNumber: '200001', fullName: 'Кузнецов Максим', email: 'kuznetsov@gmail.com', registrationIp: '78.46.120.30', currentIp: '78.46.120.35', isOnline: false, lastLogin: '2026-03-31T07:00:00', lastDisconnect: '2026-03-31T08:00:00', isDemo: false },
 ];
 
 // ==================== SETTINGS ====================

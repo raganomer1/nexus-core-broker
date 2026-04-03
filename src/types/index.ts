@@ -310,6 +310,10 @@ export interface HistoryEvent {
   description: string;
   details?: Record<string, any>;
   ip?: string;
+  actionType?: string;
+  actionStatus?: string;
+  responsibleId?: string;
+  actionDate?: string;
 }
 
 // ===================== SETTINGS =====================
