@@ -164,6 +164,7 @@ interface AppStore {
 
   // Price simulation
   simulatePriceMovement: () => void;
+  updateAssetPrices: (prices: Record<string, number>) => void;
 }
 
 export const useStore = create<AppStore>((set, get) => ({
