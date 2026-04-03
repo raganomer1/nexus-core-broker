@@ -2,16 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, NavLink } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
 import {
-  BarChart3, Newspaper, Calendar, TrendingUp, ArrowLeftRight, ChevronDown,
-  Plus, X, ArrowUp, ArrowDown, Home, Menu, ChevronLeft, ChevronRight
+  Plus, X, ArrowUp, ArrowDown, Home, Menu
 } from 'lucide-react';
-
-const leftMenuItems = [
-  { icon: BarChart3, label: 'Обзор', to: '/terminal' },
-  { icon: Newspaper, label: 'Новости', to: '/terminal/news' },
-  { icon: Calendar, label: 'Календарь', to: '/terminal/calendar' },
-  { icon: TrendingUp, label: 'Прогнозы', to: '/terminal/forecasts' },
-];
 
 export default function TerminalLayout() {
   const navigate = useNavigate();
@@ -82,16 +74,6 @@ export default function TerminalLayout() {
           <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setShowWatchlist(false)} />
         )}
 
-        {/* Left icon menu — hidden on mobile */}
-        <div className="hidden md:flex w-12 flex-col items-center py-3 gap-2 border-r flex-shrink-0" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
-          {leftMenuItems.map(item => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => `p-2 rounded-lg transition-colors ${isActive ? '' : 'opacity-50 hover:opacity-80'}`}
-              style={({ isActive }) => isActive ? { background: 'hsl(217, 91%, 55%, 0.2)', color: 'hsl(217, 91%, 55%)' } : { color: 'hsl(220, 14%, 60%)' }}>
-              <item.icon size={18} />
-            </NavLink>
-          ))}
-        </div>
-
         {/* Watchlist */}
         <div className={`
           w-56 border-r flex flex-col flex-shrink-0 overflow-hidden z-40
@@ -100,14 +82,7 @@ export default function TerminalLayout() {
         `} style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
           {/* Mobile nav inside watchlist */}
           <div className="md:hidden flex items-center gap-1 px-2 py-2 border-b" style={{ borderColor: 'hsl(220, 20%, 20%)' }}>
-            {leftMenuItems.map(item => (
-              <NavLink key={item.to} to={item.to} onClick={() => setShowWatchlist(false)}
-                className={({ isActive }) => `p-1.5 rounded transition-colors ${isActive ? '' : 'opacity-50'}`}
-                style={({ isActive }) => isActive ? { background: 'hsl(217, 91%, 55%, 0.2)', color: 'hsl(217, 91%, 55%)' } : { color: 'hsl(220, 14%, 60%)' }}>
-                <item.icon size={16} />
-              </NavLink>
-            ))}
-            <NavLink to="/client" onClick={() => setShowWatchlist(false)} className="p-1.5 rounded opacity-50 hover:opacity-80 ml-auto" style={{ color: 'hsl(220, 14%, 60%)' }}>
+            <NavLink to="/client" onClick={() => setShowWatchlist(false)} className="p-1.5 rounded opacity-50 hover:opacity-80" style={{ color: 'hsl(220, 14%, 60%)' }}>
               <Home size={16} />
             </NavLink>
           </div>
@@ -126,7 +101,7 @@ export default function TerminalLayout() {
               return (
                 <div key={asset.symbol}
                   onClick={() => { setSelectedSymbol(asset.symbol); setShowWatchlist(false); }}
-                  className={`px-3 py-2 cursor-pointer border-b transition-colors ${isSelected ? '' : 'hover:bg-white/5'}`}
+                  className={`group px-3 py-2 cursor-pointer border-b transition-colors ${isSelected ? '' : 'hover:bg-white/5'}`}
                   style={{
                     borderColor: 'hsl(220, 20%, 15%)',
                     background: isSelected ? 'hsl(217, 91%, 55%, 0.1)' : 'transparent',

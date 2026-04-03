@@ -17,14 +17,14 @@ export default function ClientDashboard() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'tradingAccountsTitle')}</h1>
-        <Button size="sm"><Plus size={14} className="mr-1" /> {t(lang, 'openAccount')}</Button>
+        {/* open account button removed for clients */}
       </div>
       {accounts.length === 0 ? (
         <div className="bg-card rounded-lg border p-6 md:p-8 text-center">
           <CreditCard size={48} className="mx-auto text-muted-foreground mb-3" />
           <h3 className="font-semibold mb-1">{t(lang, 'noActiveAccounts')}</h3>
           <p className="text-sm text-muted-foreground mb-4">{t(lang, 'openAccountToStart')}</p>
-          <Button>{t(lang, 'openAccount')}</Button>
+          {/* open account button removed */}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
