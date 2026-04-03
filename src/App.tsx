@@ -124,6 +124,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </TradingProvider>
   </QueryClientProvider>
 );
 
