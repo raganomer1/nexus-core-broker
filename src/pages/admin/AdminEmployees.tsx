@@ -334,11 +334,14 @@ export default function AdminEmployees() {
       <div className="hidden md:block bg-card rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="data-table">
-            <thead><tr className="bg-muted/30"><th>Имя</th><th>Дески</th><th>Email</th><th>Доступ к контактам</th><th>IP последнего входа</th><th>Последний вход</th><th></th></tr></thead>
+            <thead><tr className="bg-muted/30"><th>Имя</th><th>Роль</th><th>Дески</th><th>Email</th><th>Доступ к контактам</th><th>IP последнего входа</th><th>Последний вход</th><th></th></tr></thead>
             <tbody>
-              {filtered.map(e => (
+              {filtered.map(e => {
+                const role = roles.find(r => r.id === e.roleId);
+                return (
                 <tr key={e.id}>
                   <td className="font-medium">{e.lastName} {e.firstName}</td>
+                  <td><span className="px-2 py-0.5 rounded bg-muted text-xs font-medium">{role?.name || '—'}</span></td>
                   <td className="text-sm">{e.desks.map(d => desks.find(dk => dk.id === d)?.name).filter(Boolean).join(', ') || '—'}</td>
                   <td>{e.email}</td>
                   <td>{e.canViewContacts ? <span className="text-success text-xs">Да</span> : <span className="text-destructive text-xs">Нет</span>}</td>
