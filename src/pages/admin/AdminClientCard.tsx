@@ -221,11 +221,39 @@ export default function AdminClientCard() {
               ) : clientHistory.map(h => (
                 <tr key={h.id}>
                   <td className="text-xs whitespace-nowrap">{new Date(h.timestamp).toLocaleString()}</td>
-                  <td className="text-sm">{h.section}</td>
+                  <td className="text-sm">{h.actionType || h.section}</td>
                   <td className="text-sm">{h.authorName}</td>
                   <td className="text-sm max-w-[300px] truncate">{h.description}</td>
-                  <td className="text-sm">{resp ? `${resp.firstName} ${resp.lastName}` : '—'}</td>
-                  <td><span className="flex items-center gap-1.5 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> New</span></td>
+                  <td className="text-sm">{(() => { const r = h.responsibleId ? employees.find(e => e.id === h.responsibleId) : resp; return r ? `${r.firstName} ${r.lastName}` : '—'; })()}</td>
+                  <td>
+                    <div className="flex items-center gap-1">
+                      {editStatusId === h.id ? (
+                        <Select value={editStatusValue} onValueChange={v => { setEditStatusValue(v); updateHistoryEvent(h.id, { actionStatus: v }); setEditStatusId(null); toast.success('Статус обновлён'); }}>
+                          <SelectTrigger className="h-6 text-xs w-24"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="New">New</SelectItem>
+                            <SelectItem value="In progress">In progress</SelectItem>
+                            <SelectItem value="Done">Done</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <span className="flex items-center gap-1.5 text-xs">
+                            <span className={`w-1.5 h-1.5 rounded-full ${h.actionStatus === 'Done' ? 'bg-blue-500' : h.actionStatus === 'In progress' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                            {h.actionStatus || 'New'}
+                          </span>
+                          <button onClick={() => { setEditStatusId(h.id); setEditStatusValue(h.actionStatus || 'New'); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground">
+                            <Pencil size={10} />
+                          </button>
+                          {auth.role?.name === 'Admin' && (
+                            <button onClick={() => { deleteHistoryEvent(h.id); toast.success('Действие удалено'); }} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                              <X size={10} />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
