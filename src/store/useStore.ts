@@ -196,7 +196,7 @@ export const useStore = create<AppStore>((set, get) => ({
   // ==================== CLIENTS ====================
   clients: [...mock.clients],
   addClient: (data) => {
-    const client: Client = { ...data, id: genId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const client: Client = { ...data, id: genClientId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     set(s => ({ clients: [...s.clients, client] }));
     get().addHistoryEvent({ clientId: client.id, clientName: `${client.lastName} ${client.firstName}`, section: 'Clients', authorId: get().auth.userId || '', authorName: '', source: 'Employee', description: `Создание клиента: ${client.lastName} ${client.firstName}` });
     return client;
