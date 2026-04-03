@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useStore } from '@/store/useStore';
+import { useTradingPrices } from '@/contexts/TradingContext';
+import { getTvSymbol } from '@/services/marketData';
+import { TradingViewChart } from '@/components/TradingViewChart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Plus, X, AlertTriangle, BarChart3 } from 'lucide-react';
-import { createChart, CandlestickSeries, HistogramSeries, LineSeries, type IChartApi } from 'lightweight-charts';
+import { Search, Plus, X, AlertTriangle } from 'lucide-react';
 
 type TerminalContext = {
   selectedSymbol: string;
@@ -20,88 +22,14 @@ type TerminalContext = {
 
 const timeframes = ['M1', 'M15', 'H1', 'H4', 'D1'];
 
-// Generate candles that end exactly at currentPrice
-function generateCandles(currentPrice: number, count: number) {
-  const candles = [];
-  let price = currentPrice * (0.97 + Math.random() * 0.02);
-  const now = Math.floor(Date.now() / 1000);
-  for (let i = count; i >= 1; i--) {
-    const open = price;
-    const change = (Math.random() - 0.48) * price * 0.004;
-    const close = open + change;
-    const high = Math.max(open, close) + Math.random() * price * 0.0015;
-    const low = Math.min(open, close) - Math.random() * price * 0.0015;
-    candles.push({ time: now - i * 300, open, high, low, close });
-    price = close;
-  }
-  // Last candle closes at exactly current price
-  const lastOpen = price;
-  const high = Math.max(lastOpen, currentPrice) + Math.random() * currentPrice * 0.001;
-  const low = Math.min(lastOpen, currentPrice) - Math.random() * currentPrice * 0.001;
-  candles.push({ time: now, open: lastOpen, high, low, close: currentPrice });
-  return candles;
-}
-
-// Simple Moving Average
-function calcSMA(data: { close: number; time: number }[], period: number) {
-  const result: { time: number; value: number }[] = [];
-  for (let i = period - 1; i < data.length; i++) {
-    let sum = 0;
-    for (let j = 0; j < period; j++) sum += data[i - j].close;
-    result.push({ time: data[i].time, value: sum / period });
-  }
-  return result;
-}
-
-// Exponential Moving Average
-function calcEMA(data: { close: number; time: number }[], period: number) {
-  const result: { time: number; value: number }[] = [];
-  const k = 2 / (period + 1);
-  let ema = data.slice(0, period).reduce((s, d) => s + d.close, 0) / period;
-  result.push({ time: data[period - 1].time, value: ema });
-  for (let i = period; i < data.length; i++) {
-    ema = data[i].close * k + ema * (1 - k);
-    result.push({ time: data[i].time, value: ema });
-  }
-  return result;
-}
-
-// Bollinger Bands
-function calcBollinger(data: { close: number; time: number }[], period: number) {
-  const upper: { time: number; value: number }[] = [];
-  const lower: { time: number; value: number }[] = [];
-  const middle: { time: number; value: number }[] = [];
-  for (let i = period - 1; i < data.length; i++) {
-    const slice = data.slice(i - period + 1, i + 1);
-    const mean = slice.reduce((s, d) => s + d.close, 0) / period;
-    const variance = slice.reduce((s, d) => s + (d.close - mean) ** 2, 0) / period;
-    const std = Math.sqrt(variance);
-    middle.push({ time: data[i].time, value: mean });
-    upper.push({ time: data[i].time, value: mean + 2 * std });
-    lower.push({ time: data[i].time, value: mean - 2 * std });
-  }
-  return { upper, middle, lower };
-}
-
-type IndicatorType = 'sma20' | 'sma50' | 'ema20' | 'bollinger';
-const INDICATOR_OPTIONS: { key: IndicatorType; label: string }[] = [
-  { key: 'sma20', label: 'SMA 20' },
-  { key: 'sma50', label: 'SMA 50' },
-  { key: 'ema20', label: 'EMA 20' },
-  { key: 'bollinger', label: 'Bollinger Bands' },
-];
-
 export default function TerminalMain() {
   const ctx = useOutletContext<TerminalContext>();
-  const { assets, tradingAccounts, positions, payments, openPosition, closePosition, auth } = useStore();
-  const chartRef = useRef<HTMLDivElement>(null);
-  const chartApiRef = useRef<IChartApi | null>(null);
+  const { assets, tradingAccounts, positions, payments, openPosition, closePosition } = useStore();
+  const { prices } = useTradingPrices();
 
   const [tf, setTf] = useState('H1');
   const [showOrder, setShowOrder] = useState(false);
   const [showReport, setShowReport] = useState(false);
-  const [showIndicators, setShowIndicators] = useState(false);
-  const [activeIndicators, setActiveIndicators] = useState<IndicatorType[]>([]);
   const [orderType, setOrderType] = useState<'Buy' | 'Sell'>('Buy');
   const [orderVolume, setOrderVolume] = useState('0.1');
   const [orderTP, setOrderTP] = useState('');
@@ -127,6 +55,9 @@ export default function TerminalMain() {
     return a.isActive;
   });
 
+  // TradingView symbol
+  const tvSymbol = getTvSymbol(ctx.selectedSymbol);
+
   // Margin calculation
   const requiredMargin = useMemo(() => {
     if (!asset || !account) return 0;
@@ -139,7 +70,6 @@ export default function TerminalMain() {
     return asset.commission * Number(orderVolume);
   }, [asset, orderVolume]);
 
-  // Залог (deposit) = margin required
   const depositAmount = requiredMargin;
 
   const marginWarning = useMemo(() => {
@@ -200,71 +130,7 @@ export default function TerminalMain() {
     return { totalProfit, totalSwap, totalCommission, deposited, withdrawn, balance: account?.balance || 0 };
   }, [reportPositions, reportDeposits, account]);
 
-  // Chart — prices synced with asset
-  useEffect(() => {
-    if (!chartRef.current || !asset) return;
-    chartRef.current.innerHTML = '';
-    const chart = createChart(chartRef.current, {
-      width: chartRef.current.clientWidth, height: chartRef.current.clientHeight,
-      layout: { background: { color: 'hsl(220, 25%, 8%)' }, textColor: 'hsl(220, 14%, 60%)' },
-      grid: { vertLines: { color: 'hsl(220, 20%, 15%)' }, horzLines: { color: 'hsl(220, 20%, 15%)' } },
-      crosshair: { mode: 0 },
-      timeScale: { borderColor: 'hsl(220, 20%, 20%)' },
-      rightPriceScale: { borderColor: 'hsl(220, 20%, 20%)' },
-    });
-    chartApiRef.current = chart;
-
-    // Use actual bid price as latest close so chart matches asset price
-    const candles = generateCandles(asset.bid, 100);
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: 'hsl(142, 71%, 45%)', downColor: 'hsl(0, 84%, 60%)',
-      borderUpColor: 'hsl(142, 71%, 45%)', borderDownColor: 'hsl(0, 84%, 60%)',
-      wickUpColor: 'hsl(142, 71%, 45%)', wickDownColor: 'hsl(0, 84%, 60%)',
-    });
-    candleSeries.setData(candles as any);
-
-    // Volume
-    const volumeSeries = chart.addSeries(HistogramSeries, { priceScaleId: 'volume', color: 'hsl(217, 91%, 55%, 0.3)' });
-    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
-    volumeSeries.setData(candles.map(c => ({ time: c.time, value: Math.random() * 1000 + 100 })) as any);
-
-    // Indicators
-    if (activeIndicators.includes('sma20')) {
-      const sma = calcSMA(candles, 20);
-      const s = chart.addSeries(LineSeries, { color: 'hsl(45, 100%, 55%)', lineWidth: 1, priceScaleId: 'right' });
-      s.setData(sma as any);
-    }
-    if (activeIndicators.includes('sma50')) {
-      const sma = calcSMA(candles, 50);
-      const s = chart.addSeries(LineSeries, { color: 'hsl(280, 80%, 65%)', lineWidth: 1, priceScaleId: 'right' });
-      s.setData(sma as any);
-    }
-    if (activeIndicators.includes('ema20')) {
-      const ema = calcEMA(candles, 20);
-      const s = chart.addSeries(LineSeries, { color: 'hsl(200, 90%, 55%)', lineWidth: 1, priceScaleId: 'right' });
-      s.setData(ema as any);
-    }
-    if (activeIndicators.includes('bollinger')) {
-      const bb = calcBollinger(candles, 20);
-      const su = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 60%)', lineWidth: 1, lineStyle: 2, priceScaleId: 'right' });
-      su.setData(bb.upper as any);
-      const sm = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 50%)', lineWidth: 1, priceScaleId: 'right' });
-      sm.setData(bb.middle as any);
-      const sl = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 60%)', lineWidth: 1, lineStyle: 2, priceScaleId: 'right' });
-      sl.setData(bb.lower as any);
-    }
-
-    chart.timeScale().fitContent();
-    const resizeObserver = new ResizeObserver(() => {
-      if (chartRef.current) chart.applyOptions({ width: chartRef.current.clientWidth, height: chartRef.current.clientHeight });
-    });
-    resizeObserver.observe(chartRef.current);
-    return () => { chart.remove(); resizeObserver.disconnect(); };
-  }, [ctx.selectedSymbol, tf, activeIndicators]);
-
-  const toggleIndicator = (ind: IndicatorType) => {
-    setActiveIndicators(prev => prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind]);
-  };
+  const currentPrice = asset ? (orderType === 'Buy' ? asset.ask : asset.bid) : 0;
 
   const handleOrder = () => {
     setOrderError('');
@@ -299,12 +165,9 @@ export default function TerminalMain() {
     else { setShowOrder(false); setOrderTP(''); setOrderSL(''); setOrderVolume('0.1'); }
   };
 
-  // Pre-fill TP/SL with asset price when switching to price mode
-  const currentPrice = asset ? (orderType === 'Buy' ? asset.ask : asset.bid) : 0;
-
   return (
     <div className="flex flex-col h-full">
-      {/* Timeframe tabs + symbol + indicators */}
+      {/* Timeframe tabs + symbol info */}
       <div className="h-9 flex items-center px-2 md:px-3 gap-1 md:gap-2 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
         <span className="text-xs md:text-sm font-semibold mr-1 md:mr-3 whitespace-nowrap" style={{ color: 'hsl(220, 14%, 90%)' }}>{asset?.symbol}</span>
         <span className="text-xs mr-2 md:mr-4 hidden sm:inline whitespace-nowrap" style={{ color: 'hsl(220, 14%, 50%)' }}>{asset?.description}</span>
@@ -315,29 +178,12 @@ export default function TerminalMain() {
             {t}
           </button>
         ))}
-        <div className="ml-auto relative flex-shrink-0">
-          <button onClick={() => setShowIndicators(!showIndicators)} className="flex items-center gap-1 px-2 py-1 rounded text-xs"
-            style={{ color: activeIndicators.length > 0 ? 'hsl(217, 91%, 55%)' : 'hsl(220, 14%, 60%)', background: activeIndicators.length > 0 ? 'hsl(217, 91%, 55%, 0.15)' : 'transparent' }}>
-            <BarChart3 size={14} /> <span className="hidden sm:inline">Индикаторы</span>
-            {activeIndicators.length > 0 && <span className="ml-1 bg-primary text-primary-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{activeIndicators.length}</span>}
-          </button>
-          {showIndicators && (
-            <div className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-xl p-2 min-w-[180px]" style={{ background: 'hsl(220, 25%, 12%)', borderColor: 'hsl(220, 20%, 20%)' }}>
-              {INDICATOR_OPTIONS.map(opt => (
-                <button key={opt.key} onClick={() => toggleIndicator(opt.key)}
-                  className="w-full text-left px-3 py-2 rounded text-xs flex items-center justify-between hover:bg-white/5"
-                  style={{ color: activeIndicators.includes(opt.key) ? 'hsl(217, 91%, 55%)' : 'hsl(220, 14%, 70%)' }}>
-                  {opt.label}
-                  {activeIndicators.includes(opt.key) && <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">ON</span>}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Chart */}
-      <div className="flex-1 relative min-h-[200px]" ref={chartRef} onClick={() => showIndicators && setShowIndicators(false)} />
+      {/* TradingView Chart */}
+      <div className="flex-1 relative min-h-[200px]">
+        <TradingViewChart symbol={tvSymbol} theme="dark" interval={tf} />
+      </div>
 
       {/* Buy / Sell buttons below chart */}
       <div className="flex items-center gap-2 px-2 md:px-3 py-2 border-t border-b flex-shrink-0" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
