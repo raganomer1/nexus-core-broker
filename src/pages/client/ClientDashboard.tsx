@@ -17,7 +17,7 @@ export default function ClientDashboard() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <h1 className="text-lg md:text-xl font-semibold">{t(lang, 'tradingAccountsTitle')}</h1>
-        <Button size="sm"><Plus size={14} className="mr-1" /> {t(lang, 'openAccount')}</Button>
+        {/* open account button removed for clients */}
       </div>
       {accounts.length === 0 ? (
         <div className="bg-card rounded-lg border p-6 md:p-8 text-center">
