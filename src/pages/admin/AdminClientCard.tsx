@@ -34,7 +34,7 @@ export default function AdminClientCard() {
   const navigate = useNavigate();
   const store = useStore();
   const { lang } = useSettingsStore();
-  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, addTradingAccount, impersonateClient, auth, addHistoryEvent, history } = store;
+  const { clients, employees, desks, clientNotes, tradingAccounts, updateClient, addClientNote, addTradingAccount, impersonateClient, auth, addHistoryEvent, updateHistoryEvent, deleteHistoryEvent, history } = store;
 
   const [newNote, setNewNote] = useState('');
   const [newDesc, setNewDesc] = useState('');
