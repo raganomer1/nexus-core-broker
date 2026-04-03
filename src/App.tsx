@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute, { AdminPageGuard } from "./components/ProtectedRoute";
 
 import ClientLogin from "./pages/ClientLogin";
 import AdminLogin from "./pages/AdminLogin";
@@ -81,24 +81,24 @@ const App = () => (
 
           {/* Admin CRM — protected */}
           <Route path="/admin" element={<ProtectedRoute requiredType="admin"><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="clients" element={<AdminClients />} />
-            <Route path="clients/:id" element={<AdminClientCard />} />
-            <Route path="leads" element={<AdminLeads />} />
-            <Route path="accounts" element={<AdminAccounts />} />
-            <Route path="payments" element={<AdminPayments />} />
-            <Route path="trading" element={<AdminTrading />} />
-            <Route path="assets" element={<AdminAssets />} />
-            <Route path="prices" element={<AdminPrices />} />
-            <Route path="history" element={<AdminHistory />} />
-            <Route path="employees" element={<AdminEmployees />} />
-            <Route path="roles" element={<AdminRoles />} />
-            <Route path="desks" element={<AdminDesks />} />
-            <Route path="verification" element={<AdminVerification />} />
-            <Route path="support" element={<AdminSupport />} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="online" element={<AdminOnline />} />
-            <Route path="reports" element={<AdminReports />} />
+            <Route index element={<AdminPageGuard routeKey="dashboard"><AdminDashboard /></AdminPageGuard>} />
+            <Route path="clients" element={<AdminPageGuard routeKey="clients"><AdminClients /></AdminPageGuard>} />
+            <Route path="clients/:id" element={<AdminPageGuard routeKey="clients"><AdminClientCard /></AdminPageGuard>} />
+            <Route path="leads" element={<AdminPageGuard routeKey="leads"><AdminLeads /></AdminPageGuard>} />
+            <Route path="accounts" element={<AdminPageGuard routeKey="accounts"><AdminAccounts /></AdminPageGuard>} />
+            <Route path="payments" element={<AdminPageGuard routeKey="payments"><AdminPayments /></AdminPageGuard>} />
+            <Route path="trading" element={<AdminPageGuard routeKey="trading"><AdminTrading /></AdminPageGuard>} />
+            <Route path="assets" element={<AdminPageGuard routeKey="assets"><AdminAssets /></AdminPageGuard>} />
+            <Route path="prices" element={<AdminPageGuard routeKey="assets"><AdminPrices /></AdminPageGuard>} />
+            <Route path="history" element={<AdminPageGuard routeKey="history"><AdminHistory /></AdminPageGuard>} />
+            <Route path="employees" element={<AdminPageGuard routeKey="employees"><AdminEmployees /></AdminPageGuard>} />
+            <Route path="roles" element={<AdminPageGuard routeKey="roles"><AdminRoles /></AdminPageGuard>} />
+            <Route path="desks" element={<AdminPageGuard routeKey="desks"><AdminDesks /></AdminPageGuard>} />
+            <Route path="verification" element={<AdminPageGuard routeKey="verification"><AdminVerification /></AdminPageGuard>} />
+            <Route path="support" element={<AdminPageGuard routeKey="support"><AdminSupport /></AdminPageGuard>} />
+            <Route path="settings" element={<AdminPageGuard routeKey="settings"><AdminSettings /></AdminPageGuard>} />
+            <Route path="online" element={<AdminPageGuard routeKey="online"><AdminOnline /></AdminPageGuard>} />
+            <Route path="reports" element={<AdminPageGuard routeKey="reports"><AdminReports /></AdminPageGuard>} />
           </Route>
 
           {/* Client Cabinet — protected */}

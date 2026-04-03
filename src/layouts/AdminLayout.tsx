@@ -5,31 +5,10 @@ import { useNotificationStore } from '@/store/useNotificationStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { t } from '@/i18n/translations';
 import { ThemeLangToggle } from '@/components/ThemeLangToggle';
+import { adminNavItems } from '@/lib/rbac';
 import {
-  Users, CreditCard, Activity, Clock, UserCog, Building2, ShieldCheck, MessageSquare,
-  BarChart3, Settings, TrendingUp, LogOut, Bell, Menu, X, ChevronLeft, ChevronRight,
-  CheckCheck, LayoutDashboard
+  LogOut, Bell, Menu, X, ChevronLeft, ChevronRight, CheckCheck
 } from 'lucide-react';
-import type { TranslationKey } from '@/i18n/translations';
-
-const navItems: { to: string; labelKey: TranslationKey; icon: React.ElementType; exact?: boolean }[] = [
-  { to: '/admin', labelKey: 'dashboard', icon: LayoutDashboard, exact: true },
-  { to: '/admin/clients', labelKey: 'clients', icon: Users },
-  { to: '/admin/leads', labelKey: 'leads', icon: Users },
-  { to: '/admin/accounts', labelKey: 'accounts', icon: CreditCard },
-  { to: '/admin/payments', labelKey: 'payments', icon: CreditCard },
-  { to: '/admin/trading', labelKey: 'trading', icon: TrendingUp },
-  { to: '/admin/assets', labelKey: 'assets', icon: Activity },
-  { to: '/admin/prices', labelKey: 'prices', icon: BarChart3 },
-  { to: '/admin/history', labelKey: 'history', icon: Clock },
-  { to: '/admin/employees', labelKey: 'employees', icon: UserCog },
-  { to: '/admin/desks', labelKey: 'desks', icon: Building2 },
-  { to: '/admin/verification', labelKey: 'verification', icon: ShieldCheck },
-  { to: '/admin/support', labelKey: 'support', icon: MessageSquare },
-  { to: '/admin/reports', labelKey: 'reports', icon: BarChart3 },
-  { to: '/admin/settings', labelKey: 'settings', icon: Settings },
-  { to: '/admin/online', labelKey: 'online', icon: Activity },
-];
 
 const typeIcons: Record<string, string> = { ticket: '💬', payment: '💰', verification: '🔍', system: '⚙️' };
 
@@ -39,13 +18,17 @@ export default function AdminLayout() {
   const [notifOpen, setNotifOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth, employees, logout } = useStore();
+  const { auth, employees, logout, hasAnyPermission } = useStore();
   const { notifications, markRead, markAllRead, unreadCount } = useNotificationStore();
   const { lang } = useSettingsStore();
   const currentEmployee = employees.find(e => e.id === auth.employeeId);
+  const currentRole = useStore(s => s.roles.find(r => r.id === currentEmployee?.roleId));
   const unread = unreadCount();
 
   const handleNavClick = () => setMobileOpen(false);
+
+  // Filter nav items by employee permissions
+  const visibleNavItems = adminNavItems.filter(item => hasAnyPermission(item.permissions));
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -64,7 +47,7 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-          {navItems.map(item => {
+          {visibleNavItems.map(item => {
             const isActive = item.exact ? location.pathname === item.to : location.pathname.startsWith(item.to) && item.to !== '/admin';
             return (
               <NavLink key={item.to} to={item.to} onClick={handleNavClick} className={`admin-sidebar-item ${isActive ? 'active' : ''}`}>
@@ -79,6 +62,7 @@ export default function AdminLayout() {
             <div className="mb-2 px-2">
               <div className="text-sm font-medium text-primary-foreground">{currentEmployee.firstName} {currentEmployee.lastName}</div>
               <div className="text-xs text-primary-foreground/50">{currentEmployee.position}</div>
+              {currentRole && <div className="text-[10px] text-primary-foreground/40">{currentRole.name}</div>}
             </div>
           )}
           <div className="flex gap-2">
@@ -95,7 +79,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <button className="md:hidden p-1" onClick={() => setMobileOpen(!mobileOpen)}><Menu size={20} className="text-muted-foreground" /></button>
             <div className="text-sm text-muted-foreground">
-              {t(lang, navItems.find(n => n.exact ? location.pathname === n.to : location.pathname.startsWith(n.to) && n.to !== '/admin')?.labelKey || 'admin')}
+              {t(lang, visibleNavItems.find(n => n.exact ? location.pathname === n.to : location.pathname.startsWith(n.to) && n.to !== '/admin')?.labelKey || 'admin')}
             </div>
           </div>
           <div className="flex items-center gap-2">
