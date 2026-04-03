@@ -14,6 +14,10 @@ import { useNotificationStore } from './useNotificationStore';
 let idCounter = 1000;
 const genId = () => `gen_${++idCounter}`;
 
+// Numeric client IDs starting from 100
+let clientIdCounter = 112;
+const genClientId = () => String(++clientIdCounter);
+
 interface AppStore {
   // Auth
   auth: AuthState;
