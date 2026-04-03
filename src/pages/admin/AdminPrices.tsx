@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function AdminPrices() {
-  const { assets, manualOverrides, setManualPrice, checkOverrideExpiry, simulatePriceMovement, auth } = useStore();
+  const { assets, manualOverrides, setManualPrice, resetManualPrice, checkOverrideExpiry, simulatePriceMovement, auth } = useStore();
   const { lang } = useSettingsStore();
   const [editSymbol, setEditSymbol] = useState<any>(null);
   const [newBid, setNewBid] = useState('');

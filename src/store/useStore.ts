@@ -394,6 +394,15 @@ export const useStore = create<AppStore>((set, get) => ({
     });
   },
 
+  resetManualPrice: (symbolId) => {
+    const override = get().manualOverrides.find(o => o.symbolId === symbolId && o.isActive);
+    if (!override) return;
+    set(s => ({
+      manualOverrides: s.manualOverrides.map(o => o.id === override.id ? { ...o, isActive: false } : o),
+      assets: s.assets.map(a => a.id === symbolId ? { ...a, bid: override.oldBid, ask: override.oldAsk, lastUpdated: new Date().toISOString() } : a),
+    }));
+  },
+
   checkOverrideExpiry: () => {
     const now = new Date().getTime();
     const expired = get().manualOverrides.filter(o => o.isActive && new Date(o.expiresAt).getTime() <= now);
