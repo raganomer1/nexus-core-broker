@@ -45,7 +45,7 @@ export default function TerminalLayout() {
           <button className="md:hidden p-1" style={{ color: 'hsl(220, 14%, 60%)' }} onClick={() => setShowWatchlist(!showWatchlist)}>
             <Menu size={16} />
           </button>
-          <span className="font-bold text-sm" style={{ color: 'hsl(217, 91%, 55%)' }}>WebTrader</span>
+          <span className="font-bold text-sm" style={{ color: 'hsl(217, 91%, 55%)' }}>Terminal</span>
           <NavLink to="/client" className="hidden sm:flex text-xs hover:underline" style={{ color: 'hsl(220, 14%, 60%)' }}>
             <Home size={14} className="inline mr-1" />Кабинет
           </NavLink>
@@ -141,7 +141,7 @@ export default function TerminalLayout() {
             <span>Средства: <b style={{ color: 'hsl(220, 14%, 90%)' }}>${selectedAccount.equity.toFixed(2)}</b></span>
             <span>Прибыль: <b style={{ color: selectedAccount.profit >= 0 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>{selectedAccount.profit >= 0 ? '+' : ''}${selectedAccount.profit.toFixed(2)}</b></span>
             <span className="hidden sm:inline">Свободно: <b style={{ color: 'hsl(220, 14%, 90%)' }}>${selectedAccount.freeMargin.toFixed(2)}</b></span>
-            <span className="hidden sm:inline">Маржа: <b>${selectedAccount.margin.toFixed(2)}</b></span>
+            <span className="hidden sm:inline">Маржа: <b>{selectedAccount.balance > 0 ? ((selectedAccount.margin / selectedAccount.equity * 100).toFixed(1)) : '0.0'}%</b></span>
           </div>
           <div className="flex items-center gap-3">
             <span>Открыто: {openPositions.length}</span>
