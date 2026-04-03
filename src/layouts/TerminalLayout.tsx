@@ -45,7 +45,7 @@ export default function TerminalLayout() {
           <button className="md:hidden p-1" style={{ color: 'hsl(220, 14%, 60%)' }} onClick={() => setShowWatchlist(!showWatchlist)}>
             <Menu size={16} />
           </button>
-          <span className="font-bold text-sm" style={{ color: 'hsl(217, 91%, 55%)' }}>WebTrader</span>
+          <span className="font-bold text-sm" style={{ color: 'hsl(217, 91%, 55%)' }}>Terminal</span>
           <NavLink to="/client" className="hidden sm:flex text-xs hover:underline" style={{ color: 'hsl(220, 14%, 60%)' }}>
             <Home size={14} className="inline mr-1" />Кабинет
           </NavLink>
