@@ -7,7 +7,7 @@ import {
 
 export default function TerminalLayout() {
   const navigate = useNavigate();
-  const { assets, auth, clients, tradingAccounts, positions, simulatePriceMovement, checkOverrideExpiry, stopImpersonation } = useStore();
+  const { assets, auth, clients, tradingAccounts, positions, checkOverrideExpiry, stopImpersonation } = useStore();
   const client = clients.find(c => c.id === auth.clientId);
   const clientAccounts = tradingAccounts.filter(a => a.clientId === auth.clientId);
   const [selectedAccountId, setSelectedAccountId] = useState(clientAccounts[0]?.id || '');
