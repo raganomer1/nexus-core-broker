@@ -122,7 +122,7 @@ export default function ClientLayout() {
                 </div>
                 <div>
                   <div className="text-sm font-medium">{manager.firstName} {manager.lastName}</div>
-                  <div className="text-xs text-muted-foreground">{manager.position}</div>
+                  {/* role hidden from clients */}
                 </div>
               </div>
               {manager.phone && <div className="mt-2 text-xs text-muted-foreground">{manager.phone}</div>}
