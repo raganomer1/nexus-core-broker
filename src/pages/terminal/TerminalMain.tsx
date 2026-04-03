@@ -4,8 +4,8 @@ import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Plus, X, AlertTriangle } from 'lucide-react';
-import { createChart, CandlestickSeries, HistogramSeries, type IChartApi } from 'lightweight-charts';
+import { Search, Plus, X, AlertTriangle, BarChart3 } from 'lucide-react';
+import { createChart, CandlestickSeries, HistogramSeries, LineSeries, type IChartApi } from 'lightweight-charts';
 
 type TerminalContext = {
   selectedSymbol: string;
@@ -20,21 +20,76 @@ type TerminalContext = {
 
 const timeframes = ['M1', 'M15', 'H1', 'H4', 'D1'];
 
+// Generate candles that end exactly at currentPrice
 function generateCandles(currentPrice: number, count: number) {
   const candles = [];
-  let price = currentPrice * 0.98;
+  let price = currentPrice * (0.97 + Math.random() * 0.02);
   const now = Math.floor(Date.now() / 1000);
-  for (let i = count; i >= 0; i--) {
+  for (let i = count; i >= 1; i--) {
     const open = price;
-    const change = (Math.random() - 0.48) * price * 0.005;
+    const change = (Math.random() - 0.48) * price * 0.004;
     const close = open + change;
-    const high = Math.max(open, close) + Math.random() * price * 0.002;
-    const low = Math.min(open, close) - Math.random() * price * 0.002;
+    const high = Math.max(open, close) + Math.random() * price * 0.0015;
+    const low = Math.min(open, close) - Math.random() * price * 0.0015;
     candles.push({ time: now - i * 300, open, high, low, close });
     price = close;
   }
+  // Last candle closes at exactly current price
+  const lastOpen = price;
+  const high = Math.max(lastOpen, currentPrice) + Math.random() * currentPrice * 0.001;
+  const low = Math.min(lastOpen, currentPrice) - Math.random() * currentPrice * 0.001;
+  candles.push({ time: now, open: lastOpen, high, low, close: currentPrice });
   return candles;
 }
+
+// Simple Moving Average
+function calcSMA(data: { close: number; time: number }[], period: number) {
+  const result: { time: number; value: number }[] = [];
+  for (let i = period - 1; i < data.length; i++) {
+    let sum = 0;
+    for (let j = 0; j < period; j++) sum += data[i - j].close;
+    result.push({ time: data[i].time, value: sum / period });
+  }
+  return result;
+}
+
+// Exponential Moving Average
+function calcEMA(data: { close: number; time: number }[], period: number) {
+  const result: { time: number; value: number }[] = [];
+  const k = 2 / (period + 1);
+  let ema = data.slice(0, period).reduce((s, d) => s + d.close, 0) / period;
+  result.push({ time: data[period - 1].time, value: ema });
+  for (let i = period; i < data.length; i++) {
+    ema = data[i].close * k + ema * (1 - k);
+    result.push({ time: data[i].time, value: ema });
+  }
+  return result;
+}
+
+// Bollinger Bands
+function calcBollinger(data: { close: number; time: number }[], period: number) {
+  const upper: { time: number; value: number }[] = [];
+  const lower: { time: number; value: number }[] = [];
+  const middle: { time: number; value: number }[] = [];
+  for (let i = period - 1; i < data.length; i++) {
+    const slice = data.slice(i - period + 1, i + 1);
+    const mean = slice.reduce((s, d) => s + d.close, 0) / period;
+    const variance = slice.reduce((s, d) => s + (d.close - mean) ** 2, 0) / period;
+    const std = Math.sqrt(variance);
+    middle.push({ time: data[i].time, value: mean });
+    upper.push({ time: data[i].time, value: mean + 2 * std });
+    lower.push({ time: data[i].time, value: mean - 2 * std });
+  }
+  return { upper, middle, lower };
+}
+
+type IndicatorType = 'sma20' | 'sma50' | 'ema20' | 'bollinger';
+const INDICATOR_OPTIONS: { key: IndicatorType; label: string }[] = [
+  { key: 'sma20', label: 'SMA 20' },
+  { key: 'sma50', label: 'SMA 50' },
+  { key: 'ema20', label: 'EMA 20' },
+  { key: 'bollinger', label: 'Bollinger Bands' },
+];
 
 export default function TerminalMain() {
   const ctx = useOutletContext<TerminalContext>();
@@ -45,6 +100,8 @@ export default function TerminalMain() {
   const [tf, setTf] = useState('H1');
   const [showOrder, setShowOrder] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showIndicators, setShowIndicators] = useState(false);
+  const [activeIndicators, setActiveIndicators] = useState<IndicatorType[]>([]);
   const [orderType, setOrderType] = useState<'Buy' | 'Sell'>('Buy');
   const [orderVolume, setOrderVolume] = useState('0.1');
   const [orderTP, setOrderTP] = useState('');
@@ -70,6 +127,7 @@ export default function TerminalMain() {
     return a.isActive;
   });
 
+  // Margin calculation
   const requiredMargin = useMemo(() => {
     if (!asset || !account) return 0;
     const price = orderType === 'Buy' ? asset.ask : asset.bid;
@@ -81,6 +139,9 @@ export default function TerminalMain() {
     return asset.commission * Number(orderVolume);
   }, [asset, orderVolume]);
 
+  // Залог (deposit) = margin required
+  const depositAmount = requiredMargin;
+
   const marginWarning = useMemo(() => {
     if (!account) return '';
     const total = requiredMargin + commission;
@@ -89,7 +150,7 @@ export default function TerminalMain() {
     return '';
   }, [account, requiredMargin, commission]);
 
-  // Convert points to price for TP/SL
+  // TP/SL converters
   const getTPPrice = (): number | undefined => {
     if (!orderTP || !asset) return undefined;
     const val = Number(orderTP);
@@ -139,7 +200,7 @@ export default function TerminalMain() {
     return { totalProfit, totalSwap, totalCommission, deposited, withdrawn, balance: account?.balance || 0 };
   }, [reportPositions, reportDeposits, account]);
 
-  // Chart
+  // Chart — prices synced with asset
   useEffect(() => {
     if (!chartRef.current || !asset) return;
     chartRef.current.innerHTML = '';
@@ -152,6 +213,8 @@ export default function TerminalMain() {
       rightPriceScale: { borderColor: 'hsl(220, 20%, 20%)' },
     });
     chartApiRef.current = chart;
+
+    // Use actual bid price as latest close so chart matches asset price
     const candles = generateCandles(asset.bid, 100);
     const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: 'hsl(142, 71%, 45%)', downColor: 'hsl(0, 84%, 60%)',
@@ -159,16 +222,49 @@ export default function TerminalMain() {
       wickUpColor: 'hsl(142, 71%, 45%)', wickDownColor: 'hsl(0, 84%, 60%)',
     });
     candleSeries.setData(candles as any);
+
+    // Volume
     const volumeSeries = chart.addSeries(HistogramSeries, { priceScaleId: 'volume', color: 'hsl(217, 91%, 55%, 0.3)' });
     chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     volumeSeries.setData(candles.map(c => ({ time: c.time, value: Math.random() * 1000 + 100 })) as any);
+
+    // Indicators
+    if (activeIndicators.includes('sma20')) {
+      const sma = calcSMA(candles, 20);
+      const s = chart.addSeries(LineSeries, { color: 'hsl(45, 100%, 55%)', lineWidth: 1, priceScaleId: 'right' });
+      s.setData(sma as any);
+    }
+    if (activeIndicators.includes('sma50')) {
+      const sma = calcSMA(candles, 50);
+      const s = chart.addSeries(LineSeries, { color: 'hsl(280, 80%, 65%)', lineWidth: 1, priceScaleId: 'right' });
+      s.setData(sma as any);
+    }
+    if (activeIndicators.includes('ema20')) {
+      const ema = calcEMA(candles, 20);
+      const s = chart.addSeries(LineSeries, { color: 'hsl(200, 90%, 55%)', lineWidth: 1, priceScaleId: 'right' });
+      s.setData(ema as any);
+    }
+    if (activeIndicators.includes('bollinger')) {
+      const bb = calcBollinger(candles, 20);
+      const su = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 60%)', lineWidth: 1, lineStyle: 2, priceScaleId: 'right' });
+      su.setData(bb.upper as any);
+      const sm = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 50%)', lineWidth: 1, priceScaleId: 'right' });
+      sm.setData(bb.middle as any);
+      const sl = chart.addSeries(LineSeries, { color: 'hsl(0, 0%, 60%)', lineWidth: 1, lineStyle: 2, priceScaleId: 'right' });
+      sl.setData(bb.lower as any);
+    }
+
     chart.timeScale().fitContent();
     const resizeObserver = new ResizeObserver(() => {
       if (chartRef.current) chart.applyOptions({ width: chartRef.current.clientWidth, height: chartRef.current.clientHeight });
     });
     resizeObserver.observe(chartRef.current);
     return () => { chart.remove(); resizeObserver.disconnect(); };
-  }, [ctx.selectedSymbol, tf]);
+  }, [ctx.selectedSymbol, tf, activeIndicators]);
+
+  const toggleIndicator = (ind: IndicatorType) => {
+    setActiveIndicators(prev => prev.includes(ind) ? prev.filter(i => i !== ind) : [...prev, ind]);
+  };
 
   const handleOrder = () => {
     setOrderError('');
@@ -180,7 +276,6 @@ export default function TerminalMain() {
     const tpPrice = getTPPrice();
     const slPrice = getSLPrice();
 
-    // Stop level validation
     if (tpPrice !== undefined) {
       const price = orderType === 'Buy' ? asset.ask : asset.bid;
       const minDist = asset.stopLevel * Math.pow(10, -asset.precision);
@@ -197,16 +292,19 @@ export default function TerminalMain() {
     const result = openPosition({
       accountId: ctx.selectedAccountId, symbol: asset.symbol, type: orderType, volume: vol,
       openPrice: orderType === 'Buy' ? asset.ask : asset.bid, openDate: new Date().toISOString(),
-      swap: 0, commission: asset.commission * vol, margin: 0,
+      swap: 0, commission: asset.commission * vol, margin: depositAmount,
       takeProfit: tpPrice, stopLoss: slPrice,
     });
     if (!result.success) setOrderError(result.error || 'Ошибка');
     else { setShowOrder(false); setOrderTP(''); setOrderSL(''); setOrderVolume('0.1'); }
   };
 
+  // Pre-fill TP/SL with asset price when switching to price mode
+  const currentPrice = asset ? (orderType === 'Buy' ? asset.ask : asset.bid) : 0;
+
   return (
     <div className="flex flex-col h-full">
-      {/* Timeframe tabs + symbol name */}
+      {/* Timeframe tabs + symbol + indicators */}
       <div className="h-9 flex items-center px-2 md:px-3 gap-1 md:gap-2 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
         <span className="text-xs md:text-sm font-semibold mr-1 md:mr-3 whitespace-nowrap" style={{ color: 'hsl(220, 14%, 90%)' }}>{asset?.symbol}</span>
         <span className="text-xs mr-2 md:mr-4 hidden sm:inline whitespace-nowrap" style={{ color: 'hsl(220, 14%, 50%)' }}>{asset?.description}</span>
@@ -217,10 +315,29 @@ export default function TerminalMain() {
             {t}
           </button>
         ))}
+        <div className="ml-auto relative flex-shrink-0">
+          <button onClick={() => setShowIndicators(!showIndicators)} className="flex items-center gap-1 px-2 py-1 rounded text-xs"
+            style={{ color: activeIndicators.length > 0 ? 'hsl(217, 91%, 55%)' : 'hsl(220, 14%, 60%)', background: activeIndicators.length > 0 ? 'hsl(217, 91%, 55%, 0.15)' : 'transparent' }}>
+            <BarChart3 size={14} /> <span className="hidden sm:inline">Индикаторы</span>
+            {activeIndicators.length > 0 && <span className="ml-1 bg-primary text-primary-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">{activeIndicators.length}</span>}
+          </button>
+          {showIndicators && (
+            <div className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-xl p-2 min-w-[180px]" style={{ background: 'hsl(220, 25%, 12%)', borderColor: 'hsl(220, 20%, 20%)' }}>
+              {INDICATOR_OPTIONS.map(opt => (
+                <button key={opt.key} onClick={() => toggleIndicator(opt.key)}
+                  className="w-full text-left px-3 py-2 rounded text-xs flex items-center justify-between hover:bg-white/5"
+                  style={{ color: activeIndicators.includes(opt.key) ? 'hsl(217, 91%, 55%)' : 'hsl(220, 14%, 70%)' }}>
+                  {opt.label}
+                  {activeIndicators.includes(opt.key) && <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">ON</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chart */}
-      <div className="flex-1 relative min-h-[200px]" ref={chartRef} />
+      <div className="flex-1 relative min-h-[200px]" ref={chartRef} onClick={() => showIndicators && setShowIndicators(false)} />
 
       {/* Buy / Sell buttons below chart */}
       <div className="flex items-center gap-2 px-2 md:px-3 py-2 border-t border-b flex-shrink-0" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
@@ -258,6 +375,7 @@ export default function TerminalMain() {
                   <div>
                     <div className="text-xs font-medium" style={{ color: 'hsl(220, 14%, 90%)' }}>{p.symbol} <span style={{ color: p.type === 'Buy' ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>{p.type}</span></div>
                     <div className="text-xs" style={{ color: 'hsl(220, 14%, 50%)' }}>{p.volume} лот · {p.openPrice}</div>
+                    <div className="text-[10px]" style={{ color: 'hsl(220, 14%, 40%)' }}>Залог: ${p.margin.toFixed(2)}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-semibold" style={{ color: p.profit >= 0 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>
@@ -278,6 +396,7 @@ export default function TerminalMain() {
                     <th className="text-right px-2 py-2 font-medium">Цена откр.</th>
                     <th className="text-right px-2 py-2 font-medium">Текущая</th>
                     <th className="text-right px-2 py-2 font-medium">TP/SL</th>
+                    <th className="text-right px-2 py-2 font-medium">Залог</th>
                     <th className="text-right px-2 py-2 font-medium">Своп</th>
                     <th className="text-right px-2 py-2 font-medium">Прибыль</th>
                     <th className="text-right px-3 py-2 font-medium"></th>
@@ -294,6 +413,7 @@ export default function TerminalMain() {
                       <td className="text-right px-2 py-2" style={{ color: 'hsl(220, 14%, 50%)' }}>
                         {p.takeProfit ? `TP:${p.takeProfit}` : ''}{p.takeProfit && p.stopLoss ? ' ' : ''}{p.stopLoss ? `SL:${p.stopLoss}` : ''}{!p.takeProfit && !p.stopLoss ? '—' : ''}
                       </td>
+                      <td className="text-right px-2 py-2">${p.margin.toFixed(2)}</td>
                       <td className="text-right px-2 py-2">{p.swap.toFixed(2)}</td>
                       <td className="text-right px-2 py-2 font-semibold" style={{ color: p.profit >= 0 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 84%, 60%)' }}>
                         {p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}
@@ -304,7 +424,7 @@ export default function TerminalMain() {
                     </tr>
                   ))}
                   {openPos.length === 0 && (
-                    <tr><td colSpan={9} className="text-center py-4" style={{ color: 'hsl(220, 14%, 40%)' }}>Нет открытых позиций</td></tr>
+                    <tr><td colSpan={10} className="text-center py-4" style={{ color: 'hsl(220, 14%, 40%)' }}>Нет открытых позиций</td></tr>
                   )}
                 </tbody>
               </table>
@@ -347,40 +467,48 @@ export default function TerminalMain() {
               </div>
 
               {/* TP / SL with price/points toggle */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <label className="text-xs text-muted-foreground">Take Profit</label>
-                    <div className="flex gap-0.5">
-                      <button onClick={() => setTpMode('price')} className={`px-1.5 py-0.5 rounded text-[10px] ${tpMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
-                      <button onClick={() => setTpMode('points')} className={`px-1.5 py-0.5 rounded text-[10px] ${tpMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
+                    <div className="flex gap-0.5 ml-auto">
+                      <button onClick={() => { setTpMode('price'); if (tpMode === 'points' && orderTP) setOrderTP(''); }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${tpMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
+                      <button onClick={() => { setTpMode('points'); if (tpMode === 'price' && orderTP) setOrderTP(''); }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${tpMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
                     </div>
                   </div>
-                  <Input type="number" step="any" value={orderTP} onChange={e => setOrderTP(e.target.value)} placeholder={tpMode === 'price' ? 'Цена' : 'Пункты'} className="h-8" />
-                  {orderTP && tpMode === 'points' && asset && (
+                  <Input type="number" step="any" value={orderTP} onChange={e => setOrderTP(e.target.value)}
+                    placeholder={tpMode === 'price' ? currentPrice.toFixed(asset.precision) : '0'} className="h-8" />
+                  {orderTP && tpMode === 'points' && (
                     <div className="text-[10px] text-muted-foreground mt-0.5">≈ {getTPPrice()?.toFixed(asset.precision)}</div>
                   )}
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <label className="text-xs text-muted-foreground">Stop Loss</label>
-                    <div className="flex gap-0.5">
-                      <button onClick={() => setSlMode('price')} className={`px-1.5 py-0.5 rounded text-[10px] ${slMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
-                      <button onClick={() => setSlMode('points')} className={`px-1.5 py-0.5 rounded text-[10px] ${slMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
+                    <div className="flex gap-0.5 ml-auto">
+                      <button onClick={() => { setSlMode('price'); if (slMode === 'points' && orderSL) setOrderSL(''); }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${slMode === 'price' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Цена</button>
+                      <button onClick={() => { setSlMode('points'); if (slMode === 'price' && orderSL) setOrderSL(''); }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${slMode === 'points' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>Пункты</button>
                     </div>
                   </div>
-                  <Input type="number" step="any" value={orderSL} onChange={e => setOrderSL(e.target.value)} placeholder={slMode === 'price' ? 'Цена' : 'Пункты'} className="h-8" />
-                  {orderSL && slMode === 'points' && asset && (
+                  <Input type="number" step="any" value={orderSL} onChange={e => setOrderSL(e.target.value)}
+                    placeholder={slMode === 'price' ? currentPrice.toFixed(asset.precision) : '0'} className="h-8" />
+                  {orderSL && slMode === 'points' && (
                     <div className="text-[10px] text-muted-foreground mt-0.5">≈ {getSLPrice()?.toFixed(asset.precision)}</div>
                   )}
                 </div>
               </div>
 
+              {/* Info block with залог */}
               <div className="rounded-lg p-3 space-y-1.5" style={{ background: 'hsl(var(--muted))' }}>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Свободные средства</span><b>${account.freeMargin.toFixed(2)}</b></div>
-                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Требуемая маржа</span><b>${requiredMargin.toFixed(2)}</b></div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Залог (маржа)</span><b className="text-primary">${depositAmount.toFixed(2)}</b></div>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Комиссия</span><b>${commission.toFixed(2)}</b></div>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Контракт</span><b>{asset.contractSize}</b></div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Кредитное плечо</span><b>1:{account.leverage}</b></div>
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Своп (Long/Short)</span><b>{asset.swapLong}/{asset.swapShort}</b></div>
               </div>
 
@@ -450,12 +578,10 @@ export default function TerminalMain() {
         </DialogContent>
       </Dialog>
 
-      {/* Report Dialog — no XLSX export for clients */}
+      {/* Report Dialog */}
       <Dialog open={showReport} onOpenChange={setShowReport}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto mx-4">
-          <DialogHeader>
-            <DialogTitle>Торговый отчёт</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Торговый отчёт</DialogTitle></DialogHeader>
 
           <div className="flex gap-1 overflow-x-auto">
             {([['trades', 'Торговля'], ['deposits', 'Депозиты'], ['executed', 'Исполненные']] as const).map(([key, label]) => (
@@ -479,7 +605,7 @@ export default function TerminalMain() {
             <div className="overflow-x-auto">
               <table className="data-table text-xs">
                 <thead><tr className="bg-muted/30">
-                  <th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Дата закр.</th><th>Цена закр.</th><th>TP</th><th>SL</th><th>Своп</th><th>Прибыль</th>
+                  <th>Дата откр.</th><th>Тип</th><th>Символ</th><th>Объем</th><th>Цена откр.</th><th>Дата закр.</th><th>Цена закр.</th><th>TP</th><th>SL</th><th>Залог</th><th>Своп</th><th>Прибыль</th>
                 </tr></thead>
                 <tbody>
                   {reportPositions.map(p => (
@@ -493,11 +619,12 @@ export default function TerminalMain() {
                       <td>{p.closePrice || p.currentPrice}</td>
                       <td className="text-muted-foreground">{p.takeProfit || '—'}</td>
                       <td className="text-muted-foreground">{p.stopLoss || '—'}</td>
+                      <td>${p.margin.toFixed(2)}</td>
                       <td>{p.swap.toFixed(2)}</td>
                       <td className={p.profit >= 0 ? 'text-green-600' : 'text-destructive'}>{p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</td>
                     </tr>
                   ))}
-                  {reportPositions.length === 0 && <tr><td colSpan={11} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
+                  {reportPositions.length === 0 && <tr><td colSpan={12} className="text-center py-4 text-muted-foreground">Нет данных</td></tr>}
                 </tbody>
               </table>
             </div>
