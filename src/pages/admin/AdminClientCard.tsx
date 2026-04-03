@@ -93,7 +93,7 @@ export default function AdminClientCard() {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <h1 className="text-lg md:text-xl font-semibold">{client.lastName} {client.firstName}</h1>
-          <span className="px-2.5 py-0.5 rounded border text-xs font-medium text-muted-foreground bg-muted">ID {client.id.slice(0, 5)}</span>
+          <span className="px-2.5 py-0.5 rounded border text-xs font-medium text-muted-foreground bg-muted">ID {client.id}</span>
         </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={handleRegisterAccount} className="bg-emerald-500 hover:bg-emerald-600 text-white">
