@@ -490,6 +490,8 @@ export const useStore = create<AppStore>((set, get) => ({
     const e: HistoryEvent = { ...event, id: genId(), timestamp: new Date().toISOString() };
     set(s => ({ history: [e, ...s.history] }));
   },
+  updateHistoryEvent: (id, updates) => set(s => ({ history: s.history.map(h => h.id === id ? { ...h, ...updates } : h) })),
+  deleteHistoryEvent: (id) => set(s => ({ history: s.history.filter(h => h.id !== id) })),
 
   // ==================== SESSIONS ====================
   sessions: [...mock.clientSessions],
