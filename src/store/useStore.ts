@@ -165,6 +165,7 @@ interface AppStore {
   // Price simulation
   simulatePriceMovement: () => void;
   updateAssetPrices: (prices: Record<string, number>) => void;
+  updateAssetPricesFull: (details: Record<string, { symbol: string; price: number; bid: number; ask: number; changePercent: number; high24h: number; low24h: number; volume: number }>) => void;
 }
 
 export const useStore = create<AppStore>((set, get) => ({
@@ -930,7 +931,7 @@ export const useStore = create<AppStore>((set, get) => ({
     }));
   },
 
-  // ==================== EXTERNAL PRICE UPDATE ====================
+  // ==================== EXTERNAL PRICE UPDATE (mid price only — legacy) ====================
   updateAssetPrices: (prices: Record<string, number>) => {
     set(s => ({
       assets: s.assets.map(asset => {
@@ -959,6 +960,62 @@ export const useStore = create<AppStore>((set, get) => ({
         const newBid = Number(newPrice.toFixed(asset.precision));
         const spread = asset.spreadBid + asset.spreadAsk;
         const newAsk = Number((newBid + spread).toFixed(asset.precision));
+        const currentPrice = pos.type === 'Buy' ? newBid : newAsk;
+        const priceDiff = pos.type === 'Buy' ? currentPrice - pos.openPrice : pos.openPrice - currentPrice;
+        const profit = priceDiff * pos.volume * asset.contractSize - pos.commission + pos.swap;
+        return { ...pos, currentPrice, profit };
+      }),
+    }));
+
+    // Update account equity
+    const store = get();
+    const accountProfits = new Map<string, number>();
+    store.positions.filter(p => p.status === 'Open').forEach(p => {
+      accountProfits.set(p.accountId, (accountProfits.get(p.accountId) || 0) + p.profit);
+    });
+
+    set(s => ({
+      tradingAccounts: s.tradingAccounts.map(a => {
+        const totalProfit = accountProfits.get(a.id) || 0;
+        return { ...a, profit: totalProfit, equity: a.balance + totalProfit, freeMargin: a.balance + totalProfit - a.margin };
+      }),
+    }));
+  },
+
+  // ==================== FULL PRICE UPDATE (bid/ask from real feeds) ====================
+  updateAssetPricesFull: (details) => {
+    set(s => ({
+      assets: s.assets.map(asset => {
+        const override = s.manualOverrides.find(o => o.symbolId === asset.id && o.isActive);
+        if (override) return asset;
+
+        const detail = details[asset.symbol];
+        if (!detail) return asset;
+
+        const newBid = Number(detail.bid.toFixed(asset.precision));
+        const newAsk = Number(detail.ask.toFixed(asset.precision));
+
+        return {
+          ...asset,
+          prevBid: asset.bid,
+          prevAsk: asset.ask,
+          bid: newBid,
+          ask: newAsk,
+          lastUpdated: new Date().toISOString(),
+        };
+      }),
+      positions: s.positions.map(pos => {
+        if (pos.status !== 'Open') return pos;
+        const asset = s.assets.find(a => a.symbol === pos.symbol);
+        if (!asset) return pos;
+        const override = s.manualOverrides.find(o => o.symbolId === asset.id && o.isActive);
+        if (override) return pos;
+
+        const detail = details[pos.symbol];
+        if (!detail) return pos;
+
+        const newBid = Number(detail.bid.toFixed(asset.precision));
+        const newAsk = Number(detail.ask.toFixed(asset.precision));
         const currentPrice = pos.type === 'Buy' ? newBid : newAsk;
         const priceDiff = pos.type === 'Buy' ? currentPrice - pos.openPrice : pos.openPrice - currentPrice;
         const profit = priceDiff * pos.volume * asset.contractSize - pos.commission + pos.swap;

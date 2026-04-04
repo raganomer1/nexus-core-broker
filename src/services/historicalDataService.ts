@@ -8,6 +8,12 @@ const FIVE_YEARS_MS = 5 * 365.25 * 24 * 3600 * 1000;
 // In-memory cache to avoid re-fetching
 const cache = new Map<string, CandleData[]>();
 
+// Track errors per symbol for UI
+const errorMap = new Map<string, string>();
+export function getHistoryError(symbol: string): string | undefined {
+  return errorMap.get(symbol);
+}
+
 // Retry with exponential backoff
 async function fetchWithRetry(url: string, options?: RequestInit, retries = 3): Promise<Response> {
   for (let i = 0; i < retries; i++) {
@@ -15,7 +21,8 @@ async function fetchWithRetry(url: string, options?: RequestInit, retries = 3): 
       const resp = await fetch(url, options);
       if (resp.ok) return resp;
       if (resp.status === 429 && i < retries - 1) {
-        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+        console.warn(`Rate limited, retrying in ${Math.pow(2, i + 1)}s...`);
+        await new Promise(r => setTimeout(r, Math.pow(2, i + 1) * 1000));
         continue;
       }
       throw new Error(`HTTP ${resp.status}`);
@@ -35,13 +42,14 @@ async function fetchBinanceCandles(binanceSymbol: string, interval: string = '1d
   const start = now - FIVE_YEARS_MS;
   const allCandles: CandleData[] = [];
 
-  // Binance max 1000 per request; 5 years daily ~ 1825, need 2 requests
   let startTime = start;
   while (startTime < now) {
     const url = `${ENDPOINTS.BINANCE_REST}/klines?symbol=${binanceSymbol}&interval=${interval}&startTime=${startTime}&limit=1000`;
+    console.log(`[Binance] Fetching candles: ${binanceSymbol}, from=${new Date(startTime).toISOString()}`);
     try {
       const resp = await fetchWithRetry(url);
       const data: any[] = await resp.json();
+      console.log(`[Binance] ${binanceSymbol}: received ${data.length} candles`);
       if (data.length === 0) break;
       for (const k of data) {
         allCandles.push({
@@ -55,8 +63,9 @@ async function fetchBinanceCandles(binanceSymbol: string, interval: string = '1d
       }
       startTime = data[data.length - 1][0] + 1;
       if (data.length < 1000) break;
-    } catch (e) {
-      console.error(`Binance candles error (${binanceSymbol}):`, e);
+    } catch (e: any) {
+      console.error(`[Binance] candles error (${binanceSymbol}):`, e?.message);
+      errorMap.set(binanceSymbol, `Binance: ${e?.message}`);
       break;
     }
   }
@@ -71,10 +80,21 @@ async function fetchFinnhubCandles(symbol: string): Promise<CandleData[]> {
   const from = Math.floor((Date.now() - FIVE_YEARS_MS) / 1000);
   const url = `${ENDPOINTS.FINNHUB_REST}/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${API_KEYS.FINNHUB}`;
 
+  console.log(`[Finnhub] Fetching candles: ${symbol}`);
   try {
     const resp = await fetchWithRetry(url);
     const data = await resp.json();
-    if (data.s !== 'ok' || !data.t) return [];
+    console.log(`[Finnhub] ${symbol}: status=${data.s}, candles=${data.t?.length || 0}`);
+    
+    if (data.s === 'no_data' || !data.t) {
+      console.warn(`[Finnhub] No data for ${symbol}`);
+      errorMap.set(symbol, `Finnhub: нет данных для ${symbol}`);
+      return [];
+    }
+    if (data.s !== 'ok') {
+      errorMap.set(symbol, `Finnhub: ${data.s || 'unknown error'}`);
+      return [];
+    }
 
     return data.t.map((t: number, i: number) => ({
       time: t,
@@ -84,8 +104,43 @@ async function fetchFinnhubCandles(symbol: string): Promise<CandleData[]> {
       close: data.c[i],
       volume: data.v[i],
     }));
-  } catch (e) {
-    console.error(`Finnhub candles error (${symbol}):`, e);
+  } catch (e: any) {
+    console.error(`[Finnhub] candles error (${symbol}):`, e?.message);
+    errorMap.set(symbol, `Finnhub: ${e?.message}`);
+    // Fallback to Twelve Data
+    return fetchTwelveDataCandles(symbol);
+  }
+}
+
+// ════════════════════════════════════════
+// TWELVE DATA — Fallback for stocks
+// ════════════════════════════════════════
+async function fetchTwelveDataCandles(symbol: string): Promise<CandleData[]> {
+  const url = `${ENDPOINTS.TWELVE_DATA}/time_series?symbol=${symbol}&interval=1day&outputsize=5000&apikey=${API_KEYS.TWELVE_DATA}`;
+  console.log(`[TwelveData] Fallback fetch: ${symbol}`);
+  try {
+    const resp = await fetchWithRetry(url);
+    const data = await resp.json();
+    if (data.status === 'error' || !data.values) {
+      console.warn(`[TwelveData] Error for ${symbol}:`, data.message);
+      errorMap.set(symbol, `TwelveData: ${data.message || 'нет данных'}`);
+      return [];
+    }
+    console.log(`[TwelveData] ${symbol}: received ${data.values.length} candles`);
+    errorMap.delete(symbol); // Clear error on success
+    return data.values
+      .map((v: any) => ({
+        time: Math.floor(new Date(v.datetime).getTime() / 1000),
+        open: parseFloat(v.open),
+        high: parseFloat(v.high),
+        low: parseFloat(v.low),
+        close: parseFloat(v.close),
+        volume: parseFloat(v.volume || '0'),
+      }))
+      .sort((a: CandleData, b: CandleData) => a.time - b.time);
+  } catch (e: any) {
+    console.error(`[TwelveData] error (${symbol}):`, e?.message);
+    errorMap.set(symbol, `TwelveData: ${e?.message}`);
     return [];
   }
 }
@@ -94,19 +149,22 @@ async function fetchFinnhubCandles(symbol: string): Promise<CandleData[]> {
 // OANDA — Forex candles
 // ════════════════════════════════════════
 async function fetchOandaCandles(instrument: string): Promise<CandleData[]> {
-  // OANDA max 5000 candles; 5 years daily ≈ 1825 — one request
   const from = new Date(Date.now() - FIVE_YEARS_MS).toISOString();
   const url = `${ENDPOINTS.OANDA_REST}/instruments/${instrument}/candles?granularity=D&from=${from}&count=5000`;
 
+  console.log(`[OANDA] Fetching candles: ${instrument}`);
   try {
     const resp = await fetchWithRetry(url, {
       headers: { 'Authorization': `Bearer ${API_KEYS.OANDA_TOKEN}` },
     });
     const data = await resp.json();
     if (!data.candles) {
-      console.warn('OANDA candles response:', data);
+      console.warn('[OANDA] candles response:', data);
+      errorMap.set(instrument, `OANDA: ${data.errorMessage || 'нет данных'}`);
       return [];
     }
+    console.log(`[OANDA] ${instrument}: received ${data.candles.length} candles`);
+    errorMap.delete(instrument);
     return data.candles
       .filter((c: any) => c.complete !== false)
       .map((c: any) => ({
@@ -117,8 +175,9 @@ async function fetchOandaCandles(instrument: string): Promise<CandleData[]> {
         close: parseFloat(c.mid.c),
         volume: c.volume || 0,
       }));
-  } catch (e) {
-    console.error(`OANDA candles error (${instrument}):`, e);
+  } catch (e: any) {
+    console.error(`[OANDA] candles error (${instrument}):`, e?.message);
+    errorMap.set(instrument, `OANDA: ${e?.message}`);
     return [];
   }
 }
@@ -127,14 +186,11 @@ async function fetchOandaCandles(instrument: string): Promise<CandleData[]> {
 // ALPHA VANTAGE — Commodities
 // ════════════════════════════════════════
 async function fetchAlphaVantageCandles(symbol: string): Promise<CandleData[]> {
-  // Map commodity symbols
-  let avSymbol = symbol;
   let fn = 'TIME_SERIES_DAILY';
 
-  // For gold/silver, Alpha Vantage doesn't have them as regular stocks
-  // Use forex-like approach
-  if (symbol === 'XAUUSD') { avSymbol = 'XAUUSD'; fn = 'FX_DAILY'; }
-  else if (symbol === 'XAGUSD') { avSymbol = 'XAGUSD'; fn = 'FX_DAILY'; }
+  if (symbol === 'XAUUSD' || symbol === 'XAGUSD') {
+    fn = 'FX_DAILY';
+  }
 
   let url: string;
   if (fn === 'FX_DAILY') {
@@ -142,24 +198,31 @@ async function fetchAlphaVantageCandles(symbol: string): Promise<CandleData[]> {
     const to = symbol.slice(3);
     url = `${ENDPOINTS.ALPHA_VANTAGE}?function=FX_DAILY&from_symbol=${from}&to_symbol=${to}&outputsize=full&apikey=${API_KEYS.ALPHA_VANTAGE}`;
   } else {
-    url = `${ENDPOINTS.ALPHA_VANTAGE}?function=${fn}&symbol=${avSymbol}&outputsize=full&apikey=${API_KEYS.ALPHA_VANTAGE}`;
+    url = `${ENDPOINTS.ALPHA_VANTAGE}?function=${fn}&symbol=${symbol}&outputsize=full&apikey=${API_KEYS.ALPHA_VANTAGE}`;
   }
 
+  console.log(`[AlphaVantage] Fetching: ${symbol}`);
   try {
     const resp = await fetchWithRetry(url);
     const data = await resp.json();
 
-    // Check for rate limit
     if (data.Note || data['Error Message']) {
-      console.warn('Alpha Vantage limit:', data.Note || data['Error Message']);
+      const msg = data.Note || data['Error Message'];
+      console.warn('[AlphaVantage] limit:', msg);
+      errorMap.set(symbol, `AlphaVantage: лимит запросов исчерпан`);
       return [];
     }
 
     const tsKey = fn === 'FX_DAILY' ? 'Time Series FX (Daily)' : 'Time Series (Daily)';
     const ts = data[tsKey];
-    if (!ts) return [];
+    if (!ts) {
+      errorMap.set(symbol, `AlphaVantage: нет данных`);
+      return [];
+    }
 
     const cutoff = Date.now() - FIVE_YEARS_MS;
+    console.log(`[AlphaVantage] ${symbol}: received ${Object.keys(ts).length} entries`);
+    errorMap.delete(symbol);
     return Object.entries(ts)
       .map(([date, vals]: [string, any]) => ({
         time: Math.floor(new Date(date).getTime() / 1000),
@@ -171,8 +234,9 @@ async function fetchAlphaVantageCandles(symbol: string): Promise<CandleData[]> {
       }))
       .filter(c => c.time * 1000 > cutoff)
       .sort((a, b) => a.time - b.time);
-  } catch (e) {
-    console.error(`Alpha Vantage error (${symbol}):`, e);
+  } catch (e: any) {
+    console.error(`[AlphaVantage] error (${symbol}):`, e?.message);
+    errorMap.set(symbol, `AlphaVantage: ${e?.message}`);
     return [];
   }
 }
@@ -186,9 +250,13 @@ export async function fetchHistoricalCandles(symbol: string): Promise<CandleData
   if (cache.has(cacheKey)) return cache.get(cacheKey)!;
 
   const asset = marketAssets.find(a => a.symbol === symbol);
-  if (!asset) return [];
+  if (!asset) {
+    errorMap.set(symbol, `Неизвестный инструмент: ${symbol}`);
+    return [];
+  }
 
   let candles: CandleData[] = [];
+  errorMap.delete(symbol);
 
   switch (asset.market) {
     case 'crypto':
@@ -208,9 +276,17 @@ export async function fetchHistoricalCandles(symbol: string): Promise<CandleData
       candles = await fetchAlphaVantageCandles(symbol);
       break;
     case 'indices':
-      // No free API for indices history — generate synthetic data
       candles = generateSyntheticCandles(asset);
       break;
+  }
+
+  // If primary source failed, try synthetic as last resort
+  if (candles.length === 0 && asset.market !== 'indices') {
+    console.warn(`[HistoricalData] No data from API for ${symbol}, generating synthetic candles`);
+    candles = generateSyntheticCandles(asset);
+    if (!errorMap.has(symbol)) {
+      errorMap.set(symbol, 'Используются синтетические данные');
+    }
   }
 
   if (candles.length > 0) {
@@ -223,12 +299,11 @@ export async function fetchHistoricalCandles(symbol: string): Promise<CandleData
 function generateSyntheticCandles(asset: MarketAsset): CandleData[] {
   const candles: CandleData[] = [];
   const days = 365 * 5;
-  let price = asset.basePrice * 0.7; // Start lower
+  let price = asset.basePrice * 0.7;
 
   for (let i = days; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    // Skip weekends
     if (date.getDay() === 0 || date.getDay() === 6) continue;
 
     const volatility = 0.015;
@@ -252,4 +327,5 @@ function generateSyntheticCandles(asset: MarketAsset): CandleData[] {
 // Clear cache
 export function clearHistoryCache() {
   cache.clear();
+  errorMap.clear();
 }
