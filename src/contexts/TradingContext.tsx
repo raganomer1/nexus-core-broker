@@ -21,10 +21,9 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [prices, setPrices] = useState<PriceMap>(initializePrices);
   const [priceDetails, setPriceDetails] = useState<Record<string, PriceUpdate>>({});
   const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatus>>({});
-  const pricesRef = useRef(prices);
-  pricesRef.current = prices;
 
   const updateAssetPricesInStore = useStore(s => s.updateAssetPrices);
+  const updateAssetPricesFull = useStore(s => s.updateAssetPricesFull);
   const checkOverrideExpiry = useStore(s => s.checkOverrideExpiry);
 
   // Batch price updates to reduce re-renders
@@ -64,8 +63,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
 
       setPriceDetails(prev => ({ ...prev, ...details }));
 
-      // Push to zustand store
-      updateAssetPricesInStore(updates);
+      // Push FULL price data (bid/ask/spread) to zustand store
+      updateAssetPricesFull(details);
       checkOverrideExpiry();
     }, 1000);
 
