@@ -179,9 +179,9 @@ export default function TerminalMain() {
         ))}
       </div>
 
-      {/* TradingView Chart */}
+      {/* Price Chart — lightweight-charts with real data */}
       <div className="flex-1 relative min-h-[200px]">
-        <TradingViewChart symbol={tvSymbol} theme="dark" interval={tf} />
+        <PriceChart symbol={ctx.selectedSymbol} theme="dark" />
       </div>
 
       {/* Buy / Sell buttons below chart */}
