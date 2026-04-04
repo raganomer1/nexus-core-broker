@@ -170,13 +170,14 @@ export default function TerminalMain() {
       <div className="h-9 flex items-center px-2 md:px-3 gap-1 md:gap-2 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: 'hsl(220, 20%, 20%)', background: 'hsl(220, 25%, 10%)' }}>
         <span className="text-xs md:text-sm font-semibold mr-1 md:mr-3 whitespace-nowrap" style={{ color: 'hsl(220, 14%, 90%)' }}>{asset?.symbol}</span>
         <span className="text-xs mr-2 md:mr-4 hidden sm:inline whitespace-nowrap" style={{ color: 'hsl(220, 14%, 50%)' }}>{asset?.description}</span>
-        {timeframes.map(t => (
-          <button key={t} onClick={() => setTf(t)}
-            className={`px-1.5 md:px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${tf === t ? '' : 'opacity-40 hover:opacity-70'}`}
-            style={tf === t ? { background: 'hsl(217, 91%, 55%, 0.2)', color: 'hsl(217, 91%, 55%)' } : { color: 'hsl(220, 14%, 60%)' }}>
-            {t}
-          </button>
-        ))}
+        {/* Connection indicators */}
+        <div className="hidden sm:flex items-center gap-2 mr-2">
+          {['binance', 'finnhub', 'oanda'].map(p => {
+            const st = connectionStatus[p];
+            const color = st === 'connected' ? '#00d68f' : st === 'connecting' ? '#eab308' : '#ef4444';
+            return <div key={p} title={`${p}: ${st || 'off'}`} style={{ width: 6, height: 6, borderRadius: '50%', background: color, boxShadow: `0 0 4px ${color}` }} />;
+          })}
+        </div>
       </div>
 
       {/* Price Chart — lightweight-charts with real data */}
