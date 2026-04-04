@@ -7,7 +7,6 @@ interface TradingViewChartProps {
   className?: string;
 }
 
-// Map internal timeframes to TradingView intervals
 const TV_INTERVALS: Record<string, string> = {
   'M1': '1',
   'M5': '5',
@@ -22,26 +21,24 @@ const TV_INTERVALS: Record<string, string> = {
 
 function TradingViewChartInner({ symbol, theme = 'dark', interval = 'H1', className }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Clear previous widget
-    containerRef.current.innerHTML = '';
-
+    const currentId = ++widgetIdRef.current;
     const tvInterval = TV_INTERVALS[interval] || '60';
+    const bgColor = theme === 'dark' ? 'rgba(13, 17, 28, 1)' : 'rgba(255, 255, 255, 1)';
+    const gridColor = theme === 'dark' ? 'rgba(30, 38, 55, 0.5)' : 'rgba(200, 200, 200, 0.3)';
 
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.type = 'text/javascript';
-    script.async = true;
-    script.innerHTML = JSON.stringify({
+    // Build TradingView widget URL (iframe-based, no script injection)
+    const config = {
       autosize: true,
-      symbol: symbol,
+      symbol,
       interval: tvInterval,
       timezone: 'Etc/UTC',
-      theme: theme,
-      style: '1', // candlestick
+      theme,
+      style: '1',
       locale: 'ru',
       allow_symbol_change: false,
       hide_top_toolbar: false,
@@ -51,17 +48,28 @@ function TradingViewChartInner({ symbol, theme = 'dark', interval = 'H1', classN
       hide_volume: false,
       support_host: 'https://www.tradingview.com',
       studies: [],
-      backgroundColor: theme === 'dark' ? 'rgba(13, 17, 28, 1)' : 'rgba(255, 255, 255, 1)',
-      gridColor: theme === 'dark' ? 'rgba(30, 38, 55, 0.5)' : 'rgba(200, 200, 200, 0.3)',
-    });
+      backgroundColor: bgColor,
+      gridColor,
+    };
 
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container__widget';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
+    const encodedConfig = encodeURIComponent(JSON.stringify(config));
+    const iframeSrc = `https://s.tradingview.com/widgetembed/?hideideas=1&overrides={}&enabled_features=[]&disabled_features=[]&locale=ru#${encodedConfig}`;
 
-    containerRef.current.appendChild(widgetContainer);
-    containerRef.current.appendChild(script);
+    // Clear previous
+    containerRef.current.innerHTML = '';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = iframeSrc;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.allow = 'autoplay; encrypted-media';
+    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
+    iframe.loading = 'lazy';
+
+    if (currentId === widgetIdRef.current) {
+      containerRef.current.appendChild(iframe);
+    }
 
     return () => {
       if (containerRef.current) {
