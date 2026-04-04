@@ -54,8 +54,8 @@ export default function TerminalMain() {
     return a.isActive;
   });
 
-  // TradingView symbol
-  const tvSymbol = getTvSymbol(ctx.selectedSymbol);
+  // Connection status
+  const { connectionStatus } = useTradingPrices();
 
   // Margin calculation
   const requiredMargin = useMemo(() => {
