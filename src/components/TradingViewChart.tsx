@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 interface TradingViewChartProps {
   symbol: string;
@@ -20,70 +20,35 @@ const TV_INTERVALS: Record<string, string> = {
 };
 
 function TradingViewChartInner({ symbol, theme = 'dark', interval = 'H1', className }: TradingViewChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef(0);
+  const tvInterval = TV_INTERVALS[interval] || '60';
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const currentId = ++widgetIdRef.current;
-    const tvInterval = TV_INTERVALS[interval] || '60';
-    const bgColor = theme === 'dark' ? 'rgba(13, 17, 28, 1)' : 'rgba(255, 255, 255, 1)';
-    const gridColor = theme === 'dark' ? 'rgba(30, 38, 55, 0.5)' : 'rgba(200, 200, 200, 0.3)';
-
-    // Build TradingView widget URL (iframe-based, no script injection)
-    const config = {
-      autosize: true,
+  const src = useMemo(() => {
+    const params = new URLSearchParams({
       symbol,
       interval: tvInterval,
-      timezone: 'Etc/UTC',
       theme,
       style: '1',
       locale: 'ru',
-      allow_symbol_change: false,
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      calendar: false,
-      hide_volume: false,
+      hide_side_toolbar: '0',
+      allow_symbol_change: '0',
+      save_image: '0',
+      calendar: '0',
+      hide_volume: '0',
       support_host: 'https://www.tradingview.com',
-      studies: [],
-      backgroundColor: bgColor,
-      gridColor,
-    };
-
-    const encodedConfig = encodeURIComponent(JSON.stringify(config));
-    const iframeSrc = `https://s.tradingview.com/widgetembed/?hideideas=1&overrides={}&enabled_features=[]&disabled_features=[]&locale=ru#${encodedConfig}`;
-
-    // Clear previous
-    containerRef.current.innerHTML = '';
-
-    const iframe = document.createElement('iframe');
-    iframe.src = iframeSrc;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.allow = 'autoplay; encrypted-media';
-    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms';
-    iframe.loading = 'lazy';
-
-    if (currentId === widgetIdRef.current) {
-      containerRef.current.appendChild(iframe);
-    }
-
-    return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
-    };
-  }, [symbol, theme, interval]);
+    });
+    return `https://www.tradingview.com/widgetembed/?frameElementId=tv_chart&${params.toString()}`;
+  }, [symbol, tvInterval, theme]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`tradingview-widget-container ${className || ''}`}
-      style={{ height: '100%', width: '100%' }}
-    />
+    <div className={`tradingview-widget-container ${className || ''}`} style={{ height: '100%', width: '100%' }}>
+      <iframe
+        key={`${symbol}-${tvInterval}-${theme}`}
+        src={src}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        allow="autoplay; encrypted-media"
+        allowFullScreen
+      />
+    </div>
   );
 }
 
