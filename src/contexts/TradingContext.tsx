@@ -1,44 +1,80 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { initializePrices, updateAllPrices, type PriceMap } from '@/services/priceService';
+import { initializePrices, type PriceMap } from '@/services/priceService';
+import { RealtimeService, type PriceUpdate, type ConnectionStatus } from '@/services/realtimeService';
 import { useStore } from '@/store/useStore';
-import { marketAssetBySymbol } from '@/services/marketData';
 
 interface TradingContextValue {
   prices: PriceMap;
   getPrice: (symbol: string) => number;
+  connectionStatus: Record<string, ConnectionStatus>;
+  priceDetails: Record<string, PriceUpdate>;
 }
 
 const TradingContext = createContext<TradingContextValue>({
   prices: {},
   getPrice: () => 0,
+  connectionStatus: {},
+  priceDetails: {},
 });
 
 export function TradingProvider({ children }: { children: React.ReactNode }) {
   const [prices, setPrices] = useState<PriceMap>(initializePrices);
+  const [priceDetails, setPriceDetails] = useState<Record<string, PriceUpdate>>({});
+  const [connectionStatus, setConnectionStatus] = useState<Record<string, ConnectionStatus>>({});
   const pricesRef = useRef(prices);
   pricesRef.current = prices;
 
   const updateAssetPricesInStore = useStore(s => s.updateAssetPrices);
   const checkOverrideExpiry = useStore(s => s.checkOverrideExpiry);
 
-  // Fetch & update every 3 seconds
+  // Batch price updates to reduce re-renders
+  const pendingUpdates = useRef<Record<string, number>>({});
+  const pendingDetails = useRef<Record<string, PriceUpdate>>({});
+  const flushTimer = useRef<ReturnType<typeof setInterval>>();
+
   useEffect(() => {
-    let active = true;
+    const service = new RealtimeService(
+      // Price callback
+      (update: PriceUpdate) => {
+        pendingUpdates.current[update.symbol] = update.price;
+        pendingDetails.current[update.symbol] = update;
+      },
+      // Status callback
+      (provider: string, status: ConnectionStatus) => {
+        setConnectionStatus(prev => ({ ...prev, [provider]: status }));
+      }
+    );
 
-    const tick = async () => {
-      if (!active) return;
-      const newPrices = await updateAllPrices(pricesRef.current);
-      if (!active) return;
-      setPrices(newPrices);
-      // Push prices into zustand store for asset/position updates
-      updateAssetPricesInStore(newPrices);
+    // Flush batched updates every 1s
+    flushTimer.current = setInterval(() => {
+      const updates = pendingUpdates.current;
+      const details = pendingDetails.current;
+      if (Object.keys(updates).length === 0) return;
+
+      pendingUpdates.current = {};
+      pendingDetails.current = {};
+
+      setPrices(prev => {
+        const next = { ...prev };
+        for (const [sym, price] of Object.entries(updates)) {
+          next[sym] = price;
+        }
+        return next;
+      });
+
+      setPriceDetails(prev => ({ ...prev, ...details }));
+
+      // Push to zustand store
+      updateAssetPricesInStore(updates);
       checkOverrideExpiry();
-    };
+    }, 1000);
 
-    // Initial fetch
-    tick();
-    const interval = setInterval(tick, 3000);
-    return () => { active = false; clearInterval(interval); };
+    service.start();
+
+    return () => {
+      service.stop();
+      if (flushTimer.current) clearInterval(flushTimer.current);
+    };
   }, []);
 
   const getPrice = useCallback((symbol: string) => {
@@ -46,7 +82,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   }, [prices]);
 
   return (
-    <TradingContext.Provider value={{ prices, getPrice }}>
+    <TradingContext.Provider value={{ prices, getPrice, connectionStatus, priceDetails }}>
       {children}
     </TradingContext.Provider>
   );
